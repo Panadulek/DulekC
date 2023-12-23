@@ -55,6 +55,8 @@ public:
 	{
 		for (auto& it : m_scopes)
 		{
+			if (m_root.get() == it)
+				continue;
 			delete it;
 			it = nullptr;
 		}

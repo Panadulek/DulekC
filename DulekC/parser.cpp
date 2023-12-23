@@ -80,14 +80,16 @@
 #include "Value.h"
 #include "TypeContainer.h"
 #include <cstdint>
-
+#include <vector>
+std::vector<Type*> s_typeslist;
+std::vector<Identifier> s_identifierslist;
  extern char* yytext;
  int __cdecl yylex(void);
 void yyerror(const char *s) { std::cerr  << s << "  :   " << '"' << yytext << '"' << std::endl; }
 
 
 /* Line 189 of yacc.c  */
-#line 91 "parser.cpp"
+#line 93 "parser.cpp"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -110,7 +112,7 @@ void yyerror(const char *s) { std::cerr  << s << "  :   " << '"' << yytext << '"
 /* "%code requires" blocks.  */
 
 /* Line 209 of yacc.c  */
-#line 17 "parser.ypp"
+#line 19 "parser.ypp"
 
 
     #include "Type.h"
@@ -124,7 +126,7 @@ void yyerror(const char *s) { std::cerr  << s << "  :   " << '"' << yytext << '"
 
 
 /* Line 209 of yacc.c  */
-#line 128 "parser.cpp"
+#line 130 "parser.cpp"
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -160,18 +162,19 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 27 "parser.ypp"
+#line 29 "parser.ypp"
 
     char* str;  
     uint64_t num; 
     Variable* pvariable;
     Type* ptype;
     NumericValue* pnumvalue;
+    ObjectInByte bytetype;
 
 
 
 /* Line 214 of yacc.c  */
-#line 175 "parser.cpp"
+#line 178 "parser.cpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -183,7 +186,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 187 "parser.cpp"
+#line 190 "parser.cpp"
 
 #ifdef short
 # undef short
@@ -403,11 +406,11 @@ union yyalloc
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  21
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  6
+#define YYNNTS  8
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  16
+#define YYNRULES  18
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  21
+#define YYNSTATES  23
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
@@ -454,25 +457,25 @@ static const yytype_uint8 yytranslate[] =
    YYRHS.  */
 static const yytype_uint8 yyprhs[] =
 {
-       0,     0,     3,     4,     7,     9,    11,    17,    21,    23,
-      26,    29,    32,    35,    38,    41,    44
+       0,     0,     3,     4,     7,     9,    11,    18,    23,    25,
+      27,    29,    31,    33,    35,    37,    39,    41,    43
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
       22,     0,    -1,    -1,    22,    23,    -1,    23,    -1,    24,
-      -1,    19,    26,    10,    25,     7,    -1,    19,    26,     7,
-      -1,    20,    -1,     3,    11,    -1,     3,    12,    -1,     3,
-      13,    -1,     3,    14,    -1,     3,    15,    -1,     3,    16,
-      -1,     3,    17,    -1,     3,    18,    -1
+      -1,    19,     3,    26,    10,    25,     7,    -1,    19,     3,
+      26,     7,    -1,    20,    -1,    27,    -1,    28,    -1,    11,
+      -1,    13,    -1,    15,    -1,    17,    -1,    12,    -1,    14,
+      -1,    16,    -1,    18,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    48,    48,    50,    54,    55,    60,    67,    78,    85,
-      93,   101,   109,   117,   125,   133,   141
+       0,    53,    53,    55,    59,    60,    69,    76,    87,    94,
+     102,   111,   116,   121,   126,   132,   137,   142,   147
 };
 #endif
 
@@ -485,7 +488,7 @@ static const char *const yytname[] =
   "SEMICOLON", "LBUCKLE", "RBUCKLE", "INIT_TYPE", "I8", "U8", "I16", "U16",
   "I32", "U32", "I64", "U64", "IDENTIFIER", "NUMBER", "$accept", "program",
   "statement", "variable_declaration", "variable_numeric_init",
-  "NUMERIC_TYPE", 0
+  "NUMERIC_TYPE", "byte_type", "ubyte_type", 0
 };
 #endif
 
@@ -504,14 +507,14 @@ static const yytype_uint16 yytoknum[] =
 static const yytype_uint8 yyr1[] =
 {
        0,    21,    22,    22,    23,    23,    24,    24,    25,    26,
-      26,    26,    26,    26,    26,    26,    26
+      26,    27,    27,    27,    27,    28,    28,    28,    28
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
-       0,     2,     0,     2,     1,     1,     5,     3,     1,     2,
-       2,     2,     2,     2,     2,     2,     2
+       0,     2,     0,     2,     1,     1,     6,     4,     1,     1,
+       1,     1,     1,     1,     1,     1,     1,     1,     1
 };
 
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
@@ -519,15 +522,15 @@ static const yytype_uint8 yyr2[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       2,     0,     1,     0,     3,     5,     0,     0,     9,    10,
-      11,    12,    13,    14,    15,    16,     7,     0,     8,     0,
-       6
+       2,     0,     1,     0,     3,     5,     0,    11,    15,    12,
+      16,    13,    17,    14,    18,     0,     9,    10,     7,     0,
+       8,     0,     6
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int8 yydefgoto[] =
 {
-      -1,     1,     4,     5,    19,     7
+      -1,     1,     4,     5,    21,    15,    16,    17
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
@@ -535,15 +538,15 @@ static const yytype_int8 yydefgoto[] =
 #define YYPACT_NINF -11
 static const yytype_int8 yypact[] =
 {
-     -11,     0,   -11,     7,   -11,   -11,   -10,     2,   -11,   -11,
-     -11,   -11,   -11,   -11,   -11,   -11,   -11,    -9,   -11,     6,
-     -11
+     -11,     0,   -11,     7,   -11,   -11,   -10,   -11,   -11,   -11,
+     -11,   -11,   -11,   -11,   -11,     2,   -11,   -11,   -11,    -9,
+     -11,     6,   -11
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-     -11,   -11,   -11,   -11,   -11,   -11
+     -11,   -11,   -11,   -11,   -11,   -11,   -11,   -11
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -553,8 +556,8 @@ static const yytype_int8 yypgoto[] =
 #define YYTABLE_NINF -1
 static const yytype_uint8 yytable[] =
 {
-       2,     8,     9,    10,    11,    12,    13,    14,    15,    16,
-       6,    18,    17,    20,     0,     0,     0,     0,     0,     3
+       2,     7,     8,     9,    10,    11,    12,    13,    14,    18,
+       6,    20,    19,    22,     0,     0,     0,     0,     0,     3
 };
 
 static const yytype_int8 yycheck[] =
@@ -567,9 +570,9 @@ static const yytype_int8 yycheck[] =
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,    22,     0,    19,    23,    24,     3,    26,    11,    12,
-      13,    14,    15,    16,    17,    18,     7,    10,    20,    25,
-       7
+       0,    22,     0,    19,    23,    24,     3,    11,    12,    13,
+      14,    15,    16,    17,    18,    26,    27,    28,     7,    10,
+      20,    25,     7
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1383,31 +1386,31 @@ yyreduce:
         case 6:
 
 /* Line 1455 of yacc.c  */
-#line 61 "parser.ypp"
+#line 70 "parser.ypp"
     {
-        Identifier id((yyvsp[(1) - (5)].str));
-        (yyval.pvariable) = new Variable(id, (yyvsp[(2) - (5)].ptype), (yyvsp[(4) - (5)].pnumvalue), AstTree::instance().inGlobal());
+        Identifier id((yyvsp[(1) - (6)].str));
+        (yyval.pvariable) = new Variable(id, (yyvsp[(3) - (6)].ptype), (yyvsp[(5) - (6)].pnumvalue), AstTree::instance().inGlobal());
         AstTree::instance().addObject((yyval.pvariable));
-        delete [] (yyvsp[(1) - (5)].str);
+        delete [] (yyvsp[(1) - (6)].str);
     ;}
     break;
 
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 68 "parser.ypp"
+#line 77 "parser.ypp"
     {
-        Identifier id((yyvsp[(1) - (3)].str));
-        (yyval.pvariable) = new Variable(id, (yyvsp[(2) - (3)].ptype), new NumericValue(), AstTree::instance().inGlobal());
+        Identifier id((yyvsp[(1) - (4)].str));
+        (yyval.pvariable) = new Variable(id, (yyvsp[(3) - (4)].ptype), new NumericValue(), AstTree::instance().inGlobal());
         AstTree::instance().addObject((yyval.pvariable));
-        delete [] (yyvsp[(1) - (3)].str);
+        delete [] (yyvsp[(1) - (4)].str);
     ;}
     break;
 
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 79 "parser.ypp"
+#line 88 "parser.ypp"
     {
             (yyval.pnumvalue) = new NumericValue((yyvsp[(1) - (1)].num))
         ;}
@@ -1416,103 +1419,102 @@ yyreduce:
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 86 "parser.ypp"
+#line 95 "parser.ypp"
     {
-        Identifier id((yyvsp[(2) - (2)].str)) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::BYTE, true);
-        (yyval.ptype) = TypeContainer::instance().getType(id);
-        delete [] (yyvsp[(2) - (2)].str);
+       Identifier id = SimpleNumericType::generateId((yyvsp[(1) - (1)].bytetype), true) ;
+       TypeContainer::instance().insert<SimpleNumericType>(id, id, (yyvsp[(1) - (1)].bytetype), true);
+      (yyval.ptype) = TypeContainer::instance().getType(id);
+     
     ;}
     break;
 
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 94 "parser.ypp"
+#line 103 "parser.ypp"
     {
-        Identifier id((yyvsp[(2) - (2)].str)) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::BYTE, false);
-         (yyval.ptype) = TypeContainer::instance().getType(id);
-        delete [] (yyvsp[(2) - (2)].str);
+        Identifier id = SimpleNumericType::generateId((yyvsp[(1) - (1)].bytetype), true) ;
+        TypeContainer::instance().insert<SimpleNumericType>(id, id, (yyvsp[(1) - (1)].bytetype), false);
+        (yyval.ptype) = TypeContainer::instance().getType(id);
     ;}
     break;
 
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 102 "parser.ypp"
+#line 112 "parser.ypp"
     {
-        Identifier id((yyvsp[(2) - (2)].str)) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::WORD, false);
-         (yyval.ptype) = TypeContainer::instance().getType(id);
-        delete [] (yyvsp[(2) - (2)].str);
-    ;}
+   (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
+  ;}
     break;
 
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 110 "parser.ypp"
+#line 117 "parser.ypp"
     {
-        Identifier id((yyvsp[(2) - (2)].str)) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::WORD, false);
-         (yyval.ptype) = TypeContainer::instance().getType(id);
-        delete [] (yyvsp[(2) - (2)].str);
-    ;}
+    (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
+  ;}
     break;
 
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 118 "parser.ypp"
+#line 122 "parser.ypp"
     {
-        Identifier id((yyvsp[(2) - (2)].str)) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::DWORD, false);
-         (yyval.ptype) = TypeContainer::instance().getType(id);
-        delete [] (yyvsp[(2) - (2)].str);
-    ;}
+    (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
+  ;}
     break;
 
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 126 "parser.ypp"
+#line 127 "parser.ypp"
     {
-        Identifier id((yyvsp[(2) - (2)].str)) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::DWORD, false);
-         (yyval.ptype) = TypeContainer::instance().getType(id);
-        delete [] (yyvsp[(2) - (2)].str);
-    ;}
+    (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
+  ;}
     break;
 
   case 15:
 
 /* Line 1455 of yacc.c  */
-#line 134 "parser.ypp"
+#line 133 "parser.ypp"
     {
-        Identifier id((yyvsp[(2) - (2)].str)) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::QWORD, false);
-         (yyval.ptype) = TypeContainer::instance().getType(id);
-        delete [] (yyvsp[(2) - (2)].str);
-    ;}
+    (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
+  ;}
     break;
 
   case 16:
 
 /* Line 1455 of yacc.c  */
-#line 142 "parser.ypp"
+#line 138 "parser.ypp"
     {
-        Identifier id((yyvsp[(2) - (2)].str)) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::QWORD, false);
-         (yyval.ptype) = TypeContainer::instance().getType(id);
-        delete [] (yyvsp[(2) - (2)].str);
-    ;}
+    (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
+  ;}
+    break;
+
+  case 17:
+
+/* Line 1455 of yacc.c  */
+#line 143 "parser.ypp"
+    {
+    (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
+  ;}
+    break;
+
+  case 18:
+
+/* Line 1455 of yacc.c  */
+#line 148 "parser.ypp"
+    {
+   (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
+  ;}
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 1516 "parser.cpp"
+#line 1518 "parser.cpp"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1724,7 +1726,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 152 "parser.ypp"
+#line 151 "parser.ypp"
 
 
 

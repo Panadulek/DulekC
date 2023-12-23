@@ -3,6 +3,7 @@
 %{
 #include "parser.hpp" // Bison wygeneruje ten plik
 #include <iostream>
+#include "Type.h"
 #pragma warning(disable : 4996)
 #define DISPLAY(X) std::cout << X << std::endl
 #define MY_DEBUG 1
@@ -13,14 +14,14 @@
 
 %%
 
-"i8"					{ DISPLAY(yytext); yylval.str = strdup(yytext); return I8; }
-"u8"					{ DISPLAY(yytext); yylval.str = strdup(yytext); return U8; }
-"i16"					{ DISPLAY(yytext); yylval.str = strdup(yytext); return I16; }
-"u16"					{ DISPLAY(yytext); yylval.str = strdup(yytext); return U16; }
-"i32"					{ DISPLAY(yytext); yylval.str = strdup(yytext); return I32; }
-"u32"					{ DISPLAY(yytext); yylval.str = strdup(yytext); return U32; }
-"i64"					{ DISPLAY(yytext); yylval.str = strdup(yytext); return I64; }
-"u64"					{ DISPLAY(yytext); yylval.str = strdup(yytext); return U64; }
+"i8"					{ yylval.bytetype = ObjectInByte::BYTE; return I8; }
+"u8"					{ yylval.bytetype = ObjectInByte::BYTE; return U8; }
+"i16"					{ yylval.bytetype = ObjectInByte::WORD; return I16; }
+"u16"					{ yylval.bytetype = ObjectInByte::WORD; return U16; }
+"i32"					{ yylval.bytetype = ObjectInByte::DWORD; return I32; }
+"u32"					{ yylval.bytetype = ObjectInByte::DWORD; return U32; }
+"i64"					{ yylval.bytetype = ObjectInByte::QWORD; return I64; }
+"u64"					{ yylval.bytetype = ObjectInByte::QWORD; return U64; }
 
 
 [0-9]+                  { 

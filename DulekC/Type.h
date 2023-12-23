@@ -42,6 +42,32 @@ private:
 	ObjectInByte m_size;
 	bool m_isSigned;
 public:
+	static Identifier generateId(ObjectInByte id, bool isSigned)
+	{
+		switch (id)
+		{
+		case ObjectInByte::BYTE:
+			if (isSigned)
+				return Identifier("i8");
+			else
+				return Identifier("u8");
+		case ObjectInByte::WORD:
+			if (isSigned)
+				return Identifier("i16");
+			else
+				return Identifier("u16");
+		case ObjectInByte::DWORD:
+			if (isSigned)
+				return Identifier("i32");
+			else
+				return Identifier("u32");
+		case ObjectInByte::QWORD:
+			if (isSigned)
+				return Identifier("i64");
+			else
+				return Identifier("u64");
+		}
+	}
 	virtual bool isSimpleNumericType() const override { return true; }
 	SimpleNumericType(const Identifier& id, const ObjectInByte oib, const bool isSigned) : Type(id), m_size(oib), m_isSigned(isSigned) {}
 	virtual llvm::Type* getLLVMType (llvm::LLVMContext&) const override;

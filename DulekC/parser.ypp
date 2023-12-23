@@ -9,7 +9,9 @@
 #include "Value.h"
 #include "TypeContainer.h"
 #include <cstdint>
-
+#include <vector>
+std::vector<Type*> s_typeslist;
+std::vector<Identifier> s_identifierslist;
  extern char* yytext;
  int __cdecl yylex(void);
 void yyerror(const char *s) { std::cerr  << s << "  :   " << '"' << yytext << '"' << std::endl; }
@@ -30,16 +32,19 @@ void yyerror(const char *s) { std::cerr  << s << "  :   " << '"' << yytext << '"
     Variable* pvariable;
     Type* ptype;
     NumericValue* pnumvalue;
+    ObjectInByte bytetype;
 }
 
 %token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE
-%token <str> I8 U8 I16 U16 I32 U32 I64 U64
+%token <bytetype> I8 U8 I16 U16 I32 U32 I64 U64
 %token <str> IDENTIFIER
 %token <num> NUMBER
 
 
 %start program
 
+%type<bytetype> byte_type
+%type<bytetype> ubyte_type
 %type<ptype> NUMERIC_TYPE
 %type<pvariable>variable_declaration
 %type<pnumvalue> variable_numeric_init
@@ -55,19 +60,23 @@ statement
     | variable_declaration 
     ;
 
+
+
+
+
 variable_declaration
     : 
-    IDENTIFIER NUMERIC_TYPE INIT_TYPE variable_numeric_init SEMICOLON
+    IDENTIFIER ARROW NUMERIC_TYPE INIT_TYPE variable_numeric_init SEMICOLON
     {
         Identifier id($1);
-        $$ = new Variable(id, $2, $4, AstTree::instance().inGlobal());
+        $$ = new Variable(id, $3, $5, AstTree::instance().inGlobal());
         AstTree::instance().addObject($$);
         delete [] $1;
     }
-    | IDENTIFIER NUMERIC_TYPE SEMICOLON
+    | IDENTIFIER ARROW NUMERIC_TYPE SEMICOLON
     {
         Identifier id($1);
-        $$ = new Variable(id, $2, new NumericValue(), AstTree::instance().inGlobal());
+        $$ = new Variable(id, $3, new NumericValue(), AstTree::instance().inGlobal());
         AstTree::instance().addObject($$);
         delete [] $1;
     }
@@ -82,72 +91,62 @@ variable_declaration
 
 
     NUMERIC_TYPE
-    : ARROW I8 
+    : byte_type
     {
-        Identifier id($2) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::BYTE, true);
+       Identifier id = SimpleNumericType::generateId($1, true) ;
+       TypeContainer::instance().insert<SimpleNumericType>(id, id, $1, true);
+      $$ = TypeContainer::instance().getType(id);
+     
+    }
+    |
+     ubyte_type
+    {
+        Identifier id = SimpleNumericType::generateId($1, true) ;
+        TypeContainer::instance().insert<SimpleNumericType>(id, id, $1, false);
         $$ = TypeContainer::instance().getType(id);
-        delete [] $2;
-    }
-    |
-    ARROW U8 
-    {
-        Identifier id($2) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::BYTE, false);
-         $$ = TypeContainer::instance().getType(id);
-        delete [] $2;
-    }
-    |
-    ARROW I16 
-    {
-        Identifier id($2) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::WORD, false);
-         $$ = TypeContainer::instance().getType(id);
-        delete [] $2;
-    }
-    |
-    ARROW U16 
-    {
-        Identifier id($2) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::WORD, false);
-         $$ = TypeContainer::instance().getType(id);
-        delete [] $2;
-    }
-    |
-    ARROW I32 
-    {
-        Identifier id($2) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::DWORD, false);
-         $$ = TypeContainer::instance().getType(id);
-        delete [] $2;
-    }
-    |
-    ARROW U32 
-    {
-        Identifier id($2) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::DWORD, false);
-         $$ = TypeContainer::instance().getType(id);
-        delete [] $2;
-    }
-    |
-    ARROW I64 
-    {
-        Identifier id($2) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::QWORD, false);
-         $$ = TypeContainer::instance().getType(id);
-        delete [] $2;
-    }
-    |
-    ARROW U64 
-    {
-        Identifier id($2) ;
-        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::QWORD, false);
-         $$ = TypeContainer::instance().getType(id);
-        delete [] $2;
     }
     ;
 
-  
+  byte_type:
+  I8 
+  {
+   $$ = $1;
+  }
+  | 
+  I16
+  {
+    $$ = $1;
+  }
+  |
+  I32 
+  {
+    $$ = $1;
+  }
+  | 
+  I64
+  {
+    $$ = $1;
+  }
 
+  ubyte_type:
+  U8 
+  {
+    $$ = $1;
+  }
+  | 
+  U16
+  {
+    $$ = $1;
+  }
+  |
+  U32 
+  {
+    $$ = $1;
+  }
+  | 
+  U64
+  {
+   $$ = $1;
+  }
 %%
 

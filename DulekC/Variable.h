@@ -16,6 +16,10 @@ public:
 	}
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const override
 	{
+		if (m_value->isNumericValue() && m_type->isSimpleNumericType())
+		{
+			static_cast<NumericValue*>(m_value)->setSigned(static_cast<SimpleNumericType*>(m_type)->isSigned());
+		}
 		return m_value->getLLVMValue(type);
 	}
 	bool isGlobalVariable()

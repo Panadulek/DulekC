@@ -389,11 +389,12 @@ char *yytext;
 #line 4 "lexer.l"
 #include "parser.hpp" // Bison wygeneruje ten plik
 #include <iostream>
+#include "Type.h"
 #pragma warning(disable : 4996)
 #define DISPLAY(X) std::cout << X << std::endl
 #define MY_DEBUG 1
 #include<string>
-#line 397 "lexer.cpp"
+#line 398 "lexer.cpp"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -544,10 +545,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 14 "lexer.l"
+#line 15 "lexer.l"
 
 
-#line 551 "lexer.cpp"
+#line 552 "lexer.cpp"
 
 	if ( yy_init )
 		{
@@ -632,47 +633,47 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 16 "lexer.l"
-{ DISPLAY(yytext); yylval.str = strdup(yytext); return I8; }
+#line 17 "lexer.l"
+{ yylval.bytetype = ObjectInByte::BYTE; return I8; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 17 "lexer.l"
-{ DISPLAY(yytext); yylval.str = strdup(yytext); return U8; }
+#line 18 "lexer.l"
+{ yylval.bytetype = ObjectInByte::BYTE; return U8; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 18 "lexer.l"
-{ DISPLAY(yytext); yylval.str = strdup(yytext); return I16; }
+#line 19 "lexer.l"
+{ yylval.bytetype = ObjectInByte::WORD; return I16; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 19 "lexer.l"
-{ DISPLAY(yytext); yylval.str = strdup(yytext); return U16; }
+#line 20 "lexer.l"
+{ yylval.bytetype = ObjectInByte::WORD; return U16; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 20 "lexer.l"
-{ DISPLAY(yytext); yylval.str = strdup(yytext); return I32; }
+#line 21 "lexer.l"
+{ yylval.bytetype = ObjectInByte::DWORD; return I32; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 21 "lexer.l"
-{ DISPLAY(yytext); yylval.str = strdup(yytext); return U32; }
+#line 22 "lexer.l"
+{ yylval.bytetype = ObjectInByte::DWORD; return U32; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 22 "lexer.l"
-{ DISPLAY(yytext); yylval.str = strdup(yytext); return I64; }
+#line 23 "lexer.l"
+{ yylval.bytetype = ObjectInByte::QWORD; return I64; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 23 "lexer.l"
-{ DISPLAY(yytext); yylval.str = strdup(yytext); return U64; }
+#line 24 "lexer.l"
+{ yylval.bytetype = ObjectInByte::QWORD; return U64; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 26 "lexer.l"
+#line 27 "lexer.l"
 { 
 yylval.num = std::stoull(yytext) ; 
 DISPLAY("NUMBER"); 
@@ -682,65 +683,65 @@ return NUMBER;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 32 "lexer.l"
+#line 33 "lexer.l"
 { yylval.str = strdup(yytext); DISPLAY("IDENTIFIER"); return IDENTIFIER; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 33 "lexer.l"
+#line 34 "lexer.l"
 { DISPLAY("ARROW");return ARROW; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 34 "lexer.l"
+#line 35 "lexer.l"
 { return LBUCKLE; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 35 "lexer.l"
+#line 36 "lexer.l"
 { return RBUCKLE; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 36 "lexer.l"
+#line 37 "lexer.l"
 { return COMMA; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 37 "lexer.l"
+#line 38 "lexer.l"
 { DISPLAY(";");return SEMICOLON; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 38 "lexer.l"
+#line 39 "lexer.l"
 {return INIT_TYPE;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 39 "lexer.l"
+#line 40 "lexer.l"
 { /* Ignoruj bia³e znaki */ }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 40 "lexer.l"
+#line 41 "lexer.l"
 {return LBRACE;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 41 "lexer.l"
+#line 42 "lexer.l"
 {return RBRACE;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 42 "lexer.l"
+#line 43 "lexer.l"
 { /* Ignoruj inne znaki */ }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 46 "lexer.l"
+#line 47 "lexer.l"
 ECHO;
 	YY_BREAK
-#line 744 "lexer.cpp"
+#line 745 "lexer.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1626,5 +1627,5 @@ int main()
 	return 0;
 	}
 #endif
-#line 46 "lexer.l"
+#line 47 "lexer.l"
 

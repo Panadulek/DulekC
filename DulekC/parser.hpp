@@ -35,7 +35,7 @@
 /* "%code requires" blocks.  */
 
 /* Line 1676 of yacc.c  */
-#line 17 "parser.ypp"
+#line 19 "parser.ypp"
 
 
     #include "Type.h"
@@ -85,18 +85,19 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 27 "parser.ypp"
+#line 29 "parser.ypp"
 
     char* str;  
     uint64_t num; 
     Variable* pvariable;
     Type* ptype;
     NumericValue* pnumvalue;
+    ObjectInByte bytetype;
 
 
 
 /* Line 1676 of yacc.c  */
-#line 100 "parser.hpp"
+#line 101 "parser.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
