@@ -10,11 +10,15 @@
 #include "TypeContainer.h"
 #include <cstdint>
 #include <vector>
-std::vector<Type*> s_typeslist;
-std::vector<Identifier> s_identifierslist;
+#include "FlagsSettings.h"
  extern char* yytext;
  int __cdecl yylex(void);
 void yyerror(const char *s) { std::cerr  << s << "  :   " << '"' << yytext << '"' << std::endl; }
+
+std::vector<Type*> yys_types;
+std::vector<Identifier> yys_ids;
+
+
 %}
 %code requires {
 
@@ -24,6 +28,7 @@ void yyerror(const char *s) { std::cerr  << s << "  :   " << '"' << yytext << '"
     #include <memory>
     #include <string>
     #include <cstdint>
+    #include <vector>
     // Inne wymagane nag³ówki
 }
 %union {
@@ -33,9 +38,10 @@ void yyerror(const char *s) { std::cerr  << s << "  :   " << '"' << yytext << '"
     Type* ptype;
     NumericValue* pnumvalue;
     ObjectInByte bytetype;
+    Identifier* pidentifier;
 }
 
-%token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE
+%token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE FUNCTION_KEYWORD
 %token <bytetype> I8 U8 I16 U16 I32 U32 I64 U64
 %token <str> IDENTIFIER
 %token <num> NUMBER
@@ -45,9 +51,10 @@ void yyerror(const char *s) { std::cerr  << s << "  :   " << '"' << yytext << '"
 
 %type<bytetype> byte_type
 %type<bytetype> ubyte_type
-%type<ptype> NUMERIC_TYPE
+%type<ptype> type
 %type<pvariable>variable_declaration
 %type<pnumvalue> variable_numeric_init
+%type<pidentifier> argument
 %%
 
 program
@@ -57,23 +64,55 @@ program
 
 statement
     : statement
-    | variable_declaration 
+    | variable_declaration
+    | function_declaration
+    | function_body
     ;
 
 
 
+function_declaration:
+    FUNCTION_KEYWORD IDENTIFIER LBRACE argument_list RBRACE ARROW type LBRACE type_list RBRACE 
+    {
+        if(!CompilerParserFlags::instance().enterFunction())
+        {
+            throw std::runtime_error("FN_IN_FN");
+        }
+        if(yys_ids.size() != yys_types.size())
+        {
+            throw std::runtime_error("type_size_counter_not_eq");
+        }
+        Function* fn = new Function(Identifier($2), $7);
+        delete [] $2;
+        AstTree::instance().beginScope(fn);
+        for(auto i = 0; i < yys_types.size(); i++ )
+        {
+            fn->addArgs(new Variable(yys_ids[i], yys_types[i], new NumericValue(), AstTree::instance().inGlobal()));
+        }
+
+       
+    }
+
+    function_body:
+        LBUCKLE statement RBUCKLE
+        {
+            if(!CompilerParserFlags::instance().isInFunction())
+                throw std::runtime_error("NO_IN_FN");
+            AstTree::instance().endScope();
+            CompilerParserFlags::instance().exitFunction();
+        }
 
 
 variable_declaration
     : 
-    IDENTIFIER ARROW NUMERIC_TYPE INIT_TYPE variable_numeric_init SEMICOLON
+    IDENTIFIER ARROW type INIT_TYPE variable_numeric_init SEMICOLON
     {
         Identifier id($1);
         $$ = new Variable(id, $3, $5, AstTree::instance().inGlobal());
         AstTree::instance().addObject($$);
         delete [] $1;
     }
-    | IDENTIFIER ARROW NUMERIC_TYPE SEMICOLON
+    | IDENTIFIER ARROW type SEMICOLON
     {
         Identifier id($1);
         $$ = new Variable(id, $3, new NumericValue(), AstTree::instance().inGlobal());
@@ -90,12 +129,12 @@ variable_declaration
         }
 
 
-    NUMERIC_TYPE
+    type
     : byte_type
     {
        Identifier id = SimpleNumericType::generateId($1, true) ;
        TypeContainer::instance().insert<SimpleNumericType>(id, id, $1, true);
-      $$ = TypeContainer::instance().getType(id);
+       $$ = TypeContainer::instance().getType(id);
      
     }
     |
@@ -148,5 +187,38 @@ variable_declaration
   {
    $$ = $1;
   }
+
+
+  argument_list:
+  | argument {
+        yys_ids.push_back(*$1);
+        delete $1;
+    }
+  | argument_list COMMA argument { 
+  
+    yys_ids.push_back(*$3);
+    delete $3;
+  }
+  ;
+
+  argument:
+    IDENTIFIER
+    {
+        $$ = new Identifier($1);
+        delete [] $1;
+    }
+  ;
+
+  type_list:
+  | type 
+  {
+    yys_types.push_back($1);
+  }
+  | type_list COMMA type
+  {
+    yys_types.push_back($3);
+  }
+  ;
+
 %%
 

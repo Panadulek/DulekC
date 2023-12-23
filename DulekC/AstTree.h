@@ -5,6 +5,7 @@
 #include <llvm/IR/Module.h>
 #include <stack>
 #include <cassert>
+
 class AstTree
 {
 	std::unique_ptr<Scope> m_root;
@@ -49,7 +50,8 @@ public:
 	}
 	bool inGlobal()
 	{
-		return (m_stack.top() == m_root.get());
+		auto top = m_stack.top();
+		return (top == m_root.get());
 	}
 	~AstTree()
 	{

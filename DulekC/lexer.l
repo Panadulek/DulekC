@@ -6,14 +6,13 @@
 #include "Type.h"
 #pragma warning(disable : 4996)
 #define DISPLAY(X) std::cout << X << std::endl
-#define MY_DEBUG 1
 #include<string>
 %}
 
 
 
 %%
-
+"fnc"					{return FUNCTION_KEYWORD;}
 "i8"					{ yylval.bytetype = ObjectInByte::BYTE; return I8; }
 "u8"					{ yylval.bytetype = ObjectInByte::BYTE; return U8; }
 "i16"					{ yylval.bytetype = ObjectInByte::WORD; return I16; }

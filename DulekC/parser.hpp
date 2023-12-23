@@ -35,7 +35,7 @@
 /* "%code requires" blocks.  */
 
 /* Line 1676 of yacc.c  */
-#line 19 "parser.ypp"
+#line 23 "parser.ypp"
 
 
     #include "Type.h"
@@ -44,12 +44,13 @@
     #include <memory>
     #include <string>
     #include <cstdint>
+    #include <vector>
     // Inne wymagane nag³ówki
 
 
 
 /* Line 1676 of yacc.c  */
-#line 53 "parser.hpp"
+#line 54 "parser.hpp"
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -65,16 +66,17 @@
      LBUCKLE = 263,
      RBUCKLE = 264,
      INIT_TYPE = 265,
-     I8 = 266,
-     U8 = 267,
-     I16 = 268,
-     U16 = 269,
-     I32 = 270,
-     U32 = 271,
-     I64 = 272,
-     U64 = 273,
-     IDENTIFIER = 274,
-     NUMBER = 275
+     FUNCTION_KEYWORD = 266,
+     I8 = 267,
+     U8 = 268,
+     I16 = 269,
+     U16 = 270,
+     I32 = 271,
+     U32 = 272,
+     I64 = 273,
+     U64 = 274,
+     IDENTIFIER = 275,
+     NUMBER = 276
    };
 #endif
 
@@ -85,7 +87,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 29 "parser.ypp"
+#line 34 "parser.ypp"
 
     char* str;  
     uint64_t num; 
@@ -93,11 +95,12 @@ typedef union YYSTYPE
     Type* ptype;
     NumericValue* pnumvalue;
     ObjectInByte bytetype;
+    Identifier* pidentifier;
 
 
 
 /* Line 1676 of yacc.c  */
-#line 101 "parser.hpp"
+#line 104 "parser.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

@@ -31,6 +31,7 @@ public:
 	virtual bool isNumericValue() const { return false; }
 	virtual bool isSimpleNumericType() const { return false; }
 	virtual bool isVariable() const { return false; }
+	virtual bool isFunction() const { return false; }
 	std::string_view getName() { return m_id.getName(); }
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const = 0;
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const = 0;
