@@ -1,0 +1,153 @@
+%{
+#include <memory>
+#include <iostream>
+#include <string>
+#include "AstTree.h"
+#include "DuObject.h"
+#include "Type.h"
+#include "Variable.h"
+#include "Value.h"
+#include "TypeContainer.h"
+#include <cstdint>
+
+ extern char* yytext;
+ int __cdecl yylex(void);
+void yyerror(const char *s) { std::cerr  << s << "  :   " << '"' << yytext << '"' << std::endl; }
+%}
+%code requires {
+
+    #include "Type.h"
+    #include "Variable.h"
+    #include "DuObject.h"
+    #include <memory>
+    #include <string>
+    #include <cstdint>
+    // Inne wymagane nag³ówki
+}
+%union {
+    char* str;  
+    uint64_t num; 
+    Variable* pvariable;
+    Type* ptype;
+    NumericValue* pnumvalue;
+}
+
+%token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE
+%token <str> I8 U8 I16 U16 I32 U32 I64 U64
+%token <str> IDENTIFIER
+%token <num> NUMBER
+
+
+%start program
+
+%type<ptype> NUMERIC_TYPE
+%type<pvariable>variable_declaration
+%type<pnumvalue> variable_numeric_init
+%%
+
+program
+    : /* pusty */
+    | program statement
+    ;
+
+statement
+    : statement
+    | variable_declaration 
+    ;
+
+variable_declaration
+    : 
+    IDENTIFIER NUMERIC_TYPE INIT_TYPE variable_numeric_init SEMICOLON
+    {
+        Identifier id($1);
+        $$ = new Variable(id, $2, $4, AstTree::instance().inGlobal());
+        AstTree::instance().addObject($$);
+        delete [] $1;
+    }
+    | IDENTIFIER NUMERIC_TYPE SEMICOLON
+    {
+        Identifier id($1);
+        $$ = new Variable(id, $2, new NumericValue(), AstTree::instance().inGlobal());
+        AstTree::instance().addObject($$);
+        delete [] $1;
+    }
+    ;
+
+    variable_numeric_init 
+        :
+        NUMBER
+        {
+            $$ = new NumericValue($1)
+        }
+
+
+    NUMERIC_TYPE
+    : ARROW I8 
+    {
+        Identifier id($2) ;
+        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::BYTE, true);
+        $$ = TypeContainer::instance().getType(id);
+        delete [] $2;
+    }
+    |
+    ARROW U8 
+    {
+        Identifier id($2) ;
+        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::BYTE, false);
+         $$ = TypeContainer::instance().getType(id);
+        delete [] $2;
+    }
+    |
+    ARROW I16 
+    {
+        Identifier id($2) ;
+        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::WORD, false);
+         $$ = TypeContainer::instance().getType(id);
+        delete [] $2;
+    }
+    |
+    ARROW U16 
+    {
+        Identifier id($2) ;
+        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::WORD, false);
+         $$ = TypeContainer::instance().getType(id);
+        delete [] $2;
+    }
+    |
+    ARROW I32 
+    {
+        Identifier id($2) ;
+        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::DWORD, false);
+         $$ = TypeContainer::instance().getType(id);
+        delete [] $2;
+    }
+    |
+    ARROW U32 
+    {
+        Identifier id($2) ;
+        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::DWORD, false);
+         $$ = TypeContainer::instance().getType(id);
+        delete [] $2;
+    }
+    |
+    ARROW I64 
+    {
+        Identifier id($2) ;
+        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::QWORD, false);
+         $$ = TypeContainer::instance().getType(id);
+        delete [] $2;
+    }
+    |
+    ARROW U64 
+    {
+        Identifier id($2) ;
+        TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::QWORD, false);
+         $$ = TypeContainer::instance().getType(id);
+        delete [] $2;
+    }
+    ;
+
+  
+
+%%
+
