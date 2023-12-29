@@ -39,6 +39,7 @@ return NUMBER;
 [ \t\n]+                { /* Ignoruj bia³e znaki */ }
 "("						{return LBRACE;}
 ")"						{return RBRACE;}
+"="						{return ASSIGMENT;}
 .                       { /* Ignoruj inne znaki */ }
 
 

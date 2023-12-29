@@ -14,7 +14,9 @@
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
 #include <llvm/Support/TargetSelect.h>
-
+#include <algorithm>
+#include <ranges>
+#include "Statement.h"
 
 extern void not_implemented_feature();
 
@@ -30,20 +32,17 @@ class LLVMGen
 
 	void generateLocalVariableIrInfo(Variable* v, Scope* scope)
 	{
-		llvm::FunctionType* fnType = llvm::FunctionType::get(scope->getLLVMType(getContext()), false);
-		llvm::Function* fn = llvm::Function::Create(fnType, llvm::Function::ExternalLinkage, scope->getIdentifier().getName(), m_module.get());
-		std::string blockEntryName = scope->getIdentifier().getName().data();
-		blockEntryName += "_du_fun_entry";
-		llvm::BasicBlock* block = llvm::BasicBlock::Create(getContext(), blockEntryName.c_str(), fn);
-		auto savedIP = m_builder.saveIP();
-		m_builder.SetInsertPoint(block);
-		auto& list = scope->getList();
-		for (auto it : list)
+		if (scope->isFunction())
 		{
-			if (it)
-				llvm::AllocaInst* localVariable = m_builder.CreateAlloca(it->getLLVMType(getContext()), 0, it->getIdentifier().getName());
+			Function* fn = static_cast<Function*>(scope);
+			llvm::Function* llvmFn = fn->getLLVMFunction(getContext(), m_module.get());
+			llvm::BasicBlock* bb = fn->getBasicBlock(getContext(), llvmFn);
+			m_builder.SetInsertPoint(bb);
+			auto& list = fn->getList();
+			v->init(m_builder.CreateAlloca(v->getLLVMType(getContext()), nullptr , v->getIdentifier().getName()), m_builder);
+			
 		}
-		
+
 	}
 	void genIRForVariable(Variable* v, Scope* scope)
 	{
@@ -61,7 +60,10 @@ class LLVMGen
 			generateLocalVariableIrInfo(v, scope);
 		}
 	}
-
+	void genIRForStatement(Statement* s, Scope* scope)
+	{
+		s->processStatement(m_builder, getContext());
+	}
 	void genIRForElement(DuObject* obj, Scope* scope)
 	{
 		if (obj->isVariable())
@@ -69,13 +71,18 @@ class LLVMGen
 			Variable* v = static_cast<Variable*>(obj);
 			genIRForVariable(v, scope);
 		}
+		else if (obj->isStatement())
+		{
+			Statement* s = static_cast<Statement*>(obj);
+			genIRForStatement(s, scope);
+		}
 	}
 	void genIRForScope(Scope* scope)
 	{
-		for (auto it = scope->begin(); it != scope->end(); it++)
+		std::for_each(scope->begin(), scope->end(), [&](DuObject* it) ->void
 		{
-			genIRForElement(*it, scope);
-		}
+			genIRForElement(it, scope);
+		});
 	}
 public:
 	LLVMGen(const std::string& modulename) : m_builder(getContext())

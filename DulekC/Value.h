@@ -13,6 +13,7 @@ public:
 		assert(0);
 		return nullptr;
 	}
+	virtual ~Value() {}
 };
 
 class NumericValue : public Value

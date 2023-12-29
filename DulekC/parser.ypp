@@ -10,6 +10,7 @@
 #include "TypeContainer.h"
 #include <cstdint>
 #include <vector>
+#include "Statement.h"
 #include "FlagsSettings.h"
  extern char* yytext;
  int __cdecl yylex(void);
@@ -29,6 +30,7 @@ std::vector<Identifier> yys_ids;
     #include <string>
     #include <cstdint>
     #include <vector>
+    #include "Statement.h"
     // Inne wymagane nag³ówki
 }
 %union {
@@ -39,9 +41,10 @@ std::vector<Identifier> yys_ids;
     NumericValue* pnumvalue;
     ObjectInByte bytetype;
     Identifier* pidentifier;
+    Statement* pstatement;
 }
 
-%token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE FUNCTION_KEYWORD
+%token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE FUNCTION_KEYWORD ASSIGMENT
 %token <bytetype> I8 U8 I16 U16 I32 U32 I64 U64
 %token <str> IDENTIFIER
 %token <num> NUMBER
@@ -55,6 +58,7 @@ std::vector<Identifier> yys_ids;
 %type<pvariable>variable_declaration
 %type<pnumvalue> variable_numeric_init
 %type<pidentifier> argument
+%type<pstatement>  variable_assigment
 %%
 
 program
@@ -66,7 +70,9 @@ statement
     : statement
     | variable_declaration
     | function_declaration
-    | function_body
+    | function_body_begin
+    | function_body_end
+    | variable_assigment
     ;
 
 
@@ -93,16 +99,22 @@ function_declaration:
        
     }
 
-    function_body:
-        LBUCKLE statement RBUCKLE
+    function_body_begin:
+        LBUCKLE 
+        {
+            if(!CompilerParserFlags::instance().isInFunction())
+                throw std::runtime_error("NO_IN_FN");
+
+        }
+
+    function_body_end:
+        RBUCKLE 
         {
             if(!CompilerParserFlags::instance().isInFunction())
                 throw std::runtime_error("NO_IN_FN");
             AstTree::instance().endScope();
             CompilerParserFlags::instance().exitFunction();
         }
-
-
 variable_declaration
     : 
     IDENTIFIER ARROW type INIT_TYPE variable_numeric_init SEMICOLON
@@ -219,6 +231,15 @@ variable_declaration
     yys_types.push_back($3);
   }
   ;
+
+  variable_assigment:
+    argument ASSIGMENT argument SEMICOLON
+    {
+        if(!CompilerParserFlags::instance().isInFunction())
+            throw std::runtime_error("NO_IN_FN");
+        $$ = new AssigmentStatement(*$1, *$3);
+        AstTree::instance().addObject($$);
+    }
 
 %%
 
