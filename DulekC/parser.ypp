@@ -94,9 +94,26 @@ function_declaration:
         for(auto i = 0; i < yys_types.size(); i++ )
         {
             fn->addArgs(new Variable(yys_ids[i], yys_types[i], new NumericValue(), AstTree::instance().inGlobal()));
+        }   
+    }
+    |
+    FUNCTION_KEYWORD IDENTIFIER LBRACE argument_list RBRACE ARROW  LBRACE type_list RBRACE 
+    {
+        if(!CompilerParserFlags::instance().enterFunction())
+        {
+            throw std::runtime_error("FN_IN_FN");
         }
-
-       
+        if(yys_ids.size() != yys_types.size())
+        {
+            throw std::runtime_error("type_size_counter_not_eq");
+        }
+        Function* fn = new Function(Identifier($2), nullptr);
+        delete [] $2;
+        AstTree::instance().beginScope(fn);
+        for(auto i = 0; i < yys_types.size(); i++ )
+        {
+            fn->addArgs(new Variable(yys_ids[i], yys_types[i], new NumericValue(), AstTree::instance().inGlobal()));
+        }   
     }
 
     function_body_begin:
@@ -237,8 +254,26 @@ variable_declaration
     {
         if(!CompilerParserFlags::instance().isInFunction())
             throw std::runtime_error("NO_IN_FN");
-        $$ = new AssigmentStatement(*$1, *$3);
-        AstTree::instance().addObject($$);
+        auto& tree = AstTree::instance();
+		auto l = dynamic_cast<Variable*>(tree.findObject(*$1));
+		auto r = dynamic_cast<Variable*>(tree.findObject(*$3));
+        $$ = new AssigmentStatement(l, r);
+        tree.addObject($$);
+        delete $1;
+        delete $3;
+    }
+    |
+    argument ASSIGMENT variable_numeric_init  SEMICOLON
+    {
+        if(!CompilerParserFlags::instance().isInFunction())
+            throw std::runtime_error("NO_IN_FN");
+        auto& tree = AstTree::instance();
+        auto l = dynamic_cast<Variable*>(tree.findObject(*$1));
+        Variable* r = new Variable(Identifier(""), l->getType(), $3, tree.inGlobal());
+        tree.addObject(r);
+        $$ = new AssigmentStatement(l, r);
+        tree.addObject($$);
+        delete $1;
     }
 
 %%

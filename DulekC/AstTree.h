@@ -6,16 +6,17 @@
 #include <stack>
 #include <cassert>
 #include <iostream>
+#include <ranges>
 class AstTree
 {
-	std::unique_ptr<Scope> m_root;
+	Scope* m_root{ nullptr };
 	std::vector<Scope*> m_scopes;
 	std::stack<Scope*> m_stack;
 	AstTree()
 	{
-		m_root = std::make_unique<Scope>(Identifier("GLOBAL_SCOPE"));
-		m_stack.push(m_root.get());
-		m_scopes.push_back(m_root.get());
+		m_root = new Scope(Identifier("GLOBAL_SCOPE"));
+		m_stack.push(m_root);
+		m_scopes.push_back(m_root);
 	}
 public:
 	using Iterator = decltype(m_scopes)::iterator;
@@ -26,39 +27,39 @@ public:
 	}
 	void addObject(DuObject* obj)
 	{
+		static auto predicate = [&obj](const DuObject* _obj) { return _obj->getIdentifier() == obj->getIdentifier(); };
 		assert(!m_stack.empty());
-		auto it = std::find_if(m_stack.top()->begin(), m_stack.top()->end(), [&obj](const DuObject* _obj)
-			{
-				return _obj->getIdentifier() == obj->getIdentifier();
-			}
-		);
-		if (it != m_stack.top()->end())
+		Scope* top = m_stack.top();
+		auto filteredView = std::views::filter(*top, predicate);
+		if (std::ranges::distance(filteredView) > 0)
 		{
 			assert(0);
 		}
-		if (m_stack.top() != m_root.get())
+		if (top != m_root)
 		{
-			auto it = std::find_if(m_root->begin(), m_root->end(), [&obj](const DuObject* _obj)
-				{
-					return _obj->getIdentifier() == obj->getIdentifier();
-				}
-			);
-			if (it != m_root->end())
+			filteredView = std::views::filter(*m_root, predicate);
+			if (std::ranges::distance(filteredView) > 0)
 			{
 				assert(0);
 			}
 		}
-		m_stack.top()->addChild(obj);
+		top->addChild(obj);
 	}
 
 	void beginScope(Scope* scope)
 	{
+		static auto predicate = [&scope](const DuObject* _scope) { return _scope->getIdentifier() == scope->getIdentifier(); };
+		auto filteredView = std::views::filter(m_scopes, predicate);
+		if (std::ranges::distance(filteredView) > 0)
+		{
+			assert(0);
+		}
 		m_scopes.push_back(scope);
 		m_stack.push(m_scopes.back());
 	}
 	void endScope()
 	{
-		assert(m_stack.top() != m_root.get());
+		assert(m_stack.top() != m_root);
 		m_stack.pop();
 	}
 	Iterator begin()
@@ -113,7 +114,7 @@ public:
 			std::cout << "VARIABLE DOESNT EXIST" << std::endl;
 		return found;
 	}
-	DuObject* findObject(Identifier id, bool global)
+	DuObject* _findObject(Identifier id, bool global)
 	{
 		DuObject* ret = nullptr;
 		if (global)
@@ -138,20 +139,26 @@ public:
 		}
 		return ret;
 	}
+
+	DuObject* findObject(Identifier id)
+	{
+		DuObject* ret = _findObject(id, false);
+		if (!ret)
+			ret = _findObject(id, true);
+		return ret;
+	}
+
 	bool inGlobal()
 	{
 		auto top = m_stack.top();
-		return (top == m_root.get());
+		return (top == m_root);
 	}
 	~AstTree()
 	{
-		for (auto& it : m_scopes)
-		{
-			if (m_root.get() == it)
-				continue;
-		//	delete it;
-		//	it = nullptr;
-		}
+			for (auto it : m_scopes)
+			{
+				delete it;
+			}
 	}
 };
 

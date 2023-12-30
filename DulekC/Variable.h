@@ -42,21 +42,36 @@ public:
 
 	void init(llvm::AllocaInst* inst, llvm::IRBuilder<>& builder)
 	{
+		auto align = getAlligment();
+		inst->setAlignment(align);
+		auto store = builder.CreateStore(m_llvmValue, inst, false);
+		store->setAlignment(align);
 		m_llvmAllocaInst = inst;
-		builder.CreateStore(m_llvmValue, m_llvmAllocaInst, false);
 	}
 
 	llvm::AllocaInst* getAlloca()
 	{
 		return m_llvmAllocaInst;
 	}
-
+	const llvm::Align getAlligment() const
+	{
+		return llvm::Align(m_type->getSizeInBytes());
+	}
 	bool isGlobalVariable()
 	{
 		return m_isGlobal;
 	}
+
+	Type* getType()
+	{
+		return m_type;
+	}
+	Value* getValue()
+	{
+		return m_value;
+	}
 	virtual ~Variable() 
 	{
-	//	delete m_value;
+		delete m_value;
 	}
 };

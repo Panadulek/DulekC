@@ -17,30 +17,28 @@
 #include <algorithm>
 #include <ranges>
 #include "Statement.h"
-
+#define NO_CLEAR_MEMORY
 extern void not_implemented_feature();
 
 class LLVMGen
 {
-	static llvm::LLVMContext& getContext()
-	{
-		static llvm::LLVMContext s_context;
-		return s_context;
-	}
-	std::unique_ptr<llvm::Module> m_module;
-	llvm::IRBuilder<> m_builder;
 
+	llvm::LLVMContext* m_context;
+	llvm::Module* m_module;
+	llvm::IRBuilder<> m_builder;
+	llvm::LLVMContext& getContext()
+	{
+		return *m_context;
+	}
 	void generateLocalVariableIrInfo(Variable* v, Scope* scope)
 	{
 		if (scope->isFunction())
 		{
 			Function* fn = static_cast<Function*>(scope);
-			llvm::Function* llvmFn = fn->getLLVMFunction(getContext(), m_module.get());
+			llvm::Function* llvmFn = fn->getLLVMFunction(getContext(), m_module);
 			llvm::BasicBlock* bb = fn->getBasicBlock(getContext(), llvmFn);
 			m_builder.SetInsertPoint(bb);
-			auto& list = fn->getList();
 			v->init(m_builder.CreateAlloca(v->getLLVMType(getContext()), nullptr , v->getIdentifier().getName()), m_builder);
-			
 		}
 
 	}
@@ -87,7 +85,8 @@ class LLVMGen
 public:
 	LLVMGen(const std::string& modulename) : m_builder(getContext())
 	{
-		m_module = std::make_unique<llvm::Module>(modulename, getContext());
+		m_context = new llvm::LLVMContext();
+		m_module = new llvm::Module(modulename, getContext());
 		llvm::InitializeNativeTarget();
 		llvm::InitializeNativeTargetAsmPrinter();
 	}
@@ -108,7 +107,10 @@ public:
 
 	~LLVMGen()
 	{
-		
+#ifndef NO_CLEAR_MEMORY
+		delete m_context;
+		delete m_module;
+#endif
 	}
 
 };

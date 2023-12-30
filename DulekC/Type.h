@@ -8,7 +8,7 @@
 #include <llvm-c/Core.h>
 #include <memory>
 #include "DuObject.h"
-
+#include <llvm/IR/IRBuilder.h>
 enum class ObjectInByte : unsigned char
 {
 	BYTE,
@@ -32,9 +32,14 @@ public:
 		assert(0);
 		return nullptr;
 	}
+	virtual llvm::Value* convertValueBasedOnType(llvm::IRBuilder<>& builder, llvm::Value* value, llvm::Type* type, llvm::LLVMContext& context)
+	{
+		assert(0);
+		return nullptr;
+	}
+	virtual size_t getSizeInBytes() const = 0;
 	virtual ~Type() {}
 };
-
 
 class SimpleNumericType final : public Type
 {
@@ -72,5 +77,42 @@ public:
 	SimpleNumericType(const Identifier& id, const ObjectInByte oib, const bool isSigned) : Type(id), m_size(oib), m_isSigned(isSigned) {}
 	virtual llvm::Type* getLLVMType (llvm::LLVMContext&) const override;
 	const bool isSigned() const { return m_isSigned; }
-	~SimpleNumericType() {}
+	virtual size_t getSizeInBytes() const override
+	{
+		switch (m_size)
+		{
+		case ObjectInByte::BYTE:
+			return sizeof(uint8_t);
+		case ObjectInByte::WORD:
+			return sizeof(uint16_t);
+		case ObjectInByte::DWORD:
+			return sizeof(uint32_t);
+		case ObjectInByte::QWORD:
+			return sizeof(uint64_t);
+		}
+	}
+	virtual llvm::Value* convertValueBasedOnType(llvm::IRBuilder<>& builder, llvm::Value* value, llvm::Type* type, llvm::LLVMContext& context) override
+	{
+		auto myType = getLLVMType(context);
+
+		if (type->isIntegerTy() && myType->isIntegerTy()) {
+			unsigned typeBits = type->getIntegerBitWidth();
+			unsigned myTypeBits = myType->getIntegerBitWidth();
+			if (typeBits > myTypeBits) 
+			{
+				return builder.CreateTrunc(value, myType, "truncVal");
+			}
+			else if (typeBits < myTypeBits)
+			{
+				return builder.CreateZExtOrBitCast(value, myType, "extVal");
+			}
+			else if (typeBits == myTypeBits) 
+			{
+				return builder.CreateBitCast(value, myType, "bitcastVal");
+			}
+		}
+		return value;
+
+	}
+	virtual ~SimpleNumericType() {}
 };

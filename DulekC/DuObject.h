@@ -5,7 +5,6 @@
 #include <llvm/IR/Module.h>
 
 
-
 class Identifier
 {
 	const std::string m_id;
@@ -27,6 +26,7 @@ class DuObject
 	Identifier m_id;
 protected:
 	DuObject(const Identifier& identfier) : m_id(identfier) {}
+
 public:
 	virtual bool isNumericValue() const { return false; }
 	virtual bool isSimpleNumericType() const { return false; }

@@ -29,6 +29,8 @@ public:
 	{
 		return llvm::ConstantInt::get(type, m_value, m_isSigned);
 	}
+	uint64_t getValue() const { return m_value; }
 	void setSigned(bool flag) { m_isSigned = flag; }
 	virtual bool isNumericValue() const { return true; }
+	virtual ~NumericValue() {}
 };
