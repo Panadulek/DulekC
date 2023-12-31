@@ -10,6 +10,7 @@ protected:
 public:
 	Statement(Identifier id) : DuObject(id) {}
 	virtual bool isStatement() const override { return true; }
+	virtual bool isAssigmentStatement() const { return false;  }
 	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const { assert(0); }
 	virtual ~Statement() {}
 };
@@ -61,12 +62,15 @@ public:
 			store->setAlignment(m_left->getAlligment());
 		}
 	}
+
+	virtual bool isAssigmentStatement() const override { return true; }
+
 	virtual ~AssigmentStatement() 
 	{
 		if (m_right->getIdentifier().getName().empty())
 			delete m_right;
-	
 	}
+
 };
 
 class ReturnStatement : public Statement

@@ -13,6 +13,7 @@ class Variable : public DuObject
 	DECLARELLVM(Value);
 	DECLARELLVM(AllocaInst);
 	bool m_isGlobal;
+	bool m_isTmp = false;
 	llvm::Value* _getLLVMValue(llvm::Type* type) const
 	{
 		if (m_value->isNumericValue() && m_type->isSimpleNumericType())
@@ -69,6 +70,14 @@ public:
 	Value* getValue()
 	{
 		return m_value;
+	}
+	void setTmp()
+	{
+		m_isTmp = true;
+	}
+	const bool isTmp() const
+	{
+		return m_isTmp;
 	}
 	virtual ~Variable() 
 	{

@@ -17,25 +17,26 @@
 #include <algorithm>
 #include <ranges>
 #include "Statement.h"
+#include <llvm/ExecutionEngine/GenericValue.h>
 #define NO_CLEAR_MEMORY
 extern void not_implemented_feature();
 
 class LLVMGen
 {
 
-	llvm::LLVMContext* m_context;
-	llvm::Module* m_module;
+	std::unique_ptr<llvm::Module> m_module;
 	llvm::IRBuilder<> m_builder;
 	llvm::LLVMContext& getContext()
 	{
-		return *m_context;
+		static llvm::LLVMContext s_context;
+		return s_context;
 	}
 	void generateLocalVariableIrInfo(Variable* v, Scope* scope)
 	{
 		if (scope->isFunction())
 		{
 			Function* fn = static_cast<Function*>(scope);
-			llvm::Function* llvmFn = fn->getLLVMFunction(getContext(), m_module);
+			llvm::Function* llvmFn = fn->getLLVMFunction(getContext(), m_module.get());
 			llvm::BasicBlock* bb = fn->getBasicBlock(getContext(), llvmFn);
 			m_builder.SetInsertPoint(bb);
 			v->init(m_builder.CreateAlloca(v->getLLVMType(getContext()), nullptr , v->getIdentifier().getName()), m_builder);
@@ -85,8 +86,7 @@ class LLVMGen
 public:
 	LLVMGen(const std::string& modulename) : m_builder(getContext())
 	{
-		m_context = new llvm::LLVMContext();
-		m_module = new llvm::Module(modulename, getContext());
+		m_module = std::make_unique<llvm::Module>(modulename, getContext());
 		llvm::InitializeNativeTarget();
 		llvm::InitializeNativeTargetAsmPrinter();
 	}
@@ -99,18 +99,36 @@ public:
 			genIRForScope(*it);
 		}
 	}
+	void executeCodeToByteCode()
+	{
+		std::string ErrStr;
 
-	void execute()
+		llvm::Function* F = m_module->getFunction("main");
+		if (!F)
+		{
+			llvm::errs() << "cannot find fun.\n";
+		}
+
+		std::unique_ptr<llvm::ExecutionEngine> EE(
+			llvm::EngineBuilder(std::move(m_module))
+			.setErrorStr(&ErrStr)
+			.create());
+
+		if (!EE)
+		{
+			llvm::errs() << "error ExecutionEngine: " << ErrStr << "\n";
+		}
+
+		std::vector<llvm::GenericValue> Args;
+		llvm::GenericValue gv = EE->runFunction(F, Args);
+	}
+	void print()
 	{
 		m_module->print(llvm::outs(), nullptr);
 	}
 
 	~LLVMGen()
 	{
-#ifndef NO_CLEAR_MEMORY
-		delete m_context;
-		delete m_module;
-#endif
 	}
 
 };

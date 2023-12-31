@@ -27,6 +27,6 @@ int main()
 	yyparse();
 	LLVMGen generator("test");
 	generator.genIRForFile(AstTree::instance().begin(), AstTree::instance().end());
-	generator.execute();
+	generator.print();
 	return 0;
 }

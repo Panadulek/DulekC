@@ -9,7 +9,7 @@
 #include <ranges>
 class AstTree
 {
-	Scope* m_root{ nullptr };
+	Scope* m_root;
 	std::vector<Scope*> m_scopes;
 	std::stack<Scope*> m_stack;
 	AstTree()
@@ -27,7 +27,12 @@ public:
 	}
 	void addObject(DuObject* obj)
 	{
-		static auto predicate = [&obj](const DuObject* _obj) { return _obj->getIdentifier() == obj->getIdentifier(); };
+		static auto predicate = [&obj](const DuObject* _obj)
+			{ 
+				
+				return (!_obj->isStatement() &&  _obj->getIdentifier() == obj->getIdentifier());
+			
+			};
 		assert(!m_stack.empty());
 		Scope* top = m_stack.top();
 		auto filteredView = std::views::filter(*top, predicate);
@@ -43,6 +48,7 @@ public:
 				assert(0);
 			}
 		}
+		obj->setParent(m_stack.top());
 		top->addChild(obj);
 	}
 
@@ -73,46 +79,9 @@ public:
 
 	bool checkVisibility(DuObject* obj1, DuObject* obj2)
 	{
-		auto begin = m_stack.top()->begin();
-		auto end = m_stack.top()->end();
-		for (auto it = begin; it != end; it++)
-		{
-			if (*it == obj1)
-			{
-				begin = it;
-				break;
-			}
-		}
-		bool found = false;
-		for (auto it = begin; it != end; it++)
-		{
-			if (*it == obj2)
-			{
-				found = true;
-				break;
-			}
-		}
-		for (auto it = m_root->begin(); it != m_root->end(); it++)
-		{
-			if (found)
-			{
-				if ((*it)->getIdentifier() == obj2->getIdentifier())
-				{
-					std::cout << "VARIABLE REPEAT" << std::endl;
-					return false;
-				}
-			}
-			else
-			{
-				if (*it == obj2)
-				{
-					found = true;
-				}
-			}
-		}
-		if (!found)
-			std::cout << "VARIABLE DOESNT EXIST" << std::endl;
-		return found;
+		Scope* s1 = static_cast<Scope*>(obj1->getParent());
+		Scope* s2 = static_cast<Scope*>(obj2->getParent());
+		return ((s1 == s2) || s2 == m_root);
 	}
 	DuObject* _findObject(Identifier id, bool global)
 	{

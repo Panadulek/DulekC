@@ -25,7 +25,8 @@ class DuObject
 {
 	Identifier m_id;
 protected:
-	DuObject(const Identifier& identfier) : m_id(identfier) {}
+	DuObject* m_parent;
+	DuObject(const Identifier& identfier) : m_id(identfier), m_parent(nullptr) {}
 
 public:
 	virtual bool isNumericValue() const { return false; }
@@ -33,10 +34,17 @@ public:
 	virtual bool isVariable() const { return false; }
 	virtual bool isFunction() const { return false; }
 	virtual bool isStatement() const { return false;  }
+	virtual bool isScope() const { return true; }
 	std::string_view getName() { return m_id.getName(); }
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const = 0;
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const = 0;
 	const Identifier& getIdentifier() const { return m_id; }
+	void setParent(DuObject* p)
+	{
+		assert(p->isScope());
+		m_parent = p;
+	}
+	DuObject* getParent() { return m_parent; }
 	virtual ~DuObject() {}
 
 
