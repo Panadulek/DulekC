@@ -49,7 +49,7 @@ public:
 		return m_childs.end();
 	}
 
-	
+	virtual bool isScope() const override { return true; }
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const override
 	{
 		assert(0);
@@ -129,6 +129,10 @@ public:
 		if(!m_llvmFunction)
 			m_llvmFunction = llvm::Function::Create(getFunctionType(context), llvm::Function::ExternalLinkage, getIdentifier().getName(), m);
 		return m_llvmFunction;
+	}
+	Type* getType() const
+	{
+		return m_returnType;
 	}
 	void generateReturn(llvm::LLVMContext& context, llvm::Module* m)
 	{

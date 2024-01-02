@@ -44,7 +44,8 @@ std::vector<Identifier> yys_ids;
     Statement* pstatement;
 }
 
-%token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE FUNCTION_KEYWORD ASSIGMENT
+%token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE ASSIGMENT 
+%token FUNCTION_KEYWORD RETURN_KEYWORD 
 %token <bytetype> I8 U8 I16 U16 I32 U32 I64 U64
 %token <str> IDENTIFIER
 %token <num> NUMBER
@@ -270,11 +271,30 @@ variable_declaration
         auto& tree = AstTree::instance();
         auto l = dynamic_cast<Variable*>(tree.findObject(*$1));
         Variable* r = new Variable(Identifier(""), l->getType(), $3, tree.inGlobal());
-        tree.addObject(r);
         $$ = new AssigmentStatement(l, r);
         tree.addObject($$);
         delete $1;
     }
+    |
+    RETURN_KEYWORD argument SEMICOLON
+    {
+        if(!CompilerParserFlags::instance().isInFunction())
+            throw std::runtime_error("NO_IN_FN");
+        auto& tree = AstTree::instance();
+        auto l = tree.findObject(*$2);
+        auto s = tree.getCurrentScope();
+        if(s->isFunction())
+        {
+            $$ = new ReturnStatement(l, static_cast<Function*>(s)->getType());
+            tree.addObject($$);
+        }
+        else
+        {
+             throw std::runtime_error("NOT FUNCTION");
+        }
+        delete $2;
+    }
+    ;
 
 %%
 

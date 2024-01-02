@@ -34,7 +34,8 @@ public:
 	virtual bool isVariable() const { return false; }
 	virtual bool isFunction() const { return false; }
 	virtual bool isStatement() const { return false;  }
-	virtual bool isScope() const { return true; }
+	virtual bool isType() const  { return false; }
+	virtual bool isScope() const { return false; }
 	std::string_view getName() { return m_id.getName(); }
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const = 0;
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const = 0;

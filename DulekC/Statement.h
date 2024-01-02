@@ -3,6 +3,10 @@
 #include "Variable.h"
 #include <llvm/IR/IRBuilder.h>
 #include "AstTree.h"
+#include <llvm/IR/Instructions.h>
+
+#define DELETE_TMP_VARIABLE(X)	if(X->getIdentifier().getName().empty() && X->isTmp()) delete X;
+
 class Statement : public DuObject
 {
 protected:
@@ -51,7 +55,7 @@ public:
 			else
 				assert(0);
 		}
-		else if (AstTree::instance().checkVisibility(m_left, m_right) || true)
+		else if ( AstTree::instance().checkVisibility(m_left, m_right) )
 		{
 			llvm::Value* val = builder.CreateLoad(m_right->getLLVMType(context), m_right->getAlloca(), m_right->getIdentifier().getName().data());
 			if (m_right->getLLVMType(context) != m_left->getLLVMType(context)) {
@@ -67,13 +71,58 @@ public:
 
 	virtual ~AssigmentStatement() 
 	{
-		if (m_right->getIdentifier().getName().empty())
-			delete m_right;
+		DELETE_TMP_VARIABLE(m_right)
 	}
 
 };
 
 class ReturnStatement : public Statement
 {
+	Variable* m_var;
+	Type* m_retType;
+	mutable llvm::ReturnInst* m_retInstance;
+public:
+	ReturnStatement(DuObject* var, DuObject* retType) : Statement(Identifier("return_stmt")), m_var(nullptr), m_retType(nullptr)
+	{
+		if (var && var->isVariable())
+			m_var = static_cast<Variable*>(var);
+		if (retType && retType->isType())
+			m_retType = static_cast<Type*>(retType);
+		m_retInstance = nullptr;
+	}
+	virtual llvm::Type* getLLVMType(llvm::LLVMContext& context) const override
+	{
+		assert(0);
+		return nullptr;
+	}
+	virtual llvm::Value* getLLVMValue(llvm::Type* type) const override
+	{
+		assert(0);
+		return nullptr;
+	}
+	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const  override 
+	{
+		if (m_retInstance)
+			return;
+		llvm::ReturnInst* retInstance = nullptr;
+		if (m_retType)
+		{
+			llvm::Value* llvmRetVal = m_retType->convertValueBasedOnType(builder, m_var->getLLVMValue(nullptr), m_var->getLLVMType(context), context);
+			m_retInstance = builder.CreateRet(llvmRetVal);
+		}
+		else
+		{
+			m_retInstance = builder.CreateRetVoid();
+		}
+	}
 
+	llvm::ReturnInst* _return()
+	{
+		return m_retInstance;
+	}
+
+	virtual ~ReturnStatement()
+	{
+		DELETE_TMP_VARIABLE(m_var)
+	}
 };

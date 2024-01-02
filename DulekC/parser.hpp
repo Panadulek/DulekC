@@ -67,18 +67,19 @@
      LBUCKLE = 263,
      RBUCKLE = 264,
      INIT_TYPE = 265,
-     FUNCTION_KEYWORD = 266,
-     ASSIGMENT = 267,
-     I8 = 268,
-     U8 = 269,
-     I16 = 270,
-     U16 = 271,
-     I32 = 272,
-     U32 = 273,
-     I64 = 274,
-     U64 = 275,
-     IDENTIFIER = 276,
-     NUMBER = 277
+     ASSIGMENT = 266,
+     FUNCTION_KEYWORD = 267,
+     RETURN_KEYWORD = 268,
+     I8 = 269,
+     U8 = 270,
+     I16 = 271,
+     U16 = 272,
+     I32 = 273,
+     U32 = 274,
+     I64 = 275,
+     U64 = 276,
+     IDENTIFIER = 277,
+     NUMBER = 278
    };
 #endif
 
@@ -103,7 +104,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 107 "parser.hpp"
+#line 108 "parser.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

@@ -116,7 +116,10 @@ public:
 			ret = _findObject(id, true);
 		return ret;
 	}
-
+	Scope* getCurrentScope()
+	{
+		return m_stack.top();
+	}
 	bool inGlobal()
 	{
 		auto top = m_stack.top();

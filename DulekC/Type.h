@@ -23,6 +23,7 @@ class Type : public DuObject
 public:
 	Type(const Identifier& id) : DuObject(id) {};
 	virtual bool isSimpleNumericType() const { return false; }
+	virtual bool isType() const override { return true; }
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const override
 	{
 		return nullptr;

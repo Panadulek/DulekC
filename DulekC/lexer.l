@@ -5,7 +5,14 @@
 #include <iostream>
 #include "Type.h"
 #pragma warning(disable : 4996)
+
+#define YYDEBUGYY 0
+#if YYDEBUGYY == 1
 #define DISPLAY(X) std::cout << X << std::endl
+#else
+#define DISPLAY(X) ;
+#endif
+
 #include<string>
 %}
 
@@ -13,6 +20,7 @@
 
 %%
 "fnc"					{return FUNCTION_KEYWORD;}
+"return"				{ return RETURN_KEYWORD;}
 "i8"					{ yylval.bytetype = ObjectInByte::BYTE; return I8; }
 "u8"					{ yylval.bytetype = ObjectInByte::BYTE; return U8; }
 "i16"					{ yylval.bytetype = ObjectInByte::WORD; return I16; }
