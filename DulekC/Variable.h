@@ -62,7 +62,14 @@ public:
 	{
 		return m_isGlobal;
 	}
-
+	void copyValue(Variable* var)
+	{
+		if (var->getType() == m_type)
+		{
+			m_value = var->getValue()->copy();
+			m_llvmValue = var->getLLVMValue(nullptr);
+		}
+	}
 	Type* getType()
 	{
 		return m_type;

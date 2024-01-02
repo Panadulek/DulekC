@@ -97,8 +97,8 @@ public:
 		auto myType = getLLVMType(context);
 
 		if (type->isIntegerTy() && myType->isIntegerTy()) {
-			unsigned typeBits = type->getIntegerBitWidth();
-			unsigned myTypeBits = myType->getIntegerBitWidth();
+			const unsigned typeBits = type->getIntegerBitWidth();
+			const unsigned myTypeBits = myType->getIntegerBitWidth();
 			if (typeBits > myTypeBits) 
 			{
 				return builder.CreateTrunc(value, myType, "truncVal");

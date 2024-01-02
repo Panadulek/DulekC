@@ -13,6 +13,7 @@ public:
 		assert(0);
 		return nullptr;
 	}
+	virtual Value* copy() = 0;
 	virtual ~Value() {}
 };
 
@@ -32,5 +33,9 @@ public:
 	uint64_t getValue() const { return m_value; }
 	void setSigned(bool flag) { m_isSigned = flag; }
 	virtual bool isNumericValue() const { return true; }
+	virtual Value* copy()
+	{
+		return new NumericValue(*this);
+	}
 	virtual ~NumericValue() {}
 };

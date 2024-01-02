@@ -51,6 +51,7 @@ public:
 			{
 				auto store = builder.CreateStore(llvm::ConstantInt::get(m_left->getLLVMType(context), static_cast<NumericValue*>(value)->getValue()), m_left->getAlloca());
 				store->setAlignment(m_left->getAlligment());
+				m_left->copyValue(m_right);
 			}
 			else
 				assert(0);
@@ -64,6 +65,7 @@ public:
 			
 			auto store = builder.CreateStore(val, m_left->getAlloca());
 			store->setAlignment(m_left->getAlligment());
+			m_left->copyValue(m_right);
 		}
 	}
 
