@@ -31,8 +31,7 @@ int main()
 	yyparse();
 	LLVMGen generator("test");
 	generator.genIRForFile(AstTree::instance().begin(), AstTree::instance().end());
-	generator.print();
-	printf("\n\n\n\n");
+
 	generator.executeCodeToByteCode();
 
 	return 0;

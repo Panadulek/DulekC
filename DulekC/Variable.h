@@ -62,12 +62,12 @@ public:
 	{
 		return m_isGlobal;
 	}
-	void copyValue(Variable* var)
+	void update(Variable* var, llvm::Value* newLLVMValue = nullptr)
 	{
-		if (var->getType() == m_type)
+		if (typeid(var->getType()) == typeid(m_type))
 		{
 			m_value = var->getValue()->copy();
-			m_llvmValue = var->getLLVMValue(nullptr);
+			m_llvmValue = newLLVMValue;
 		}
 	}
 	Type* getType()
