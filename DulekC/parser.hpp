@@ -35,7 +35,7 @@
 /* "%code requires" blocks.  */
 
 /* Line 1676 of yacc.c  */
-#line 24 "parser.ypp"
+#line 25 "parser.ypp"
 
 
     #include "Type.h"
@@ -70,16 +70,17 @@
      ASSIGMENT = 266,
      FUNCTION_KEYWORD = 267,
      RETURN_KEYWORD = 268,
-     I8 = 269,
-     U8 = 270,
-     I16 = 271,
-     U16 = 272,
-     I32 = 273,
-     U32 = 274,
-     I64 = 275,
-     U64 = 276,
-     IDENTIFIER = 277,
-     NUMBER = 278
+     SYS_DISPLAY = 269,
+     I8 = 270,
+     U8 = 271,
+     I16 = 272,
+     U16 = 273,
+     I32 = 274,
+     U32 = 275,
+     I64 = 276,
+     U64 = 277,
+     IDENTIFIER = 278,
+     NUMBER = 279
    };
 #endif
 
@@ -90,7 +91,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 36 "parser.ypp"
+#line 37 "parser.ypp"
 
     char* str;  
     uint64_t num; 
@@ -104,7 +105,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 108 "parser.hpp"
+#line 109 "parser.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

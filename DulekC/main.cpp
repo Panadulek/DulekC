@@ -21,6 +21,10 @@ void not_implemented_feature()
 	throw std::runtime_error("NOT_IMPLEMENTED");
 #endif
 }
+
+
+
+
 int main() 
 {
 	auto code = fopen_s(&yyin, "Main.du", "r");
@@ -28,5 +32,8 @@ int main()
 	LLVMGen generator("test");
 	generator.genIRForFile(AstTree::instance().begin(), AstTree::instance().end());
 	generator.print();
+	printf("\n\n\n\n");
+	generator.executeCodeToByteCode();
+
 	return 0;
 }

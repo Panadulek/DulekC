@@ -7,16 +7,24 @@
 #include <cassert>
 #include <iostream>
 #include <ranges>
+#include "SystemFunctions.h"
+
+
 class AstTree
 {
 	Scope* m_root;
 	std::vector<Scope*> m_scopes;
 	std::stack<Scope*> m_stack;
+	void createSysFunction()
+	{
+		m_scopes.emplace_back(new Function(SystemFunctions::getSysFunctionName<SystemFunctions::SysFunctionID::DISPLAY>(), nullptr));
+	}
 	AstTree()
 	{
 		m_root = new Scope(Identifier("GLOBAL_SCOPE"));
 		m_stack.push(m_root);
 		m_scopes.push_back(m_root);
+		createSysFunction();
 	}
 public:
 	using Iterator = decltype(m_scopes)::iterator;
@@ -119,6 +127,42 @@ public:
 	Scope* getCurrentScope()
 	{
 		return m_stack.top();
+	}
+	bool setCurrentScope(Scope* sc)
+	{
+		if (sc == m_root)
+			return false;
+		auto it = std::ranges::find_if(m_scopes, [&](Scope* _sc)->bool
+			{
+				return _sc == sc;
+			});
+
+		if (it != m_scopes.end())
+		{
+			m_stack.push(*it);
+			return true;
+		}
+		return false;
+	}
+	Function* findFunction(Identifier id)
+	{
+		auto filtredView = m_scopes | std::views::filter([&](const Scope* s)
+			{
+				return s->getIdentifier() == id;
+			});
+		auto size = std::ranges::distance(filtredView);
+		if (size == 0)
+		{
+			return nullptr;
+		}
+		else if (size == 1)
+		{
+			auto begin = filtredView.begin();
+			Function* fn = (*begin)->isFunction() ? static_cast<Function*>(*begin) : nullptr;
+			return fn;
+		}
+		else
+			return 0;
 	}
 	bool inGlobal()
 	{

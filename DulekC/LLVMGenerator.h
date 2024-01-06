@@ -18,14 +18,20 @@
 #include <ranges>
 #include "Statement.h"
 #include <llvm/ExecutionEngine/GenericValue.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/FileSystem.h>
+#include "SystemFunctions.h"
 #define NO_CLEAR_MEMORY
 extern void not_implemented_feature();
 
-class LLVMGen
+
+
+class LLVMGen final
 {
 
 	std::unique_ptr<llvm::Module> m_module;
 	llvm::IRBuilder<> m_builder;
+	SystemFunctions* m_systemFunctions;
 	llvm::LLVMContext& getContext()
 	{
 		static llvm::LLVMContext s_context;
@@ -61,7 +67,18 @@ class LLVMGen
 	}
 	void genIRForStatement(Statement* s, Scope* scope)
 	{
-		s->processStatement(m_builder, getContext());
+		if (s->isCallFunctionStatement())
+		{
+			CallFunction* cfs = static_cast<CallFunction*>(s);
+			if (cfs->isCallFunctionStatement())
+				cfs->processSystemFunc(m_systemFunctions->findFunction(cfs->getFunctionName()), m_builder.CreateGlobalStringPtr("%d\n"), m_builder);
+			else
+			{
+				assert(0);
+			}
+		}
+		else
+			s->processStatement(m_builder, getContext());
 	}
 	void genIRForElement(DuObject* obj, Scope* scope)
 	{
@@ -78,17 +95,37 @@ class LLVMGen
 	}
 	void genIRForScope(Scope* scope)
 	{
+		const bool isSettedScope = AstTree::instance().setCurrentScope(scope);
 		std::for_each(scope->begin(), scope->end(), [&](DuObject* it) ->void
 		{
 			genIRForElement(it, scope);
 		});
+		if(isSettedScope)
+			AstTree::instance().endScope();
+	}
+	void buildSystemFunctions()
+	{
+		m_systemFunctions = new SystemFunctions (m_module.get(), &m_builder, &getContext());
+	}
+	void genfile()
+	{
+		std::error_code EC;
+		llvm::raw_fd_ostream OS("output.ll", EC, llvm::sys::fs::OF_None);
+
+		if (EC) {
+			std::cerr << "B³¹d podczas otwierania pliku 'output.ll': " << EC.message() << std::endl;
+			return;
+		}
+
+		m_module->print(OS, nullptr);
 	}
 public:
-	LLVMGen(const std::string& modulename) : m_builder(getContext())
+	LLVMGen(const std::string& modulename) : m_builder(getContext()), m_systemFunctions(nullptr)
 	{
 		m_module = std::make_unique<llvm::Module>(modulename, getContext());
 		llvm::InitializeNativeTarget();
 		llvm::InitializeNativeTargetAsmPrinter();
+		buildSystemFunctions();
 	}
 
 
@@ -101,6 +138,7 @@ public:
 	}
 	void executeCodeToByteCode()
 	{
+		genfile();
 		std::string ErrStr;
 
 		llvm::Function* F = m_module->getFunction("main");
@@ -118,7 +156,7 @@ public:
 		{
 			llvm::errs() << "error ExecutionEngine: " << ErrStr << "\n";
 		}
-
+		
 		std::vector<llvm::GenericValue> Args;
 		llvm::GenericValue gv = EE->runFunction(F, Args);
 	}
@@ -129,6 +167,7 @@ public:
 
 	~LLVMGen()
 	{
+		delete m_systemFunctions;
 	}
 
 };

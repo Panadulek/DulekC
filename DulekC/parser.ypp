@@ -12,6 +12,7 @@
 #include <vector>
 #include "Statement.h"
 #include "FlagsSettings.h"
+#include "SystemFunctions.h"
  extern char* yytext;
  int __cdecl yylex(void);
 void yyerror(const char *s) { std::cerr  << s << "  :   " << '"' << yytext << '"' << std::endl; }
@@ -46,6 +47,7 @@ std::vector<Identifier> yys_ids;
 
 %token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE ASSIGMENT 
 %token FUNCTION_KEYWORD RETURN_KEYWORD 
+%token SYS_DISPLAY
 %token <bytetype> I8 U8 I16 U16 I32 U32 I64 U64
 %token <str> IDENTIFIER
 %token <num> NUMBER
@@ -293,6 +295,17 @@ variable_declaration
              throw std::runtime_error("NOT FUNCTION");
         }
         delete $2;
+    }
+    |
+    SYS_DISPLAY LBRACE argument_list RBRACE SEMICOLON
+    {
+        if(!CompilerParserFlags::instance().isInFunction())
+            throw std::runtime_error("NO_IN_FN");
+        auto& tree = AstTree::instance();
+        Identifier id(SystemFunctions::getSysFunctionName<SystemFunctions::SysFunctionID::DISPLAY>());
+        Function* f = tree.findFunction(id);
+        $$ = new CallFunction(std::move(yys_ids), f);
+        tree.addObject($$);
     }
     ;
 

@@ -15,6 +15,8 @@ public:
 	Statement(Identifier id) : DuObject(id) {}
 	virtual bool isStatement() const override { return true; }
 	virtual bool isAssigmentStatement() const { return false;  }
+	virtual bool isReturn() const { return false;  }
+	virtual bool isCallFunctionStatement() const { return false;  }
 	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const { assert(0); }
 	virtual ~Statement() {}
 };
@@ -122,9 +124,58 @@ public:
 	{
 		return m_retInstance;
 	}
-
+	virtual bool isReturn() const override { return true; }
 	virtual ~ReturnStatement()
 	{
 		DELETE_TMP_VARIABLE(m_var)
 	}
+};
+
+
+
+class CallFunction : public Statement
+{
+	std::vector<Identifier> m_args;
+	Function* m_fun;
+	bool m_isSysFunction;
+public:
+	CallFunction(std::vector<Identifier>&& args, Function* fun) : Statement(Identifier("call_fnc_stmt")), m_args(std::move(args)), m_fun(fun), m_isSysFunction(false)
+	{
+		m_isSysFunction = m_fun->getIdentifier().getName()[0] == '$';
+	}
+	virtual llvm::Type* getLLVMType(llvm::LLVMContext& context) const override
+	{
+		assert(0);
+		return nullptr;
+	}
+	virtual llvm::Value* getLLVMValue(llvm::Type* type) const override
+	{
+		assert(0);
+		return nullptr;
+	}
+	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
+	{ 
+		
+	}
+	void processSystemFunc(llvm::FunctionCallee* fc, llvm::Value* str, llvm::IRBuilder<>& builder)
+	{
+		AstTree& tree = AstTree::instance();
+		std::vector<llvm::Value*> args;
+		args.push_back(str);
+		for (auto it : m_args)
+		{
+			auto arg = tree.findObject(it);
+			if (arg->isVariable())
+			{
+				args.push_back(static_cast<Variable*>(arg)->getLLVMValue(nullptr));
+			}
+		}
+		builder.CreateCall(*fc, args);
+	}
+	Identifier getFunctionName()
+	{
+		return m_fun->getIdentifier();
+	}
+	virtual bool isCallFunctionStatement() const override { return true; }
+	virtual ~CallFunction() {}
 };
