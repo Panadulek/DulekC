@@ -94,7 +94,8 @@ public:
 class Function : public Scope
 {
 protected:
-	std::vector<Variable*> m_args;
+	std::vector<Identifier> m_args;
+	std::vector<Type*> m_typesArgs;
 	Type* m_returnType;
 	llvm::FunctionType* m_llvmType;
 	llvm::Function* m_llvmFunction;
@@ -106,12 +107,8 @@ protected:
 	}
 
 public:
-	Function(Identifier id, Type* returnType) : Scope(id), m_returnType(returnType), m_llvmType(nullptr), m_llvmFunction(nullptr)
+	Function(Identifier id, Type* returnType, std::vector<Identifier>&& args, std::vector<Type*>&& types) : Scope(id), m_args(std::move(args)), m_typesArgs(std::move(types)), m_returnType(returnType), m_llvmType(nullptr), m_llvmFunction(nullptr)
 	{}
-	void addArgs(Variable* arg)
-	{
-		m_args.push_back(arg);
-	}
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext& context) const override
 	{
 		if (m_returnType)

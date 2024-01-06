@@ -71,7 +71,7 @@ class LLVMGen final
 		{
 			CallFunction* cfs = static_cast<CallFunction*>(s);
 			if (cfs->isCallFunctionStatement())
-				cfs->processSystemFunc(m_systemFunctions->findFunction(cfs->getFunctionName()), m_builder.CreateGlobalStringPtr("%d\n"), m_builder);
+				cfs->processSystemFunc(m_systemFunctions->findFunction(cfs->getFunctionName()), m_builder.CreateGlobalStringPtr("%d\n"), m_builder, getContext());
 			else
 			{
 				assert(0);

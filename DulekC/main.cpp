@@ -25,14 +25,16 @@ void not_implemented_feature()
 
 
 
-int main() 
+int main(int argc, char* argv[])
 {
-	auto code = fopen_s(&yyin, "Main.du", "r");
+	errno_t code;
+	if(argc > 1)
+		code = fopen_s(&yyin, argv[1], "r");
+	else
+		code = fopen_s(&yyin, "Main.du", "r");
 	yyparse();
 	LLVMGen generator("test");
 	generator.genIRForFile(AstTree::instance().begin(), AstTree::instance().end());
-
 	generator.executeCodeToByteCode();
-
 	return 0;
 }

@@ -4,7 +4,7 @@
 #include <llvm/IR/IRBuilder.h>
 #include "AstTree.h"
 #include <llvm/IR/Instructions.h>
-
+#include "TypeContainer.h"
 #define DELETE_TMP_VARIABLE(X)	if(X->getIdentifier().getName().empty() && X->isTmp()) delete X;
 
 class Statement : public DuObject
@@ -157,18 +157,32 @@ public:
 	{ 
 		
 	}
-	void processSystemFunc(llvm::FunctionCallee* fc, llvm::Value* str, llvm::IRBuilder<>& builder)
+	void processSystemFunc(llvm::FunctionCallee* fc, llvm::Value* str, llvm::IRBuilder<>& builder, llvm::LLVMContext& context)
 	{
 		AstTree& tree = AstTree::instance();
 		std::vector<llvm::Value*> args;
 		args.push_back(str);
 		for (auto it : m_args)
 		{
+			auto [isNumber, val] = it.toNumber();
 			auto arg = tree.findObject(it);
-			if (arg->isVariable())
+			llvm::Type* _type = nullptr;
+			if (!arg && isNumber)
 			{
-				args.push_back(static_cast<Variable*>(arg)->getLLVMValue(nullptr));
+				Identifier id = SimpleNumericType::generateId(ObjectInByte::DWORD, true);
+				TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::DWORD, true);
+				Type* type = TypeContainer::instance().getType(SimpleNumericType::generateId(ObjectInByte::DWORD, true));
+				arg = new Variable(it, type , new NumericValue(val), AstTree::instance().inGlobal());
+				_type = arg->getLLVMType(context);
+				args.push_back(arg->getLLVMValue(_type));
+				delete arg;
+				return;
 			}
+			if (arg && arg->isVariable())
+			{
+				Variable* _arg = static_cast<Variable*>(arg);
+				args.push_back(arg->getLLVMValue(_type));
+			}	
 		}
 		builder.CreateCall(*fc, args);
 	}

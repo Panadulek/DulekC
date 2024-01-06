@@ -4,8 +4,10 @@
 
 class Value : public DuObject
 {
+protected:
+	Value(Identifier id) : DuObject(Identifier(id)) {}
 public:
-	Value() : DuObject(Identifier("Value")) {}
+	
 	virtual bool isNumericValue() const { return false;  }
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const override { return nullptr; }
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const override
@@ -22,7 +24,7 @@ class NumericValue : public Value
 	uint64_t m_value;
 	bool m_isSigned = false;
 public:
-	NumericValue(const uint64_t i = 0) : Value()
+	NumericValue(const uint64_t i = 0) : Value(Identifier(std::to_string(i)))
 	{
 		m_value = i;
 	}

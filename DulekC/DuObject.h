@@ -3,21 +3,25 @@
 #include <string_view>
 #include <memory>
 #include <llvm/IR/Module.h>
-
-
+#include <charconv>
+#include <cstdint>
 class Identifier
 {
 	const std::string m_id;
 public:
 	Identifier(const std::string& id) : m_id(id) 
-	{
-		int x = 0;
-		x++;
-	}
+	{}
 	std::string_view getName() const { return m_id; }
 	bool operator==(const Identifier& otherId) const
 	{
 		return m_id.compare(otherId.m_id) == 0;
+	}
+
+	const std::pair<bool, uint64_t> toNumber() const
+	{
+		uint64_t val;
+		auto[ptr, errcode] = std::from_chars(m_id.data(), m_id.data() + m_id.size(), val);
+		return { errcode == std::errc() && ptr == (m_id.data() + m_id.size()), val };
 	}
 };
 
@@ -36,6 +40,7 @@ public:
 	virtual bool isStatement() const { return false;  }
 	virtual bool isType() const  { return false; }
 	virtual bool isScope() const { return false; }
+	virtual bool isConstValue() const { return false; }
 	std::string_view getName() { return m_id.getName(); }
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const = 0;
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const = 0;

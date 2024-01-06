@@ -17,7 +17,7 @@ class AstTree
 	std::stack<Scope*> m_stack;
 	void createSysFunction()
 	{
-		m_scopes.emplace_back(new Function(SystemFunctions::getSysFunctionName<SystemFunctions::SysFunctionID::DISPLAY>(), nullptr));
+		m_scopes.emplace_back(new Function(SystemFunctions::getSysFunctionName<SystemFunctions::SysFunctionID::DISPLAY>(), nullptr, {}, {}));
 	}
 	AstTree()
 	{
@@ -35,7 +35,7 @@ public:
 	}
 	void addObject(DuObject* obj)
 	{
-		static auto predicate = [&obj](const DuObject* _obj)
+		auto predicate = [&obj](const DuObject* _obj)
 			{ 
 				
 				return (!_obj->isStatement() &&  _obj->getIdentifier() == obj->getIdentifier());
@@ -62,7 +62,7 @@ public:
 
 	void beginScope(Scope* scope)
 	{
-		static auto predicate = [&scope](const DuObject* _scope) { return _scope->getIdentifier() == scope->getIdentifier(); };
+		auto predicate = [&scope](const DuObject* _scope) { return _scope->getIdentifier() == scope->getIdentifier(); };
 		auto filteredView = std::views::filter(m_scopes, predicate);
 		if (std::ranges::distance(filteredView) > 0)
 		{

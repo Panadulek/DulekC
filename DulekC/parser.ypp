@@ -91,13 +91,9 @@ function_declaration:
         {
             throw std::runtime_error("type_size_counter_not_eq");
         }
-        Function* fn = new Function(Identifier($2), $7);
-        delete [] $2;
+        Function* fn = new Function(Identifier($2), $7, std::move(yys_ids), std::move(yys_types));
         AstTree::instance().beginScope(fn);
-        for(auto i = 0; i < yys_types.size(); i++ )
-        {
-            fn->addArgs(new Variable(yys_ids[i], yys_types[i], new NumericValue(), AstTree::instance().inGlobal()));
-        }   
+        delete [] $2;
     }
     |
     FUNCTION_KEYWORD IDENTIFIER LBRACE argument_list RBRACE ARROW  LBRACE type_list RBRACE 
@@ -110,13 +106,9 @@ function_declaration:
         {
             throw std::runtime_error("type_size_counter_not_eq");
         }
-        Function* fn = new Function(Identifier($2), nullptr);
-        delete [] $2;
+        Function* fn = new Function(Identifier($2), nullptr, std::move(yys_ids), std::move(yys_types));
         AstTree::instance().beginScope(fn);
-        for(auto i = 0; i < yys_types.size(); i++ )
-        {
-            fn->addArgs(new Variable(yys_ids[i], yys_types[i], new NumericValue(), AstTree::instance().inGlobal()));
-        }   
+        delete [] $2;
     }
 
     function_body_begin:
@@ -238,6 +230,11 @@ variable_declaration
     {
         $$ = new Identifier($1);
         delete [] $1;
+    }
+    |
+    NUMBER
+    {
+        $$ = new Identifier(std::to_string($1));
     }
   ;
 
