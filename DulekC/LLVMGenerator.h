@@ -37,14 +37,19 @@ class LLVMGen final
 		static llvm::LLVMContext s_context;
 		return s_context;
 	}
+	void generateMemoryForFunction(Scope* scope)
+	{
+		if (!scope->isFunction() || static_cast<Function*>(scope)->isSystemFunction())
+			return;
+		Function* fn = static_cast<Function*>(scope);
+		llvm::Function* llvmFn = fn->getLLVMFunction(getContext(), m_module.get());
+		llvm::BasicBlock* bb = fn->getBasicBlock(getContext(), llvmFn);
+		m_builder.SetInsertPoint(bb);
+	}
 	void generateLocalVariableIrInfo(Variable* v, Scope* scope)
 	{
 		if (scope->isFunction())
 		{
-			Function* fn = static_cast<Function*>(scope);
-			llvm::Function* llvmFn = fn->getLLVMFunction(getContext(), m_module.get());
-			llvm::BasicBlock* bb = fn->getBasicBlock(getContext(), llvmFn);
-			m_builder.SetInsertPoint(bb);
 			v->init(m_builder.CreateAlloca(v->getLLVMType(getContext()), nullptr , v->getIdentifier().getName()), m_builder);
 		}
 
@@ -96,6 +101,7 @@ class LLVMGen final
 	void genIRForScope(Scope* scope)
 	{
 		const bool isSettedScope = AstTree::instance().setCurrentScope(scope);
+		generateMemoryForFunction(scope);
 		std::for_each(scope->begin(), scope->end(), [&](DuObject* it) ->void
 		{
 			genIRForElement(it, scope);

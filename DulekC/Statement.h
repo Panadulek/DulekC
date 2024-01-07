@@ -169,14 +169,14 @@ public:
 			llvm::Type* _type = nullptr;
 			if (!arg && isNumber)
 			{
-				Identifier id = SimpleNumericType::generateId(ObjectInByte::DWORD, true);
+ 				Identifier id = SimpleNumericType::generateId(ObjectInByte::DWORD, true);
 				TypeContainer::instance().insert<SimpleNumericType>(id, id, ObjectInByte::DWORD, true);
 				Type* type = TypeContainer::instance().getType(SimpleNumericType::generateId(ObjectInByte::DWORD, true));
 				arg = new Variable(it, type , new NumericValue(val), AstTree::instance().inGlobal());
 				_type = arg->getLLVMType(context);
 				args.push_back(arg->getLLVMValue(_type));
 				delete arg;
-				return;
+				arg = nullptr;
 			}
 			if (arg && arg->isVariable())
 			{
@@ -188,7 +188,7 @@ public:
 	}
 	Identifier getFunctionName()
 	{
-		return m_fun->getIdentifier();
+ 		return m_fun->getIdentifier();
 	}
 	virtual bool isCallFunctionStatement() const override { return true; }
 	virtual ~CallFunction() {}
