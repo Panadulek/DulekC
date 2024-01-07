@@ -100,6 +100,7 @@ protected:
 	llvm::FunctionType* m_llvmType;
 	llvm::Function* m_llvmFunction;
 	bool m_isSystemFunction;
+	bool m_isProcedure;
 	llvm::FunctionType* getFunctionType(llvm::LLVMContext& context)
 	{
 		if(!m_llvmType)
@@ -108,7 +109,7 @@ protected:
 	}
 
 public:
-	Function(Identifier id, Type* returnType, std::vector<Identifier>&& args, std::vector<Type*>&& types, bool systemFunction = false) : Scope(id), m_args(std::move(args)), m_typesArgs(std::move(types)), m_returnType(returnType), m_llvmType(nullptr), m_llvmFunction(nullptr), m_isSystemFunction(systemFunction)
+	Function(Identifier id, Type* returnType, std::vector<Identifier>&& args, std::vector<Type*>&& types, bool systemFunction, bool isProcedure) : Scope(id), m_args(std::move(args)), m_typesArgs(std::move(types)), m_returnType(returnType), m_llvmType(nullptr), m_llvmFunction(nullptr), m_isSystemFunction(systemFunction), m_isProcedure(isProcedure)
 	{}
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext& context) const override
 	{
@@ -141,6 +142,7 @@ public:
 		m_isSystemFunction = flag;
 	}
 	const bool isSystemFunction() const { return m_isSystemFunction;  }
+	const bool isProcedure() const { return m_isProcedure;  }
 	virtual bool isFunction() const { return true; }
 };
 

@@ -48,6 +48,10 @@ return NUMBER;
 "("						{return LBRACE;}
 ")"						{return RBRACE;}
 "="						{return ASSIGMENT;}
+"+"						{return PLUS;}
+"-"						{return MINUS;}
+"*"						{return MULTIPLICATION;}
+"/"						{return DIV;}
 .                       { /* Ignoruj inne znaki */ }
 
 

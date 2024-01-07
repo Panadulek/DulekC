@@ -46,6 +46,14 @@ class LLVMGen final
 		llvm::BasicBlock* bb = fn->getBasicBlock(getContext(), llvmFn);
 		m_builder.SetInsertPoint(bb);
 	}
+
+	void generateDefaultReturnForProcedure(Scope* scope)
+	{
+		if (!scope->isFunction() || !static_cast<Function*>(scope)->isProcedure())
+			return;
+		m_builder.CreateRetVoid();
+	}
+
 	void generateLocalVariableIrInfo(Variable* v, Scope* scope)
 	{
 		if (scope->isFunction())
@@ -108,6 +116,8 @@ class LLVMGen final
 		});
 		if(isSettedScope)
 			AstTree::instance().endScope();
+		generateDefaultReturnForProcedure(scope);
+		
 	}
 	void buildSystemFunctions()
 	{

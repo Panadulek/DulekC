@@ -17,8 +17,7 @@ class AstTree
 	std::stack<Scope*> m_stack;
 	void createSysFunction()
 	{
-		m_scopes.emplace_back(new Function(SystemFunctions::getSysFunctionName<SystemFunctions::SysFunctionID::DISPLAY>(), nullptr, {}, {}, true));
-
+		m_scopes.emplace_back(new Function(SystemFunctions::getSysFunctionName<SystemFunctions::SysFunctionID::DISPLAY>(), nullptr, {}, {}, true, false));
 	}
 	AstTree()
 	{

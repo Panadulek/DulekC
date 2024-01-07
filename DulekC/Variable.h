@@ -2,7 +2,8 @@
 #include "Type.h"
 #include "Value.h"
 #include "llvm/IR/IRBuilder.h"
-
+#include "TypeContainer.h"
+class AstTree;
 #define DECLARELLVM(X) mutable llvm::##X* m_llvm##X
 
 class Variable : public DuObject

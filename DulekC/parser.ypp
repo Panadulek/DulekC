@@ -13,6 +13,7 @@
 #include "Statement.h"
 #include "FlagsSettings.h"
 #include "SystemFunctions.h"
+#include "Expression.h"
  extern char* yytext;
  int __cdecl yylex(void);
 void yyerror(const char *s) { std::cerr  << s << "  :   " << '"' << yytext << '"' << std::endl; }
@@ -32,6 +33,7 @@ std::vector<Identifier> yys_ids;
     #include <cstdint>
     #include <vector>
     #include "Statement.h"
+    #include "Expression.h"
     // Inne wymagane nag³ówki
 }
 %union {
@@ -43,9 +45,11 @@ std::vector<Identifier> yys_ids;
     ObjectInByte bytetype;
     Identifier* pidentifier;
     Statement* pstatement;
+    Value* pval;
+    Expression* pexpr;
 }
 
-%token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE ASSIGMENT 
+%token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE ASSIGMENT PLUS MINUS MULTIPLICATION DIV
 %token FUNCTION_KEYWORD RETURN_KEYWORD 
 %token SYS_DISPLAY
 %token <bytetype> I8 U8 I16 U16 I32 U32 I64 U64
@@ -62,6 +66,7 @@ std::vector<Identifier> yys_ids;
 %type<pnumvalue> variable_numeric_init
 %type<pidentifier> argument
 %type<pstatement>  variable_assigment
+%type<pval> just_value_init
 %%
 
 program
@@ -91,7 +96,7 @@ function_declaration:
         {
             throw std::runtime_error("type_size_counter_not_eq");
         }
-        Function* fn = new Function(Identifier($2), $7, std::move(yys_ids), std::move(yys_types));
+        Function* fn = new Function(Identifier($2), $7, std::move(yys_ids), std::move(yys_types), false, true);
         AstTree::instance().beginScope(fn);
         delete [] $2;
     }
@@ -106,7 +111,7 @@ function_declaration:
         {
             throw std::runtime_error("type_size_counter_not_eq");
         }
-        Function* fn = new Function(Identifier($2), nullptr, std::move(yys_ids), std::move(yys_types));
+        Function* fn = new Function(Identifier($2), nullptr, std::move(yys_ids), std::move(yys_types), false, true);
         AstTree::instance().beginScope(fn);
         delete [] $2;
     }
@@ -129,7 +134,7 @@ function_declaration:
         }
 variable_declaration
     : 
-    IDENTIFIER ARROW type INIT_TYPE variable_numeric_init SEMICOLON
+    IDENTIFIER ARROW type INIT_TYPE just_value_init SEMICOLON
     {
         Identifier id($1);
         $$ = new Variable(id, $3, $5, AstTree::instance().inGlobal());
@@ -144,7 +149,13 @@ variable_declaration
         delete [] $1;
     }
     ;
-
+    just_value_init
+    :
+    variable_numeric_init
+    {
+        $$ = $1;
+    }
+    ;
     variable_numeric_init 
         :
         NUMBER
@@ -212,16 +223,23 @@ variable_declaration
    $$ = $1;
   }
 
-
   argument_list:
   | argument {
         yys_ids.push_back(*$1);
         delete $1;
     }
+  | NUMBER
+  {
+        yys_ids.push_back(Identifier(std::to_string($1)));
+  }
   | argument_list COMMA argument { 
   
     yys_ids.push_back(*$3);
     delete $3;
+  }
+ | argument_list COMMA NUMBER { 
+  
+    yys_ids.push_back(Identifier(std::to_string($3)));
   }
   ;
 
@@ -230,11 +248,6 @@ variable_declaration
     {
         $$ = new Identifier($1);
         delete [] $1;
-    }
-    |
-    NUMBER
-    {
-        $$ = new Identifier(std::to_string($1));
     }
   ;
 
@@ -248,6 +261,8 @@ variable_declaration
     yys_types.push_back($3);
   }
   ;
+
+
 
   variable_assigment:
     argument ASSIGMENT argument SEMICOLON
@@ -263,7 +278,7 @@ variable_declaration
         delete $3;
     }
     |
-    argument ASSIGMENT variable_numeric_init  SEMICOLON
+    argument ASSIGMENT just_value_init  SEMICOLON
     {
         if(!CompilerParserFlags::instance().isInFunction())
             throw std::runtime_error("NO_IN_FN");
@@ -305,6 +320,13 @@ variable_declaration
         tree.addObject($$);
     }
     ;
+
+
+
+
+
+
+
 
 %%
 
