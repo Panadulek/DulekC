@@ -35,7 +35,6 @@ int main(int argc, char* argv[])
 	yyparse();
 	LLVMGen generator("test");
 	generator.genIRForFile(AstTree::instance().begin(), AstTree::instance().end());
-	generator.print();
 	generator.executeCodeToByteCode();
 	return 0;
 }

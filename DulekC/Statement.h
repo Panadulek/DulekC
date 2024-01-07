@@ -142,6 +142,17 @@ public:
 	CallFunction(std::vector<Identifier>&& args, Function* fun) : Statement(Identifier("call_fnc_stmt")), m_args(std::move(args)), m_fun(fun), m_isSysFunction(false)
 	{
 		m_isSysFunction = m_fun->getIdentifier().getName()[0] == '$';
+		AstTree& tree = AstTree::instance();
+		for (auto it : m_args)
+		{
+			auto arg = tree.findObject(it);
+			auto [isNumber, val] = it.toNumber(); 
+			if (!arg && !isNumber)
+			{
+				std::cout << "nie znaleziono obiektu: " << it.getName() << std::endl;
+				std::exit(-1);
+			}
+		}
 	}
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext& context) const override
 	{
