@@ -36,8 +36,7 @@ public:
 	void addObject(DuObject* obj)
 	{
 		auto predicate = [&obj](const DuObject* _obj)
-			{ 
-				
+			{ 	
 				return (!_obj->isStatement() &&  _obj->getIdentifier() == obj->getIdentifier());
 			
 			};
@@ -84,12 +83,15 @@ public:
 	{
 		return m_scopes.end();
 	}
-
+	bool checkGlobalVisibility(DuObject* obj2)
+	{
+		return obj2->getParent() == m_root;
+	}
 	bool checkVisibility(DuObject* obj1, DuObject* obj2)
 	{
 		Scope* s1 = static_cast<Scope*>(obj1->getParent());
 		Scope* s2 = static_cast<Scope*>(obj2->getParent());
-		return ((s1 == s2) || s2 == m_root);
+		return (s1 == s2);
 	}
 	DuObject* _findObject(Identifier id, bool global)
 	{

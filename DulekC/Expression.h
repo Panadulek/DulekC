@@ -17,7 +17,7 @@ protected:
 		m_res = res;
 	}
 public:
-	virtual void processExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context) = 0;
+	virtual void processExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool s = true) = 0;
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) 
 	{
 		assert(0);
@@ -27,102 +27,66 @@ public:
 	{
 		return m_res;
 	}
+	virtual ~Expression() {}
 };
 
 
 
 class MatematicalExpression : public Expression
 {
-	Identifier m_l;
-	Identifier m_r;
-	bool m_isLNumber;
-	bool m_isRNumber;
-	bool m_signed;
+	Expression* m_l;
+	Expression* m_r;
 public:
-	MatematicalExpression(Identifier op, Identifier l, Identifier r, bool s) : Expression(op),  m_l(l), m_r(r), m_isLNumber(false), m_isRNumber(false), m_signed(s)
+	MatematicalExpression(Identifier op, Expression* l, Expression* r) : Expression(op), m_l(l), m_r(r)
+	{}
+
+	virtual void processExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool s = true) override
 	{
-		auto [isLNumber, lValue] = l.toNumber();
-		auto [isRNumber, isLValue] = r.toNumber();
-		auto& tree = AstTree::instance();
-		if (!isLNumber)
-		{
-			auto foundObject = tree.findObject(m_l);
-			if (!foundObject)
-			{
-				std::cout << "nie znaleziono l obiektu" << std::endl;
-				assert(0);
-			}
-		}
-		if (!isRNumber)
-		{
-			auto foundObject = tree.findObject(m_r);
-			if (!foundObject)
-			{
-				std::cout << "nie znaleziono r obiektu" << std::endl;
-				assert(0);
-			}
-		}
-
-		m_isLNumber = isLNumber;
-		m_isRNumber = isRNumber;
-	}
-
-	virtual void processExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context) override
-	{
-		std::unique_ptr<DuObject> m_objs[2]{ nullptr, nullptr };
-		auto& tree = AstTree::instance();
-		if (m_isLNumber)
-			m_objs[0] = GeneratorTmpVariables::generateI32Variable(m_l, m_l.toNumber().second);
-		if(m_isRNumber)
-			m_objs[1] = GeneratorTmpVariables::generateI32Variable(m_r, m_r.toNumber().second);
-		
-
-		DuObject* obj[2]{ nullptr, nullptr };
-		if (!m_objs[0])
-		{
-			obj[0] = tree.findObject(m_l);
-		}
-		else
-			obj[0] = m_objs[0].get();
-
-		if (!m_objs[1])
-		{
-			obj[1] = tree.findObject(m_r);
-		}
-		else
-			obj[1] = m_objs[1].get();
-
-		if (!obj[0] || !obj[1])
-		{
-			std::cout << "nie znaleziono prawej strony wartosci " << std::endl;
-			assert(0);
-		}
-
+		assert(m_l && m_r);
 		std::string_view view = getIdentifier().getName();
+		m_l->processExpression(module, builder, context, s);
+		m_r->processExpression(module, builder, context, s);
 		if (!view.compare("+"))
 		{
-			setRes(builder.CreateAdd(obj[0]->getLLVMValue(obj[0]->getLLVMType(context)), obj[1]->getLLVMValue(obj[1]->getLLVMType(context))));
+			setRes(builder.CreateAdd(m_l->getLLVMValue(nullptr), m_r->getLLVMValue(nullptr)));
 		}
 		else if (!view.compare("-"))
 		{
-			setRes(builder.CreateSub(obj[0]->getLLVMValue(obj[0]->getLLVMType(context)), obj[1]->getLLVMValue(obj[1]->getLLVMType(context))));
+			setRes(builder.CreateSub(m_l->getLLVMValue(nullptr), m_r->getLLVMValue(nullptr)));
 		}
 		else if (!view.compare("*"))
 		{
-			setRes(builder.CreateMul(obj[0]->getLLVMValue(obj[0]->getLLVMType(context)), obj[1]->getLLVMValue(obj[1]->getLLVMType(context))));
+			setRes(builder.CreateMul(m_l->getLLVMValue(nullptr), m_r->getLLVMValue(nullptr)));
 		}
 		else if (!view.compare("/"))
 		{
-			if(m_signed)
-				setRes(builder.CreateSDiv(obj[0]->getLLVMValue(obj[0]->getLLVMType(context)), obj[1]->getLLVMValue(obj[1]->getLLVMType(context))));
+			if(s)
+				setRes(builder.CreateSDiv(m_l->getLLVMValue(nullptr), m_r->getLLVMValue(nullptr)));
 			else
-				setRes(builder.CreateUDiv(obj[0]->getLLVMValue(obj[0]->getLLVMType(context)), obj[1]->getLLVMValue(obj[1]->getLLVMType(context))));
+				setRes(builder.CreateUDiv(m_l->getLLVMValue(nullptr), m_r->getLLVMValue(nullptr)));
 		}
 		else
 		{
 			setRes(nullptr);
 		}
 	}
+	virtual ~MatematicalExpression() 
+	{
+		delete m_l;
+		delete m_r;
+	}
+};
 
-	
+
+class BasicExpression : public Expression
+{
+public:
+	BasicExpression(Identifier id) : Expression(id) {}
+
+	virtual void processExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool s = true)
+	{
+
+	}
+	virtual ~BasicExpression() {}
+
 };

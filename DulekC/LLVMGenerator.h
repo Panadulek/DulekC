@@ -91,7 +91,7 @@ class LLVMGen final
 			}
 		}
 		else
-			s->processStatement(m_builder, getContext());
+			s->processStatement(m_builder, getContext(), m_module.get());
 	}
 	void genIRForElement(DuObject* obj, Scope* scope)
 	{

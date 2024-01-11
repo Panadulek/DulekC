@@ -18,7 +18,7 @@ public:
 	virtual bool isAssigmentStatement() const { return false;  }
 	virtual bool isReturn() const { return false;  }
 	virtual bool isCallFunctionStatement() const { return false;  }
-	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const { assert(0); }
+	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* module) const { assert(0); }
 	virtual ~Statement() {}
 };
 
@@ -45,7 +45,7 @@ public:
 		assert(0);
 		return nullptr;
 	}
-	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const  override
+	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* module) const  override
 	{
 		if ( m_right->getIdentifier().getName().empty() )
 		{
@@ -61,12 +61,29 @@ public:
 		}
 		else if ( AstTree::instance().checkVisibility(m_left, m_right) )
 		{
-			llvm::Value* val = builder.CreateLoad(m_right->getLLVMType(context), m_right->getAlloca(), m_right->getIdentifier().getName().data());
-			if (m_right->getLLVMType(context) != m_left->getLLVMType(context)) {
-				val = m_left->getType()->convertValueBasedOnType(builder, val, m_right->getLLVMType(context), context);
+			llvm::Value* val = nullptr;
+			if (!m_right->isGlobalVariable())
+			{
+				 val = builder.CreateLoad(m_right->getLLVMType(context), m_right->getAlloca(), m_right->getIdentifier().getName().data());
+				if (m_right->getLLVMType(context) != m_left->getLLVMType(context)) {
+					val = m_left->getType()->convertValueBasedOnType(builder, val, m_right->getLLVMType(context), context);
+				}
+
 			}
-			
+			else
+			{
+				assert(0);
+			}
 			auto store = builder.CreateStore(val, m_left->getAlloca());
+			store->setAlignment(m_left->getAlligment());
+			m_left->update(m_right, store->getValueOperand());
+		}
+		else if (AstTree::instance().checkGlobalVisibility(m_right))
+		{
+
+			llvm::GlobalVariable* gv = module->getGlobalVariable(m_right->getIdentifier().getName());
+			llvm::LoadInst* load = builder.CreateLoad(gv->getValueType(), gv, "");
+			auto store = builder.CreateStore(load, m_left->getAlloca());
 			store->setAlignment(m_left->getAlligment());
 			m_left->update(m_right, store->getValueOperand());
 		}
@@ -105,7 +122,7 @@ public:
 		assert(0);
 		return nullptr;
 	}
-	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const  override 
+	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module*) const  override
 	{
 		if (m_retInstance)
 			return;
@@ -165,7 +182,7 @@ public:
 		assert(0);
 		return nullptr;
 	}
-	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context) const
+	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module*) const override
 	{ 
 		
 	}

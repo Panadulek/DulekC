@@ -508,11 +508,11 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    72,    72,    74,    78,    79,    80,    81,    82,    83,
-      89,   104,   120,   128,   137,   144,   154,   161,   168,   176,
-     185,   190,   195,   200,   206,   211,   216,   221,   226,   227,
-     231,   235,   240,   247,   254,   255,   259,   268,   281,   293,
-     312
+       0,    74,    74,    76,    80,    81,    82,    83,    84,    85,
+      91,   106,   122,   130,   139,   146,   156,   163,   170,   178,
+     187,   192,   197,   202,   208,   213,   218,   223,   228,   229,
+     233,   237,   242,   249,   256,   257,   261,   270,   283,   295,
+     314
 };
 #endif
 
@@ -1457,7 +1457,7 @@ yyreduce:
         case 10:
 
 /* Line 1455 of yacc.c  */
-#line 90 "parser.ypp"
+#line 92 "parser.ypp"
     {
         if(!CompilerParserFlags::instance().enterFunction())
         {
@@ -1476,7 +1476,7 @@ yyreduce:
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 105 "parser.ypp"
+#line 107 "parser.ypp"
     {
         if(!CompilerParserFlags::instance().enterFunction())
         {
@@ -1495,7 +1495,7 @@ yyreduce:
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 121 "parser.ypp"
+#line 123 "parser.ypp"
     {
             if(!CompilerParserFlags::instance().isInFunction())
                 throw std::runtime_error("NO_IN_FN");
@@ -1506,7 +1506,7 @@ yyreduce:
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 129 "parser.ypp"
+#line 131 "parser.ypp"
     {
             if(!CompilerParserFlags::instance().isInFunction())
                 throw std::runtime_error("NO_IN_FN");
@@ -1518,7 +1518,7 @@ yyreduce:
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 138 "parser.ypp"
+#line 140 "parser.ypp"
     {
         Identifier id((yyvsp[(1) - (6)].str));
         (yyval.pvariable) = new Variable(id, (yyvsp[(3) - (6)].ptype), (yyvsp[(5) - (6)].pval), AstTree::instance().inGlobal());
@@ -1530,7 +1530,7 @@ yyreduce:
   case 15:
 
 /* Line 1455 of yacc.c  */
-#line 145 "parser.ypp"
+#line 147 "parser.ypp"
     {
         Identifier id((yyvsp[(1) - (4)].str));
         (yyval.pvariable) = new Variable(id, (yyvsp[(3) - (4)].ptype), new NumericValue(), AstTree::instance().inGlobal());
@@ -1542,7 +1542,7 @@ yyreduce:
   case 16:
 
 /* Line 1455 of yacc.c  */
-#line 155 "parser.ypp"
+#line 157 "parser.ypp"
     {
         (yyval.pval) = (yyvsp[(1) - (1)].pnumvalue);
     ;}
@@ -1551,7 +1551,7 @@ yyreduce:
   case 17:
 
 /* Line 1455 of yacc.c  */
-#line 162 "parser.ypp"
+#line 164 "parser.ypp"
     {
             (yyval.pnumvalue) = new NumericValue((yyvsp[(1) - (1)].num))
         ;}
@@ -1560,7 +1560,7 @@ yyreduce:
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 169 "parser.ypp"
+#line 171 "parser.ypp"
     {
        Identifier id = SimpleNumericType::generateId((yyvsp[(1) - (1)].bytetype), true) ;
        TypeContainer::instance().insert<SimpleNumericType>(id, id, (yyvsp[(1) - (1)].bytetype), true);
@@ -1572,7 +1572,7 @@ yyreduce:
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 177 "parser.ypp"
+#line 179 "parser.ypp"
     {
         Identifier id = SimpleNumericType::generateId((yyvsp[(1) - (1)].bytetype), true) ;
         TypeContainer::instance().insert<SimpleNumericType>(id, id, (yyvsp[(1) - (1)].bytetype), false);
@@ -1583,7 +1583,7 @@ yyreduce:
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 186 "parser.ypp"
+#line 188 "parser.ypp"
     {
    (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
   ;}
@@ -1592,7 +1592,7 @@ yyreduce:
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 191 "parser.ypp"
+#line 193 "parser.ypp"
     {
     (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
   ;}
@@ -1601,7 +1601,7 @@ yyreduce:
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 196 "parser.ypp"
+#line 198 "parser.ypp"
     {
     (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
   ;}
@@ -1610,7 +1610,7 @@ yyreduce:
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 201 "parser.ypp"
+#line 203 "parser.ypp"
     {
     (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
   ;}
@@ -1619,7 +1619,7 @@ yyreduce:
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 207 "parser.ypp"
+#line 209 "parser.ypp"
     {
     (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
   ;}
@@ -1628,7 +1628,7 @@ yyreduce:
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 212 "parser.ypp"
+#line 214 "parser.ypp"
     {
     (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
   ;}
@@ -1637,7 +1637,7 @@ yyreduce:
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 217 "parser.ypp"
+#line 219 "parser.ypp"
     {
     (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
   ;}
@@ -1646,7 +1646,7 @@ yyreduce:
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 222 "parser.ypp"
+#line 224 "parser.ypp"
     {
    (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
   ;}
@@ -1655,7 +1655,7 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 227 "parser.ypp"
+#line 229 "parser.ypp"
     {
         yys_ids.push_back(*(yyvsp[(1) - (1)].pidentifier));
         delete (yyvsp[(1) - (1)].pidentifier);
@@ -1665,7 +1665,7 @@ yyreduce:
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 232 "parser.ypp"
+#line 234 "parser.ypp"
     {
         yys_ids.push_back(Identifier(std::to_string((yyvsp[(1) - (1)].num))));
   ;}
@@ -1674,7 +1674,7 @@ yyreduce:
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 235 "parser.ypp"
+#line 237 "parser.ypp"
     { 
   
     yys_ids.push_back(*(yyvsp[(3) - (3)].pidentifier));
@@ -1685,7 +1685,7 @@ yyreduce:
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 240 "parser.ypp"
+#line 242 "parser.ypp"
     { 
   
     yys_ids.push_back(Identifier(std::to_string((yyvsp[(3) - (3)].num))));
@@ -1695,7 +1695,7 @@ yyreduce:
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 248 "parser.ypp"
+#line 250 "parser.ypp"
     {
         (yyval.pidentifier) = new Identifier((yyvsp[(1) - (1)].str));
         delete [] (yyvsp[(1) - (1)].str);
@@ -1705,7 +1705,7 @@ yyreduce:
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 256 "parser.ypp"
+#line 258 "parser.ypp"
     {
     yys_types.push_back((yyvsp[(1) - (1)].ptype));
   ;}
@@ -1714,7 +1714,7 @@ yyreduce:
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 260 "parser.ypp"
+#line 262 "parser.ypp"
     {
     yys_types.push_back((yyvsp[(3) - (3)].ptype));
   ;}
@@ -1723,7 +1723,7 @@ yyreduce:
   case 37:
 
 /* Line 1455 of yacc.c  */
-#line 269 "parser.ypp"
+#line 271 "parser.ypp"
     {
         if(!CompilerParserFlags::instance().isInFunction())
             throw std::runtime_error("NO_IN_FN");
@@ -1740,7 +1740,7 @@ yyreduce:
   case 38:
 
 /* Line 1455 of yacc.c  */
-#line 282 "parser.ypp"
+#line 284 "parser.ypp"
     {
         if(!CompilerParserFlags::instance().isInFunction())
             throw std::runtime_error("NO_IN_FN");
@@ -1756,7 +1756,7 @@ yyreduce:
   case 39:
 
 /* Line 1455 of yacc.c  */
-#line 294 "parser.ypp"
+#line 296 "parser.ypp"
     {
         if(!CompilerParserFlags::instance().isInFunction())
             throw std::runtime_error("NO_IN_FN");
@@ -1779,7 +1779,7 @@ yyreduce:
   case 40:
 
 /* Line 1455 of yacc.c  */
-#line 313 "parser.ypp"
+#line 315 "parser.ypp"
     {
         if(!CompilerParserFlags::instance().isInFunction())
             throw std::runtime_error("NO_IN_FN");
@@ -2006,7 +2006,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 331 "parser.ypp"
+#line 354 "parser.ypp"
 
 
 

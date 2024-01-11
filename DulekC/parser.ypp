@@ -57,6 +57,7 @@ std::vector<Identifier> yys_ids;
 %token <num> NUMBER
 
 
+
 %start program
 
 %type<bytetype> byte_type
@@ -67,6 +68,7 @@ std::vector<Identifier> yys_ids;
 %type<pidentifier> argument
 %type<pstatement>  variable_assigment
 %type<pval> just_value_init
+%type<pexpr> expression
 %%
 
 program
@@ -324,7 +326,28 @@ variable_declaration
 
 
 
+    expression
+    : term
+    | expression PLUS term
+        { /* implementacja dodawania */ }
+    | expression MINUS term
+        { /* implementacja odejmowania */ }
+    ;
 
+term
+    : factor
+    | term MULTIPLICATION factor
+        { /* implementacja mno¿enia */ }
+    | term DIV factor
+        { /* implementacja dzielenia */ }
+    ;
+
+factor
+    : NUMBER
+        { /* utworzenie wartoœci numerycznej */ }
+    | IDENTIFIER
+        { /* znajdowanie zmiennej o danej nazwie */ }
+    ;
 
 
 
