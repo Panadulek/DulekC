@@ -82,8 +82,11 @@ public:
 		{
 
 			llvm::GlobalVariable* gv = module->getGlobalVariable(m_right->getIdentifier().getName());
-			llvm::LoadInst* load = builder.CreateLoad(gv->getValueType(), gv, "");
-			auto store = builder.CreateStore(load, m_left->getAlloca());
+			llvm::Value* val = builder.CreateLoad(gv->getValueType(), gv, "");
+			if (m_right->getLLVMType(context) != m_left->getLLVMType(context)) {
+				val = m_left->getType()->convertValueBasedOnType(builder, val, m_right->getLLVMType(context), context);
+			}
+			auto store = builder.CreateStore(val, m_left->getAlloca());
 			store->setAlignment(m_left->getAlligment());
 			m_left->update(m_right, store->getValueOperand());
 		}
