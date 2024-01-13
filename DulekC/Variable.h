@@ -79,6 +79,10 @@ public:
 	{
 		return m_value;
 	}
+	Variable* copy()
+	{
+
+	}
 	void setTmp()
 	{
 		m_isTmp = true;

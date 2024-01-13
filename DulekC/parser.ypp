@@ -68,6 +68,8 @@ std::vector<Identifier> yys_ids;
 %type<pidentifier> argument
 %type<pstatement>  variable_assigment
 %type<pval> just_value_init
+%type<pexpr> factor
+%type<pexpr> term
 %type<pexpr> expression
 %%
 
@@ -292,6 +294,18 @@ variable_declaration
         delete $1;
     }
     |
+    argument ASSIGMENT  expression SEMICOLON
+    {
+        if(!CompilerParserFlags::instance().isInFunction())
+            throw std::runtime_error("NO_IN_FN");
+        auto& tree = AstTree::instance();
+        auto l = dynamic_cast<Variable*>(tree.findObject(*$1));
+        $$ = new AssigmentStatement(l, $3);
+        tree.addObject($$);
+        delete $1;
+
+    }
+    |
     RETURN_KEYWORD argument SEMICOLON
     {
         if(!CompilerParserFlags::instance().isInFunction())
@@ -327,26 +341,33 @@ variable_declaration
 
 
     expression
-    : term
+    : term { $$ = $1}
     | expression PLUS term
-        { /* implementacja dodawania */ }
+        { $$ = new MatematicalExpression(Identifier("+"), $1, $3);    }
     | expression MINUS term
-        { /* implementacja odejmowania */ }
+        { $$ = new MatematicalExpression(Identifier("-"), $1, $3);    }
     ;
 
 term
-    : factor
+    : factor { $$ = $1 }
     | term MULTIPLICATION factor
-        { /* implementacja mno¿enia */ }
+    { 
+        $$ = new MatematicalExpression(Identifier("*"), $1, $3);    
+    }
     | term DIV factor
-        { /* implementacja dzielenia */ }
+        { $$ = new MatematicalExpression(Identifier("/"), $1, $3);    }
     ;
 
 factor
     : NUMBER
-        { /* utworzenie wartoœci numerycznej */ }
-    | IDENTIFIER
-        { /* znajdowanie zmiennej o danej nazwie */ }
+        {
+           $$ = new BasicExpression(Identifier(std::to_string($1)));
+        }
+    | argument
+        { 
+            $$ = new BasicExpression(*$1);
+            delete $1;
+        }
     ;
 
 

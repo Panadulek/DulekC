@@ -6,7 +6,9 @@
 #include <llvm/IR/Instructions.h>
 #include "TypeContainer.h"
 #include "GenTmpVariables.h"
-#define DELETE_TMP_VARIABLE(X)	if(X->getIdentifier().getName().empty() && X->isTmp()) delete X;
+#include "Expression.h"
+#include <format>
+#define DELETE_TMP_VARIABLE(X)	if(X && X->getIdentifier().getName().empty() && X->isTmp()) delete X;
 
 class Statement : public DuObject
 {
@@ -27,12 +29,100 @@ class AssigmentStatement : public Statement
 {
 	Variable* m_left;
 	Variable* m_right;
+	Expression* m_expr;
+	bool m_hasExpr;
+
+	void _processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* module) const
+	{
+		if (m_right && m_right->getIdentifier().getName().empty())
+		{
+			auto value = m_right->getValue();
+			if (value->isNumericValue())
+			{
+				auto store = builder.CreateStore(llvm::ConstantInt::get(m_left->getLLVMType(context), static_cast<NumericValue*>(value)->getValue()), m_left->getAlloca());
+				store->setAlignment(m_left->getAlligment());
+				m_left->update(m_right, store->getValueOperand());
+			}
+			else
+				assert(0);
+		}
+		else if (m_right && (AstTree::instance().checkVisibility(m_left, m_right) || AstTree::instance().checkGlobalVisibility(m_right)))
+		{
+			llvm::Value* val = nullptr;
+			if (!m_right->isGlobalVariable())
+			{
+				val = builder.CreateLoad(m_right->getLLVMType(context), m_right->getAlloca(), m_right->getIdentifier().getName().data());
+			}
+			else
+			{
+				llvm::GlobalVariable* gv = module->getGlobalVariable(m_right->getIdentifier().getName());
+				val = builder.CreateLoad(gv->getValueType(), gv, "");
+			}
+			if (m_right->getLLVMType(context) != m_left->getLLVMType(context)) {
+				val = m_left->getType()->convertValueBasedOnType(builder, val, m_right->getLLVMType(context), context);
+			}
+			auto store = builder.CreateStore(val, m_left->getAlloca());
+			store->setAlignment(m_left->getAlligment());
+			m_left->update(m_right, store->getValueOperand());
+		}
+		else
+		{
+			const std::string format = "Undeclared variable\n";
+			printf(format.c_str());
+			std::exit(15);
+
+		}
+	}
+
+
+
+	void _processStatementExpr(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* module) const
+	{
+		if (m_expr)
+		{
+			if (m_left->getType()->isSimpleNumericType())
+			{
+				m_expr->processExpression(module, builder, context, static_cast<SimpleNumericType*>(m_left->getType())->isSigned());
+			}
+			llvm::Value* val = m_expr->getLLVMValue(nullptr);
+			if (val->getType() != m_left->getLLVMType(context))
+			{
+				val = m_left->getType()->convertValueBasedOnType(builder, val, val->getType(), context);
+			}
+			auto store = builder.CreateStore(val, m_left->getAlloca());
+			store->setAlignment(m_left->getAlligment());
+			if (m_left->getType()->isSimpleNumericType())
+			{
+				uint64_t castedval = llvm::dyn_cast<llvm::ConstantInt>(store->getValueOperand())->getZExtValue();
+				if (castedval)
+				{
+					auto ptr = new Variable(m_left->getIdentifier(), m_left->getType(), new NumericValue(castedval), m_left->isGlobalVariable());
+					m_left->update(ptr, store->getValueOperand());
+					delete ptr;
+				}
+			}
+			
+			
+			
+		}
+		else
+		{
+			const std::string format = "null expr\n";
+			printf(format.c_str());
+			std::exit(15);
+
+		}
+	}
+
+
 public:
-	AssigmentStatement(Variable* l, Variable* r) : Statement(Identifier("assigment statement")), m_left(l), m_right(r)
+	AssigmentStatement(Variable* l, Variable* r) : Statement(Identifier("assigment statement")), m_left(l), m_right(r), m_expr(nullptr), m_hasExpr(false)
+	{}
+	AssigmentStatement(Variable* l, Expression* r) : Statement(Identifier("assigment statement")), m_left(l), m_right(nullptr), m_expr(r), m_hasExpr(true)
 	{}
 	void setRightElement(Variable* r)
 	{
-		assert(!m_right);
+		assert(!m_right && !m_hasExpr);
 		m_right = r;
 	}
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext& context) const override
@@ -47,49 +137,10 @@ public:
 	}
 	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* module) const  override
 	{
-		if ( m_right->getIdentifier().getName().empty() )
-		{
-			auto value = m_right->getValue();
-			if (value->isNumericValue())
-			{
-				auto store = builder.CreateStore(llvm::ConstantInt::get(m_left->getLLVMType(context), static_cast<NumericValue*>(value)->getValue()), m_left->getAlloca());
-				store->setAlignment(m_left->getAlligment());
-				m_left->update(m_right, store->getValueOperand());
-			}
-			else
-				assert(0);
-		}
-		else if ( AstTree::instance().checkVisibility(m_left, m_right) )
-		{
-			llvm::Value* val = nullptr;
-			if (!m_right->isGlobalVariable())
-			{
-				 val = builder.CreateLoad(m_right->getLLVMType(context), m_right->getAlloca(), m_right->getIdentifier().getName().data());
-				if (m_right->getLLVMType(context) != m_left->getLLVMType(context)) {
-					val = m_left->getType()->convertValueBasedOnType(builder, val, m_right->getLLVMType(context), context);
-				}
-
-			}
-			else
-			{
-				assert(0);
-			}
-			auto store = builder.CreateStore(val, m_left->getAlloca());
-			store->setAlignment(m_left->getAlligment());
-			m_left->update(m_right, store->getValueOperand());
-		}
-		else if (AstTree::instance().checkGlobalVisibility(m_right))
-		{
-
-			llvm::GlobalVariable* gv = module->getGlobalVariable(m_right->getIdentifier().getName());
-			llvm::Value* val = builder.CreateLoad(gv->getValueType(), gv, "");
-			if (m_right->getLLVMType(context) != m_left->getLLVMType(context)) {
-				val = m_left->getType()->convertValueBasedOnType(builder, val, m_right->getLLVMType(context), context);
-			}
-			auto store = builder.CreateStore(val, m_left->getAlloca());
-			store->setAlignment(m_left->getAlligment());
-			m_left->update(m_right, store->getValueOperand());
-		}
+		if (!m_hasExpr)
+			_processStatement(builder, context, module);
+		else
+			_processStatementExpr(builder, context, module);
 	}
 
 	virtual bool isAssigmentStatement() const override { return true; }
