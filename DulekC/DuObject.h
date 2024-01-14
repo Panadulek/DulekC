@@ -44,6 +44,7 @@ public:
 	std::string_view getName() { return m_id.getName(); }
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const = 0;
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const = 0;
+	virtual DuObject* copy() const = 0;
 	const Identifier& getIdentifier() const { return m_id; }
 	void setParent(DuObject* p)
 	{

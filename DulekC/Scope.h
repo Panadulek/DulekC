@@ -78,7 +78,11 @@ public:
 	{
 		return m_blockEntryName;
 	}
-
+	virtual DuObject* copy() const override
+	{
+		assert(0);
+		return nullptr;
+	}
 	virtual ~Scope()
 	{
 		for (auto& it : m_childs)

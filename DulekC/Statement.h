@@ -20,6 +20,11 @@ public:
 	virtual bool isAssigmentStatement() const { return false;  }
 	virtual bool isReturn() const { return false;  }
 	virtual bool isCallFunctionStatement() const { return false;  }
+	virtual DuObject* copy() const override
+	{
+		assert(0);
+		return nullptr;
+	}
 	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* module) const { assert(0); }
 	virtual ~Statement() {}
 };
@@ -84,7 +89,7 @@ class AssigmentStatement : public Statement
 			{
 				m_expr->processExpression(module, builder, context, static_cast<SimpleNumericType*>(m_left->getType())->isSigned());
 			}
-			llvm::Value* val = m_expr->getLLVMValue(nullptr);
+			llvm::Value* val = m_expr->getLLVMValue(m_left->getLLVMType(context));
 			if (val->getType() != m_left->getLLVMType(context))
 			{
 				val = m_left->getType()->convertValueBasedOnType(builder, val, val->getType(), context);
@@ -259,7 +264,7 @@ public:
 			if (arg && arg->isVariable())
 			{
 				Variable* _arg = static_cast<Variable*>(arg);
-				args.push_back(arg->getLLVMValue(_type));
+				args.push_back(arg->getLLVMValue(arg->getLLVMType(context)));
 			}	
 		}
 		builder.CreateCall(*fc, args);

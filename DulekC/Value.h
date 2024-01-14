@@ -15,7 +15,16 @@ public:
 		assert(0);
 		return nullptr;
 	}
-	virtual Value* copy() = 0;
+	virtual DuObject* copy() const override
+	{
+		assert(0);
+		return nullptr;
+	}
+	virtual void setNewValue(llvm::Value*)
+	{
+		assert(0);
+		return;
+	}
 	virtual ~Value() {}
 };
 
@@ -35,9 +44,16 @@ public:
 	uint64_t getValue() const { return m_value; }
 	void setSigned(bool flag) { m_isSigned = flag; }
 	virtual bool isNumericValue() const { return true; }
-	virtual Value* copy()
+	virtual DuObject* copy() const override
 	{
-		return new NumericValue(*this);
+		return new NumericValue(getValue());
+	}
+	virtual void setNewValue(llvm::Value* val) override
+	{
+		if (auto* constInt = llvm::dyn_cast<llvm::ConstantInt>(val)) {
+			m_value = m_isSigned ? constInt->getSExtValue() : constInt->getZExtValue();
+		}
+		return;
 	}
 	virtual ~NumericValue() {}
 };

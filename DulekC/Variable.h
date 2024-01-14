@@ -23,6 +23,7 @@ class Variable : public DuObject
 		}
 		return m_value->getLLVMValue(type);
 	}
+
 public:
 	Variable(Identifier id, Type* type, Value* val, bool globalScope) : DuObject(id), m_type(type), m_value(val), m_isGlobal(globalScope), 
 		m_llvmType(nullptr), m_llvmValue(nullptr), m_llvmAllocaInst(nullptr) {}
@@ -59,16 +60,20 @@ public:
 	{
 		return llvm::Align(m_type->getSizeInBytes());
 	}
-	bool isGlobalVariable()
+	bool isGlobalVariable() const
 	{
 		return m_isGlobal;
 	}
 	void update(Variable* var, llvm::Value* newLLVMValue = nullptr)
 	{
 		if (typeid(var->getType()) == typeid(m_type))
-		{
-			m_value = var->getValue()->copy();
-			m_llvmValue = newLLVMValue;
+		{	
+			Value* val = var->getValue();
+			delete m_value;
+			m_value = nullptr;
+			m_llvmValue = nullptr;
+			m_value = static_cast<Value*>(val->copy());
+			m_value->setNewValue(newLLVMValue);
 		}
 	}
 	Type* getType()
@@ -79,9 +84,9 @@ public:
 	{
 		return m_value;
 	}
-	Variable* copy()
+	virtual DuObject* copy() const override
 	{
-
+		return new Variable(getIdentifier(), static_cast<Type*>(m_type->copy()), static_cast<Value*>(m_value->copy()), isGlobalVariable());
 	}
 	void setTmp()
 	{

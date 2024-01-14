@@ -16,7 +16,7 @@ protected:
 	void setRes(DuObject* res)
 	{
 		assert(res->isVariable());
-		m_res = static_cast<Variable*>(res);
+		m_res = static_cast<Variable*>(res->copy());
 	}
 
 public:
@@ -33,7 +33,15 @@ public:
 	{
 		return m_res;
 	}
-	virtual ~Expression() {}
+	DuObject* copy() const
+	{
+		assert(0);
+		return nullptr;
+	}
+	virtual ~Expression()
+	{
+		delete m_res;
+	}
 };
 
 
@@ -92,9 +100,8 @@ public:
 
 class BasicExpression : public Expression
 {
-	std::unique_ptr<Variable> m_toDelete;
 public:
-	BasicExpression(Identifier id) : Expression(id), m_toDelete(nullptr) {}
+	BasicExpression(Identifier id) : Expression(id) {}
 
 	virtual void processExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool s)
 	{ 
@@ -110,8 +117,8 @@ public:
 			auto [isNumber, val] = getIdentifier().toNumber();
 			if (isNumber)
 			{
-				m_toDelete = GeneratorTmpVariables::generateI32Variable(getIdentifier(), val);
-				setRes(m_toDelete.get());
+				auto toDelete = GeneratorTmpVariables::generateI32Variable(getIdentifier(), val);
+				setRes(toDelete.get());
 			}
 		}
 		

@@ -115,5 +115,10 @@ public:
 		return value;
 
 	}
+
+	DuObject* copy() const override
+	{
+		return new SimpleNumericType(getIdentifier(), m_size, isSigned());
+	}
 	virtual ~SimpleNumericType() {}
 };
