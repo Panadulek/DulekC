@@ -31,12 +31,12 @@
 "u64"					{ yylval.bytetype = ObjectInByte::QWORD; return U64; }
 "$display"				{return SYS_DISPLAY;}
 
-[0-9]+                  { 
-yylval.num = std::stoull(yytext) ; 
-DISPLAY("NUMBER"); 
-return NUMBER; 
-
+-?[0-9]+ {
+    yylval.num = std::stoull(yytext); 
+    DISPLAY("NUMBER"); 
+    return NUMBER; 
 }
+
 [a-zA-Z_][a-zA-Z0-9_]*  { yylval.str = strdup(yytext); DISPLAY("IDENTIFIER"); return IDENTIFIER; }
 "->"                    { DISPLAY("ARROW");return ARROW; }
 "{"                     { return LBUCKLE; }
