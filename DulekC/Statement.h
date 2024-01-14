@@ -34,7 +34,7 @@ class AssigmentStatement : public Statement
 {
 	Variable* m_left;
 	Variable* m_right;
-	Expression* m_expr;
+	mutable Expression* m_expr;
 	bool m_hasExpr;
 
 	void _processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* module) const
@@ -90,6 +90,8 @@ class AssigmentStatement : public Statement
 				m_expr->processExpression(module, builder, context, static_cast<SimpleNumericType*>(m_left->getType())->isSigned());
 			}
 			llvm::Value* val = m_expr->getLLVMValue(m_left->getLLVMType(context));
+			delete m_expr;
+			m_expr = nullptr;
 			if (val->getType() != m_left->getLLVMType(context))
 			{
 				val = m_left->getType()->convertValueBasedOnType(builder, val, val->getType(), context);
@@ -105,10 +107,7 @@ class AssigmentStatement : public Statement
 					m_left->update(ptr, store->getValueOperand());
 					delete ptr;
 				}
-			}
-			
-			
-			
+			}	
 		}
 		else
 		{
