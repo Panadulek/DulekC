@@ -368,6 +368,10 @@ factor
             $$ = new BasicExpression(*$1);
             delete $1;
         }
+    | LBRACE expression RBRACE
+    {
+            $$ = $2; 
+    }
     ;
 
 
