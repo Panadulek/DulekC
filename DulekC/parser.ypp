@@ -100,7 +100,7 @@ function_declaration:
         {
             throw std::runtime_error("type_size_counter_not_eq");
         }
-        Function* fn = new Function(Identifier($2), $7, std::move(yys_ids), std::move(yys_types), false, true);
+        Function* fn = new Function(Identifier($2), $7, std::move(yys_ids), std::move(yys_types), false, false);
         AstTree::instance().beginScope(fn);
         delete [] $2;
     }
@@ -332,9 +332,22 @@ variable_declaration
         auto& tree = AstTree::instance();
         Identifier id(SystemFunctions::getSysFunctionName<SystemFunctions::SysFunctionID::DISPLAY>());
         Function* f = tree.findFunction(id);
-        $$ = new CallFunction(std::move(yys_ids), f);
+        $$ = new CallFunction(std::move(yys_ids), f, true);
         tree.addObject($$);
     }
+    |
+    argument LBRACE argument_list RBRACE SEMICOLON
+    {
+        if(!CompilerParserFlags::instance().isInFunction())
+            throw std::runtime_error("NO_IN_FN");
+        auto& tree = AstTree::instance();
+        Function* f = tree.findFunction(*$1);
+        $$ = new CallFunction(std::move(yys_ids), f, false);
+        tree.addObject($$);
+        delete $1;
+    }
+    |
+
     ;
 
 

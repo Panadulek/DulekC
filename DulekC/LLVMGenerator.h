@@ -42,9 +42,7 @@ class LLVMGen final
 		if (!scope->isFunction() || static_cast<Function*>(scope)->isSystemFunction())
 			return;
 		Function* fn = static_cast<Function*>(scope);
-		llvm::Function* llvmFn = fn->getLLVMFunction(getContext(), m_module.get());
-		llvm::BasicBlock* bb = fn->getBasicBlock(getContext(), llvmFn);
-		m_builder.SetInsertPoint(bb);
+		llvm::Function* llvmFn = fn->getLLVMFunction(getContext(), m_module.get(), m_builder);
 	}
 
 	void generateDefaultReturnForProcedure(Scope* scope)
@@ -84,7 +82,12 @@ class LLVMGen final
 		{
 			CallFunction* cfs = static_cast<CallFunction*>(s);
 			if (cfs->isCallFunctionStatement())
-				cfs->processSystemFunc(m_systemFunctions->findFunction(cfs->getFunctionName()), m_builder.CreateGlobalStringPtr("%d\n"), m_builder, getContext());
+			{
+				if (cfs->isSystemFunction())
+					cfs->processSystemFunc(m_systemFunctions->findFunction(cfs->getFunctionName()), m_builder.CreateGlobalStringPtr("%d\n\0"), m_builder, getContext());
+				else
+					cfs->processStatement(m_builder, getContext(), m_module.get());
+			}
 			else
 			{
 				assert(0);

@@ -45,6 +45,8 @@ public:
 
 	void init(llvm::AllocaInst* inst, llvm::IRBuilder<>& builder)
 	{
+		if (m_llvmAllocaInst)
+			return;
 		auto align = getAlligment();
 		inst->setAlignment(align);
 		auto store = builder.CreateStore(m_llvmValue, inst, false);
@@ -71,9 +73,9 @@ public:
 			Value* val = var->getValue();
 			delete m_value;
 			m_value = nullptr;
-			m_llvmValue = nullptr;
-			m_value = static_cast<Value*>(val->copy());
-			m_value->setNewValue(newLLVMValue);
+			m_llvmValue = newLLVMValue;
+			m_value = val ? static_cast<Value*>(val->copy()) : var->getType()->getDefaultValue();
+			m_value->setNewValue(newLLVMValue); 
 		}
 	}
 	Type* getType()
@@ -101,3 +103,5 @@ public:
 		delete m_value;
 	}
 };
+
+

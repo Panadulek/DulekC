@@ -18,7 +18,7 @@ public:
 	Statement(Identifier id) : DuObject(id) {}
 	virtual bool isStatement() const override { return true; }
 	virtual bool isAssigmentStatement() const { return false;  }
-	virtual bool isReturn() const { return false;  }
+	virtual bool isReturnStatement() const { return false;  }
 	virtual bool isCallFunctionStatement() const { return false;  }
 	virtual DuObject* copy() const override
 	{
@@ -162,13 +162,12 @@ class ReturnStatement : public Statement
 	Type* m_retType;
 	mutable llvm::ReturnInst* m_retInstance;
 public:
-	ReturnStatement(DuObject* var, DuObject* retType) : Statement(Identifier("return_stmt")), m_var(nullptr), m_retType(nullptr)
+	ReturnStatement(DuObject* var, DuObject* retType) : Statement(Identifier("return_stmt")), m_var(nullptr), m_retType(nullptr), m_retInstance(nullptr)
 	{
 		if (var && var->isVariable())
 			m_var = static_cast<Variable*>(var);
 		if (retType && retType->isType())
 			m_retType = static_cast<Type*>(retType);
-		m_retInstance = nullptr;
 	}
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext& context) const override
 	{
@@ -187,8 +186,18 @@ public:
 		llvm::ReturnInst* retInstance = nullptr;
 		if (m_retType)
 		{
-			llvm::Value* llvmRetVal = m_retType->convertValueBasedOnType(builder, m_var->getLLVMValue(nullptr), m_var->getLLVMType(context), context);
-			m_retInstance = builder.CreateRet(llvmRetVal);
+			if (m_var && m_retType == m_var->getType())
+			{
+				auto lt = m_var->getLLVMType(context);
+				auto lt2 = m_retType->getLLVMType(context);
+				llvm::Value* llvmRetVal = m_retType->convertValueBasedOnType(builder, m_var->getLLVMValue(nullptr), m_var->getLLVMType(context), context);
+				m_retInstance = builder.CreateRet(llvmRetVal);
+			}
+			else
+			{
+				printf("Type nie pasuja\n");
+				exit(15);
+			}
 		}
 		else
 		{
@@ -200,7 +209,7 @@ public:
 	{
 		return m_retInstance;
 	}
-	virtual bool isReturn() const override { return true; }
+	virtual bool isReturnStatement() const override { return true; }
 	virtual ~ReturnStatement()
 	{
 		DELETE_TMP_VARIABLE(m_var)
@@ -213,9 +222,10 @@ class CallFunction : public Statement
 {
 	std::vector<Identifier> m_args;
 	Function* m_fun;
+	mutable llvm::CallInst* m_ret;
 	bool m_isSysFunction;
 public:
-	CallFunction(std::vector<Identifier>&& args, Function* fun) : Statement(Identifier("call_fnc_stmt")), m_args(std::move(args)), m_fun(fun), m_isSysFunction(false)
+	CallFunction(std::vector<Identifier>&& args, Function* fun, bool isSystem) : Statement(Identifier("call_fnc_stmt")), m_args(std::move(args)), m_fun(fun), m_isSysFunction(isSystem), m_ret(nullptr)
 	{
 		m_isSysFunction = m_fun->getIdentifier().getName()[0] == '$';
 		AstTree& tree = AstTree::instance();
@@ -232,17 +242,34 @@ public:
 	}
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext& context) const override
 	{
-		assert(0);
-		return nullptr;
+		return m_fun->getLLVMType(context);
 	}
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const override
 	{
-		assert(0);
-		return nullptr;
+		return m_fun->getLLVMValue(type);
 	}
-	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module*) const override
+	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* m) const override
 	{ 
-		
+		AstTree& tree = AstTree::instance();
+		std::vector<llvm::Value*> args;
+		for (auto it : m_args)
+		{
+			auto [isNumber, val] = it.toNumber();
+			auto arg = tree.findObject(it);
+			llvm::Type* _type = nullptr;
+			if (!arg && isNumber)
+			{
+				std::unique_ptr<Variable> uniqueArg = GeneratorTmpVariables::generateI32Variable(it, val);
+				_type = uniqueArg->getLLVMType(context);
+				args.push_back(uniqueArg->getLLVMValue(_type));
+			}
+			if (arg && arg->isVariable())
+			{
+				Variable* _arg = static_cast<Variable*>(arg);
+				args.push_back(arg->getLLVMValue(arg->getLLVMType(context)));
+			}
+		}
+		m_ret = builder.CreateCall(m_fun->getLLVMFunction(context, m, builder), args);
 	}
 	void processSystemFunc(llvm::FunctionCallee* fc, llvm::Value* str, llvm::IRBuilder<>& builder, llvm::LLVMContext& context)
 	{
@@ -266,12 +293,13 @@ public:
 				args.push_back(arg->getLLVMValue(arg->getLLVMType(context)));
 			}	
 		}
-		builder.CreateCall(*fc, args);
+		m_ret = builder.CreateCall(*fc, args);
 	}
 	Identifier getFunctionName()
 	{
  		return m_fun->getIdentifier();
 	}
+	const bool isSystemFunction() { return m_isSysFunction; }
 	virtual bool isCallFunctionStatement() const override { return true; }
 	virtual ~CallFunction() {}
 };

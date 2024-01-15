@@ -9,6 +9,7 @@
 #include <memory>
 #include "DuObject.h"
 #include <llvm/IR/IRBuilder.h>
+#include "Value.h"
 enum class ObjectInByte : unsigned char
 {
 	BYTE,
@@ -24,6 +25,8 @@ public:
 	Type(const Identifier& id) : DuObject(id) {};
 	virtual bool isSimpleNumericType() const { return false; }
 	virtual bool isType() const override { return true; }
+	virtual Value* getDefaultValue() const = 0;
+	virtual Value* convertLLVMToValue(llvm::Value* lv) const = 0;
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const override
 	{
 		return nullptr;
@@ -115,7 +118,14 @@ public:
 		return value;
 
 	}
-
+	virtual Value* getDefaultValue() const override
+	{
+		return new NumericValue();
+	}
+	virtual Value* convertLLVMToValue(llvm::Value* lv) const override
+	{
+		return nullptr;
+	}
 	DuObject* copy() const override
 	{
 		return new SimpleNumericType(getIdentifier(), m_size, isSigned());
