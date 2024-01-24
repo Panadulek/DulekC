@@ -17,11 +17,15 @@ class SystemFunctions final
 	}
 
 
-
-public:
 	SystemFunctions(llvm::Module* m, llvm::IRBuilder<>* b, llvm::LLVMContext* c) : m_module(m), m_builder(b), m_context(c)
 	{
 		generatePrintNumberFunction();
+	}
+public:
+	static SystemFunctions* GetSystemFunctions(llvm::Module* m, llvm::IRBuilder<>* b, llvm::LLVMContext* c)
+	{
+		static SystemFunctions sf(m, b, c);
+		return &sf;
 	}
 	enum class SysFunctionID
 	{

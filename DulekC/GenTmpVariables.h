@@ -12,3 +12,7 @@ namespace GeneratorTmpVariables
 		return std::make_unique<Variable>(_id, type, new NumericValue(val), AstTree::instance().inGlobal());
 	}
 };
+
+
+
+

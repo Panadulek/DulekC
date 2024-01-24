@@ -8,7 +8,7 @@
 #include <iostream>
 #include <ranges>
 #include "SystemFunctions.h"
-
+#include "TypeContainer.h"
 
 class AstTree
 {
@@ -17,7 +17,7 @@ class AstTree
 	std::stack<Scope*> m_stack;
 	void createSysFunction()
 	{
-		m_scopes.emplace_back(new Function(SystemFunctions::getSysFunctionName<SystemFunctions::SysFunctionID::DISPLAY>(), nullptr, {}, {}, true, false));
+		m_scopes.emplace_back(new Function(SystemFunctions::getSysFunctionName<SystemFunctions::SysFunctionID::DISPLAY>(), TypeContainer::instance().getType(SimpleNumericType::generateId(ObjectInByte::DWORD, true)), {}, {}, true, false));
 	}
 	AstTree()
 	{

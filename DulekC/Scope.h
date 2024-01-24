@@ -147,7 +147,7 @@ public:
 		if (m_returnType)
 			return m_returnType->getLLVMType(context);
 		else
-			llvm::Type::getVoidTy(context);
+			return llvm::Type::getVoidTy(context);
 	}
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const override
 	{

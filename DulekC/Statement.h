@@ -98,16 +98,7 @@ class AssigmentStatement : public Statement
 			}
 			auto store = builder.CreateStore(val, m_left->getAlloca());
 			store->setAlignment(m_left->getAlligment());
-			if (m_left->getType()->isSimpleNumericType())
-			{
-				uint64_t castedval = llvm::dyn_cast<llvm::ConstantInt>(store->getValueOperand())->getZExtValue();
-				if (castedval)
-				{
-					auto ptr = new Variable(m_left->getIdentifier(), m_left->getType(), new NumericValue(castedval), m_left->isGlobalVariable());
-					m_left->update(ptr, store->getValueOperand());
-					delete ptr;
-				}
-			}	
+			m_left->updateByLLVM(store->getValueOperand(), store->getValueOperand()->getType());
 		}
 		else
 		{
@@ -220,86 +211,28 @@ public:
 
 class CallFunction : public Statement
 {
-	std::vector<Identifier> m_args;
-	Function* m_fun;
-	mutable llvm::CallInst* m_ret;
-	bool m_isSysFunction;
+	std::unique_ptr<CallFunctionExpression> m_cfe;
 public:
-	CallFunction(std::vector<Identifier>&& args, Function* fun, bool isSystem) : Statement(Identifier("call_fnc_stmt")), m_args(std::move(args)), m_fun(fun), m_isSysFunction(isSystem), m_ret(nullptr)
+	CallFunction(CallFunctionExpression* cfe) : Statement(Identifier("call_fnc_stmt"))
 	{
-		m_isSysFunction = m_fun->getIdentifier().getName()[0] == '$';
-		AstTree& tree = AstTree::instance();
-		for (auto it : m_args)
-		{
-			auto arg = tree.findObject(it);
-			auto [isNumber, val] = it.toNumber(); 
-			if (!arg && !isNumber)
-			{
-				std::cout << "nie znaleziono obiektu: " << it.getName() << std::endl;
-				std::exit(-1);
-			}
-		}
+		m_cfe.reset(cfe);
 	}
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext& context) const override
 	{
-		return m_fun->getLLVMType(context);
+		return m_cfe->getLLVMType(context);
 	}
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const override
 	{
-		return m_fun->getLLVMValue(type);
+		return m_cfe->getLLVMValue(type);
 	}
 	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* m) const override
 	{ 
-		AstTree& tree = AstTree::instance();
-		std::vector<llvm::Value*> args;
-		for (auto it : m_args)
-		{
-			auto [isNumber, val] = it.toNumber();
-			auto arg = tree.findObject(it);
-			llvm::Type* _type = nullptr;
-			if (!arg && isNumber)
-			{
-				std::unique_ptr<Variable> uniqueArg = GeneratorTmpVariables::generateI32Variable(it, val);
-				_type = uniqueArg->getLLVMType(context);
-				args.push_back(uniqueArg->getLLVMValue(_type));
-			}
-			if (arg && arg->isVariable())
-			{
-				Variable* _arg = static_cast<Variable*>(arg);
-				args.push_back(arg->getLLVMValue(arg->getLLVMType(context)));
-			}
-		}
-		m_ret = builder.CreateCall(m_fun->getLLVMFunction(context, m, builder), args);
-	}
-	void processSystemFunc(llvm::FunctionCallee* fc, llvm::Value* str, llvm::IRBuilder<>& builder, llvm::LLVMContext& context)
-	{
-		AstTree& tree = AstTree::instance();
-		std::vector<llvm::Value*> args;
-		args.push_back(str);
-		for (auto it : m_args)
-		{
-			auto [isNumber, val] = it.toNumber();
-			auto arg = tree.findObject(it);
-			llvm::Type* _type = nullptr;
-			if (!arg && isNumber)
-			{
-				std::unique_ptr<Variable> uniqueArg = GeneratorTmpVariables::generateI32Variable(it, val);
-				_type = uniqueArg->getLLVMType(context);
-				args.push_back(uniqueArg->getLLVMValue(_type));
-			}
-			if (arg && arg->isVariable())
-			{
-				Variable* _arg = static_cast<Variable*>(arg);
-				args.push_back(arg->getLLVMValue(arg->getLLVMType(context)));
-			}	
-		}
-		m_ret = builder.CreateCall(*fc, args);
+		m_cfe->processExpression(m, builder, context, false);
 	}
 	Identifier getFunctionName()
 	{
- 		return m_fun->getIdentifier();
+ 		return m_cfe->getIdentifier();
 	}
-	const bool isSystemFunction() { return m_isSysFunction; }
 	virtual bool isCallFunctionStatement() const override { return true; }
 	virtual ~CallFunction() {}
 };

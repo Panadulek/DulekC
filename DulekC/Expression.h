@@ -7,6 +7,8 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include "GenTmpVariables.h"
+#include "Statement.h"
+#include "SystemFunctions.h"
 class Expression : public DuObject
 {
 
@@ -18,7 +20,11 @@ protected:
 		assert(res->isVariable());
 		m_res = static_cast<Variable*>(res->copy());
 	}
-
+	void setRefRes(DuObject* res)
+	{
+		assert(res->isVariable());
+		m_res = static_cast<Variable*>(res);
+	}
 public:
 	virtual void processExpression(llvm::Module*, llvm::IRBuilder<>&, llvm::LLVMContext&, bool s) = 0;
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext& c) const override
@@ -87,7 +93,7 @@ public:
 			else
 				result = builder.CreateUDiv(lVal, rVal);
 		}
-		var1->update(m_r->getRes(), result);
+		var1->updateByLLVM(result, result->getType());
 		setRes(var1);
 	}
 	virtual ~MatematicalExpression() 
@@ -97,6 +103,109 @@ public:
 	}
 };
 
+
+class CallFunctionExpression : public Expression
+{
+	std::vector<Identifier> m_args;
+	Function* m_fun;
+
+	llvm::Value* processUserFunc(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* m) const 
+	{
+		AstTree& tree = AstTree::instance();
+		std::vector<llvm::Value*> args;
+		for (auto it : m_args)
+		{
+			auto [isNumber, val] = it.toNumber();
+			auto arg = tree.findObject(it);
+			llvm::Type* _type = nullptr;
+			if (!arg && isNumber)
+			{
+				std::unique_ptr<Variable> uniqueArg = GeneratorTmpVariables::generateI32Variable(it, val);
+				_type = uniqueArg->getLLVMType(context);
+				args.push_back(uniqueArg->getLLVMValue(_type));
+			}
+			if (arg && arg->isVariable())
+			{
+				Variable* _arg = static_cast<Variable*>(arg);
+				args.push_back(arg->getLLVMValue(arg->getLLVMType(context)));
+			}
+		}
+		return builder.CreateCall(m_fun->getLLVMFunction(context, m, builder), args);
+	}
+	llvm::Value* processSystemFunc(llvm::FunctionCallee* fc, llvm::Value* str, llvm::IRBuilder<>& builder, llvm::LLVMContext& context)
+	{
+		AstTree& tree = AstTree::instance();
+		std::vector<llvm::Value*> args;
+		args.push_back(str);
+		for (auto it : m_args)
+		{
+			auto [isNumber, val] = it.toNumber();
+			auto arg = tree.findObject(it);
+			llvm::Type* _type = nullptr;
+			if (!arg && isNumber)
+			{
+				std::unique_ptr<Variable> uniqueArg = GeneratorTmpVariables::generateI32Variable(it, val);
+				_type = uniqueArg->getLLVMType(context);
+				args.push_back(uniqueArg->getLLVMValue(_type));
+			}
+			if (arg && arg->isVariable())
+			{
+				Variable* _arg = static_cast<Variable*>(arg);
+				args.push_back(arg->getLLVMValue(arg->getLLVMType(context)));
+			}
+		}
+		return builder.CreateCall(*fc, args);
+	}
+
+
+public:
+	CallFunctionExpression(std::vector<Identifier>&& args, Function* fun) : Expression(Identifier("CallFunctionExpr")), m_args(std::move(args)), m_fun(fun)
+	{
+		AstTree& tree = AstTree::instance();
+		for (auto it : m_args)
+		{
+			auto arg = tree.findObject(it);
+			auto [isNumber, val] = it.toNumber();
+			if (!arg && !isNumber)
+			{
+				std::cout << "nie znaleziono obiektu: " << it.getName() << std::endl;
+				std::exit(-1);
+			}
+		}
+	}
+	virtual llvm::Type* getLLVMType(llvm::LLVMContext& context) const override
+	{
+		return m_fun->getLLVMType(context);
+	}
+	virtual llvm::Value* getLLVMValue(llvm::Type* type) const override
+	{
+		return getRes()->getLLVMValue(type);
+	}
+
+	virtual void processExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool) override
+	{
+		bool isSystemFun = m_fun->getIdentifier().getName().data()[0] == '$';
+		llvm::Value* result = nullptr;
+		if (isSystemFun)
+		{
+			SystemFunctions* sf = SystemFunctions::GetSystemFunctions(module, &builder, &context);
+			auto callee = sf->findFunction(m_fun->getIdentifier());
+			if (callee)
+				result = processSystemFunc(callee, builder.CreateGlobalStringPtr("%d\n\0"), builder, context);
+			else
+				isSystemFun = false;
+		}
+		if(!isSystemFun)
+		{
+			result = processUserFunc(builder, context, module);
+		}
+		if (m_fun->isProcedure())
+			return;
+		Variable* variable = new Variable(Identifier(""), m_fun->getType(), nullptr, false);
+		variable->updateByLLVM(result, m_fun->getLLVMType(context));
+		setRes(variable);
+	}
+};
 
 class BasicExpression : public Expression
 {
@@ -119,6 +228,7 @@ public:
 			{
 				auto toDelete = GeneratorTmpVariables::generateI32Variable(getIdentifier(), val);
 				setRes(toDelete.get());
+				toDelete.release();
 			}
 		}
 		

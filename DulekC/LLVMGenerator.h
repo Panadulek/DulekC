@@ -31,7 +31,6 @@ class LLVMGen final
 
 	std::unique_ptr<llvm::Module> m_module;
 	llvm::IRBuilder<> m_builder;
-	SystemFunctions* m_systemFunctions;
 	llvm::LLVMContext& getContext()
 	{
 		static llvm::LLVMContext s_context;
@@ -83,9 +82,6 @@ class LLVMGen final
 			CallFunction* cfs = static_cast<CallFunction*>(s);
 			if (cfs->isCallFunctionStatement())
 			{
-				if (cfs->isSystemFunction())
-					cfs->processSystemFunc(m_systemFunctions->findFunction(cfs->getFunctionName()), m_builder.CreateGlobalStringPtr("%d\n\0"), m_builder, getContext());
-				else
 					cfs->processStatement(m_builder, getContext(), m_module.get());
 			}
 			else
@@ -122,10 +118,6 @@ class LLVMGen final
 		generateDefaultReturnForProcedure(scope);
 		
 	}
-	void buildSystemFunctions()
-	{
-		m_systemFunctions = new SystemFunctions (m_module.get(), &m_builder, &getContext());
-	}
 	void genfile()
 	{
 		std::error_code EC;
@@ -139,12 +131,11 @@ class LLVMGen final
 		m_module->print(OS, nullptr);
 	}
 public:
-	LLVMGen(const std::string& modulename) : m_builder(getContext()), m_systemFunctions(nullptr)
+	LLVMGen(const std::string& modulename) : m_builder(getContext())
 	{
 		m_module = std::make_unique<llvm::Module>(modulename, getContext());
 		llvm::InitializeNativeTarget();
 		llvm::InitializeNativeTargetAsmPrinter();
-		buildSystemFunctions();
 	}
 
 
@@ -186,7 +177,6 @@ public:
 
 	~LLVMGen()
 	{
-		delete m_systemFunctions;
 	}
 
 };

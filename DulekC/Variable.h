@@ -74,10 +74,29 @@ public:
 			delete m_value;
 			m_value = nullptr;
 			m_llvmValue = newLLVMValue;
-			m_value = val ? static_cast<Value*>(val->copy()) : var->getType()->getDefaultValue();
-			m_value->setNewValue(newLLVMValue); 
+			if (val)
+			{
+				m_value = val ? static_cast<Value*>(val->copy()) : var->getType()->getDefaultValue();
+				m_value->setNewValue(newLLVMValue);
+			}
+			else if (!m_value && !val && newLLVMValue)
+			{
+				m_llvmValue = newLLVMValue;
+			}
+			else
+				assert(0);
 		}
 	}
+
+	void updateByLLVM(llvm::Value* val, llvm::Type* type)
+	{
+		if ( type == getLLVMType(type->getContext()) )
+		{
+			m_llvmValue = val;
+			m_llvmType = type;
+		}
+	}
+
 	Type* getType()
 	{
 		return m_type;
@@ -88,7 +107,12 @@ public:
 	}
 	virtual DuObject* copy() const override
 	{
-		return new Variable(getIdentifier(), static_cast<Type*>(m_type->copy()), static_cast<Value*>(m_value->copy()), isGlobalVariable());
+		auto variable = new Variable(getIdentifier(), m_type ? static_cast<Type*>(m_type->copy()) : nullptr, m_value ? static_cast<Value*>(m_value->copy()) : nullptr, isGlobalVariable());
+		if (m_llvmValue && m_llvmType)
+		{
+			variable->updateByLLVM(m_llvmValue, m_llvmType);
+		}
+		return variable;
 	}
 	void setTmp()
 	{
