@@ -11,12 +11,20 @@
 #include <cstdint>
 #include <vector>
 #include "Statement.h"
-#include "FlagsSettings.h"
 #include "SystemFunctions.h"
 #include "Expression.h"
+#include "ContextAnalyzer.h"
+#include "MessageEngine.h"
+#include "LexerContext.h"
+extern std::unique_ptr<MessageEngine> s_messageEngine;
+extern LexerContext* s_lc;
  extern char* yytext;
  int __cdecl yylex(void);
-void yyerror(const char *s) { std::cerr  << s << "  :   " << '"' << yytext << '"' << std::endl; }
+
+void yyerror(const char *s) 
+{ 
+    s_messageEngine->printError(MessageEngine::Code::ERROR_TOKEN, yytext);
+}
 
 std::vector<Type*> yys_types;
 std::vector<Identifier> yys_ids;
@@ -53,7 +61,7 @@ extern int lex(void);
     Expression* pexpr;
 }
 
-%token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE ASSIGMENT PLUS MINUS MULTIPLICATION DIV
+%token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE ASSIGMENT PLUS MINUS MULTIPLICATION DIV COMMENT
 %token FUNCTION_KEYWORD RETURN_KEYWORD 
 %token SYS_DISPLAY
 %token <bytetype> I8 U8 I16 U16 I32 U32 I64 U64
@@ -86,6 +94,7 @@ statement
     : variable_declaration
     | function_declaration
     | variable_assigment
+    | ignored_rules
     ;
 
 
@@ -93,9 +102,10 @@ statement
 function_declaration:
     FUNCTION_KEYWORD IDENTIFIER LBRACE argument_list RBRACE ARROW type LBRACE type_list RBRACE 
     {
-        if(!CompilerParserFlags::instance().enterFunction())
+        if(!s_lc->isInGlobalContext())
         {
-            throw std::runtime_error("FN_IN_FN");
+            s_messageEngine->printError(MessageEngine::Code::FunctionInsideScope, nullptr);
+            exit(static_cast<uint32_t>(MessageEngine::Code::FunctionInsideScope));
         }
         if(yys_ids.size() != yys_types.size())
         {
@@ -107,30 +117,8 @@ function_declaration:
         AstTree::instance().beginScope(fn);
         delete [] $2;
     }
-    body_block{}
-    ;
-    statements:
-    statement statements
-    |
-    ;
 
-body_block:
-    LBUCKLE
-    {
-        if(!CompilerParserFlags::instance().isInFunction())
-            throw std::runtime_error("NO_IN_FN");
-    }
-    statements
-    {
-    }
-    RBUCKLE 
-     {
-            if(!CompilerParserFlags::instance().isInFunction())
-                throw std::runtime_error("NO_IN_FN");
-            AstTree::instance().endScope();
-            CompilerParserFlags::instance().exitFunction();
-    }
-    ;
+
 variable_declaration
     : 
     IDENTIFIER ARROW type INIT_TYPE just_value_init SEMICOLON
@@ -271,8 +259,11 @@ variable_declaration
   variable_assigment:
     argument ASSIGMENT argument SEMICOLON
     {
-        if(!CompilerParserFlags::instance().isInFunction())
-            throw std::runtime_error("NO_IN_FN");
+        if(s_lc->isInGlobalContext())
+        {
+            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+        }
         auto& tree = AstTree::instance();
 		auto l = dynamic_cast<Variable*>(tree.findObject(*$1));
 		auto r = dynamic_cast<Variable*>(tree.findObject(*$3));
@@ -284,8 +275,11 @@ variable_declaration
     |
     argument ASSIGMENT just_value_init  SEMICOLON
     {
-        if(!CompilerParserFlags::instance().isInFunction())
-            throw std::runtime_error("NO_IN_FN");
+        if(s_lc->isInGlobalContext())
+        {
+            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+        }
         auto& tree = AstTree::instance();
         auto l = dynamic_cast<Variable*>(tree.findObject(*$1));
         Variable* r = new Variable(Identifier(""), l->getType(), $3, tree.inGlobal());
@@ -296,8 +290,11 @@ variable_declaration
     |
     argument ASSIGMENT  expression SEMICOLON
     {
-        if(!CompilerParserFlags::instance().isInFunction())
-            throw std::runtime_error("NO_IN_FN");
+        if(s_lc->isInGlobalContext())
+        {
+            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+        }
         auto& tree = AstTree::instance();
         auto l = dynamic_cast<Variable*>(tree.findObject(*$1));
         $$ = new AssigmentStatement(l, $3);
@@ -308,8 +305,11 @@ variable_declaration
     |
     RETURN_KEYWORD argument SEMICOLON
     {
-        if(!CompilerParserFlags::instance().isInFunction())
-            throw std::runtime_error("NO_IN_FN");
+        if(s_lc->isInGlobalContext())
+        {
+            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+        }
         auto& tree = AstTree::instance();
         auto l = tree.findObject(*$2);
         auto s = tree.getCurrentScope();
@@ -327,8 +327,11 @@ variable_declaration
     |
     SYS_DISPLAY LBRACE argument_list RBRACE SEMICOLON
     {
-        if(!CompilerParserFlags::instance().isInFunction())
-            throw std::runtime_error("NO_IN_FN");
+        if(s_lc->isInGlobalContext())
+        {
+            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+        }
         auto& tree = AstTree::instance();
         Identifier id(SystemFunctions::getSysFunctionName<SystemFunctions::SysFunctionID::DISPLAY>());
         Function* f = tree.findFunction(id);
@@ -338,8 +341,11 @@ variable_declaration
     |
     argument LBRACE argument_list RBRACE SEMICOLON
     {
-        if(!CompilerParserFlags::instance().isInFunction())
-            throw std::runtime_error("NO_IN_FN");
+        if(s_lc->isInGlobalContext())
+        {
+            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+        }
         auto& tree = AstTree::instance();
         Function* f = tree.findFunction(*$1);
         $$ = new CallFunction( new CallFunctionExpression(std::move(yys_ids), f) );
@@ -396,6 +402,11 @@ factor
     ;
 
 
-
+    ignored_rules:
+        LBUCKLE{}
+        |
+        RBUCKLE{}
+        |
+        COMMENT{}
 %%
 

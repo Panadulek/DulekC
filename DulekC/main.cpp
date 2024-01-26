@@ -12,6 +12,8 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
 #include <llvm/Support/raw_ostream.h>
+#include "MessageEngine.h"
+#include <memory>
 int yyparse(void);
 extern FILE* yyin;
 #define NOT_IMPLEMENTED_FEATURE_
@@ -22,7 +24,10 @@ void not_implemented_feature()
 #endif
 }
 
+std::unique_ptr<MessageEngine> s_messageEngine;
 
+
+extern void initlex(void);
 
 
 int main(int argc, char* argv[])
@@ -32,6 +37,9 @@ int main(int argc, char* argv[])
 		code = fopen_s(&yyin, argv[1], "r");
 	else
 		code = fopen_s(&yyin, "Main.du", "r");
+	
+	s_messageEngine = std::make_unique<TerminalMessageEngine>();
+	initlex();
 	yyparse();
 	LLVMGen generator("test");
 	generator.genIRForFile(AstTree::instance().begin(), AstTree::instance().end());
