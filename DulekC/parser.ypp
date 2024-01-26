@@ -20,9 +20,13 @@ void yyerror(const char *s) { std::cerr  << s << "  :   " << '"' << yytext << '"
 
 std::vector<Type*> yys_types;
 std::vector<Identifier> yys_ids;
-
+extern int lex(void);
+#define yylex lex
 
 %}
+
+
+
 %code requires {
 
     #include "Type.h"
@@ -79,11 +83,8 @@ program
     ;
 
 statement
-    : statement
-    | variable_declaration
+    : variable_declaration
     | function_declaration
-    | function_body_begin
-    | function_body_end
     | variable_assigment
     ;
 
@@ -100,42 +101,36 @@ function_declaration:
         {
             throw std::runtime_error("type_size_counter_not_eq");
         }
-        Function* fn = new Function(Identifier($2), $7, std::move(yys_ids), std::move(yys_types), false, false);
+
+        const bool isProcedure = !$7;
+        Function* fn = new Function(Identifier($2), $7, std::move(yys_ids), std::move(yys_types), false, isProcedure);
         AstTree::instance().beginScope(fn);
         delete [] $2;
     }
+    body_block{}
+    ;
+    statements:
+    statement statements
     |
-    FUNCTION_KEYWORD IDENTIFIER LBRACE argument_list RBRACE ARROW  LBRACE type_list RBRACE 
+    ;
+
+body_block:
+    LBUCKLE
     {
-        if(!CompilerParserFlags::instance().enterFunction())
-        {
-            throw std::runtime_error("FN_IN_FN");
-        }
-        if(yys_ids.size() != yys_types.size())
-        {
-            throw std::runtime_error("type_size_counter_not_eq");
-        }
-        Function* fn = new Function(Identifier($2), nullptr, std::move(yys_ids), std::move(yys_types), false, true);
-        AstTree::instance().beginScope(fn);
-        delete [] $2;
+        if(!CompilerParserFlags::instance().isInFunction())
+            throw std::runtime_error("NO_IN_FN");
     }
-
-    function_body_begin:
-        LBUCKLE 
-        {
-            if(!CompilerParserFlags::instance().isInFunction())
-                throw std::runtime_error("NO_IN_FN");
-
-        }
-
-    function_body_end:
-        RBUCKLE 
-        {
+    statements
+    {
+    }
+    RBUCKLE 
+     {
             if(!CompilerParserFlags::instance().isInFunction())
                 throw std::runtime_error("NO_IN_FN");
             AstTree::instance().endScope();
             CompilerParserFlags::instance().exitFunction();
-        }
+    }
+    ;
 variable_declaration
     : 
     IDENTIFIER ARROW type INIT_TYPE just_value_init SEMICOLON
@@ -169,7 +164,10 @@ variable_declaration
 
 
     type
-    : byte_type
+    : 
+    {$$ = nullptr;}
+    |
+    byte_type
     {
        Identifier id = SimpleNumericType::generateId($1, true) ;
        TypeContainer::instance().insert<SimpleNumericType>(id, id, $1, true);
@@ -258,11 +256,13 @@ variable_declaration
   type_list:
   | type 
   {
-    yys_types.push_back($1);
+    if($1)
+        yys_types.push_back($1);
   }
   | type_list COMMA type
   {
-    yys_types.push_back($3);
+    if($3)
+        yys_types.push_back($3);
   }
   ;
 

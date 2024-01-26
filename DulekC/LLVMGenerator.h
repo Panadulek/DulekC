@@ -142,7 +142,7 @@ public:
 	void genIRForFile(const AstTree::Iterator begin, const AstTree::Iterator end)
 	{
 		for (auto it = begin; it != end; it++)
-		{
+		{ 
 			genIRForScope(*it);
 		}
 	}
@@ -174,6 +174,7 @@ public:
 	{
 		m_module->print(llvm::outs(), nullptr);
 	}
+
 
 	~LLVMGen()
 	{

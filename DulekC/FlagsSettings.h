@@ -17,7 +17,8 @@ class CompilerParserFlags
 	bool m_inFunction;
 	bool m_inStruct;
 	bool m_inGlobal;
-
+	int m_braceCounter;
+	int m_buckleCounter;
 
 	void err(const std::string& str)
 	{
@@ -57,4 +58,26 @@ public:
 		return (m_inFunction && !m_inGlobal);
 	}
 
+	int openBrace()
+	{
+		m_braceCounter++;
+		return m_braceCounter;
+	}
+	int closeBrace()
+	{
+		m_braceCounter--;
+		return m_braceCounter;
+	}
+
+	int openBuckle()
+	{
+		m_buckleCounter++;
+		return m_buckleCounter;
+	}
+
+	int closeBuckle()
+	{
+		m_buckleCounter--;
+		return m_buckleCounter;
+	}
 };

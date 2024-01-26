@@ -35,7 +35,7 @@
 /* "%code requires" blocks.  */
 
 /* Line 1676 of yacc.c  */
-#line 26 "parser.ypp"
+#line 30 "parser.ypp"
 
 
     #include "Type.h"
@@ -96,7 +96,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 39 "parser.ypp"
+#line 43 "parser.ypp"
 
     char* str;  
     uint64_t num; 

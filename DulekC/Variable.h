@@ -66,7 +66,7 @@ public:
 	{
 		return m_isGlobal;
 	}
-	void update(Variable* var, llvm::Value* newLLVMValue = nullptr)
+	bool update(Variable* var, llvm::Value* newLLVMValue = nullptr)
 	{
 		if (typeid(var->getType()) == typeid(m_type))
 		{	
@@ -78,23 +78,27 @@ public:
 			{
 				m_value = val ? static_cast<Value*>(val->copy()) : var->getType()->getDefaultValue();
 				m_value->setNewValue(newLLVMValue);
+				return true;
 			}
 			else if (!m_value && !val && newLLVMValue)
 			{
 				m_llvmValue = newLLVMValue;
+				return true;
 			}
 			else
-				assert(0);
+				return false;
 		}
 	}
 
-	void updateByLLVM(llvm::Value* val, llvm::Type* type)
+	bool updateByLLVM(llvm::Value* val, llvm::Type* type)
 	{
 		if ( type == getLLVMType(type->getContext()) )
 		{
 			m_llvmValue = val;
 			m_llvmType = type;
+			return true;
 		}
+		return false;
 	}
 
 	Type* getType()
