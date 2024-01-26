@@ -1,7 +1,7 @@
 #include "FlagsSettings.h"
 #include "parser.hpp" 
 int __cdecl yylex();
-
+static ContextManager s_sm;
 static enum 
 {
 	IDX_BRACE = 0,
@@ -10,7 +10,7 @@ static enum
 } BRACES;
 
 
-void calculateBraces(int token, int arr[IDX_END])
+static void calculateBraces(int token, int arr[IDX_END])
 {
 	switch (token)
 	{
@@ -31,30 +31,33 @@ void calculateBraces(int token, int arr[IDX_END])
 }
 
 
-void analyzeBraces(int token, int arr[IDX_END])
+static void analyzeBraces(int token, int arr[IDX_END])
 {
 	if (arr[IDX_BUCKLE] < 0)
-	{
-		
-	}
+	{}
 	else if (arr[IDX_BUCKLE] > 0 && token == SEMICOLON)
-	{
-
-	}
+	{}
 	if (arr[IDX_BRACE] < 0)
-	{
-
-	}
+	{}
 	else if (arr[IDX_BRACE] > 0 && token == SEMICOLON)
-	{
-
-	}
+	{}
 }
+
+
+static ContextManager::Context findNextContext(int token)
+{
+
+
+
+}
+
+
 
 int __cdecl lex(void)
 {
 	int token = yylex();
 	static int braces[IDX_END];
+	ContextManager::Context nextContext = ContextManager::Context::EMPTY;
 	for (auto& it : braces)
 	{
 		it = 0;
