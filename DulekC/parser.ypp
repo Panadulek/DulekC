@@ -145,14 +145,15 @@ if_block:
         std::span<DuObject*> members = currScope->getList();
         if(members.empty())
         {
-          
+          Error(MessageEngine::Code::ElseNeedsIfContext, nullptr);
         }
         DuObject* ifScope = members.back();
         if(!ifScope->isIfScope())
         {
-            
+            Error(MessageEngine::Code::ElseNeedsIfContext, nullptr);
         }
-
+        static_cast<IfScope*>(ifScope)->beginElse();
+        tree.beginScope(static_cast<Scope*>(ifScope));
         s_lc->setNeedOpenBuckle(true);
     }
     ;

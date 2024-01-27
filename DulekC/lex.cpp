@@ -51,7 +51,9 @@ static CMContext findNextContext(int token)
 	if (token == FUNCTION_KEYWORD)
 		return CMContext::FUNCTION;
 	else if (token == IF_KEYWORD)
-		 return CMContext::IF;
+		return CMContext::IF;
+	else if (token == ELSE_KEYWORD)
+		return CMContext::ELSE;
 	return CMContext::EMPTY;
 }
 
@@ -99,11 +101,35 @@ int* getBraces()
 	return braces;
 }
 
+void summaryBracesCounter(int arr[IDX_END])
+{
+	if (arr[0] > 0)
+	{
+		Error(MessageEngine::Code::BRACE_COUNTER, "(");
+	}
+	else if (arr[0] < 0)
+	{
+		Error(MessageEngine::Code::BRACE_COUNTER, ")");
+	}
+	if (arr[1] > 0)
+	{
+		Error(MessageEngine::Code::BRACE_COUNTER, "{");
+	}
+	else if (arr[1] < 0)
+	{
+		Error(MessageEngine::Code::BRACE_COUNTER, "}");
+	}
 
+}
 
 int __cdecl lex(void)
 {
 	int token = yylex();
+	static int* braces = getBraces();
+	if (!token)
+	{
+		summaryBracesCounter(braces);
+	}
 	if (s_lc->isExpectedOpenBuckle())
 	{
 		if (token != LBUCKLE)
@@ -114,7 +140,7 @@ int __cdecl lex(void)
 		else
 			s_lc->setNeedOpenBuckle(false);
 	}
-	static int* braces = getBraces();
+
 	LexerContext::Context nextContext = LexerContext::Context::EMPTY;
 	calculateBraces(token, braces);
 	analyzeBraces(token, braces);

@@ -24,6 +24,7 @@ public:
 		FunctionInsideScope,
 		ExecuteGlobalExpression,
 		NeedToOpenScope,
+		ElseNeedsIfContext,
 	};
 private:
 	std::string getErrorMessage(Code code)
@@ -41,6 +42,8 @@ private:
 			return "Cannot execute expression in global context";
 		case Code::NeedToOpenScope:
 			return "Scope needs to be open with token \"{\"";
+		case Code::ElseNeedsIfContext:
+			return "Else statement needs if statement before";
 		default:
 			return "Not implemented message";
 		}

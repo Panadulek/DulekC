@@ -14,6 +14,7 @@ public:
 		GLOBAL,
 		FUNCTION,
 		IF,
+		ELSE,
 		END_CONTEXT
 	};
 private:
