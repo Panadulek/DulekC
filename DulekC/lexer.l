@@ -54,6 +54,9 @@
 "-"						{return MINUS;}
 "*"						{return MULTIPLICATION;}
 "/"						{return DIV;}
+"<"                     {return LT;}
+">"                     {return GT;}
+"=="                    {return EQ;}
 .                       { /* Ignoruj inne znaki */ }
 
 

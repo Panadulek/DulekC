@@ -66,6 +66,7 @@ extern int lex(void);
 
 %token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE ASSIGMENT PLUS MINUS MULTIPLICATION DIV COMMENT
 %token FUNCTION_KEYWORD RETURN_KEYWORD IF_KEYWORD ELSE_KEYWORD
+%token LT GT EQ
 %token SYS_DISPLAY
 %token <bytetype> I8 U8 I16 U16 I32 U32 I64 U64
 %token <str> IDENTIFIER
@@ -86,6 +87,7 @@ extern int lex(void);
 %type<pexpr> factor
 %type<pexpr> term
 %type<pexpr> expression
+%type<pexpr> boolean_expr
 %%
 
 program
@@ -395,7 +397,8 @@ variable_declaration
 
 
     expression
-    : term { $$ = $1}
+    : term { $$ = $1 ; }
+    | boolean_expr { $$ = $1; }
     | expression PLUS term
         { $$ = new MatematicalExpression(Identifier("+"), $1, $3);    }
     | expression MINUS term
@@ -436,6 +439,20 @@ factor
     }
     ;
 
+boolean_expr
+    : expression LT expression
+        {
+            $$ = nullptr;
+        }
+    | expression GT expression
+        {
+            $$ = nullptr;
+        }
+    | expression EQ expression
+        {
+            $$ = nullptr;
+        }
+    ;
 
     ignored_rules:
         LBUCKLE{}
