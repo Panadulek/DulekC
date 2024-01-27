@@ -41,7 +41,7 @@ static void calculateBraces(int token, int arr[IDX_END])
 
 static void analyzeBraces(int token, int arr[IDX_END])
 {
-	if ( ( arr[IDX_BUCKLE] < 0 ) || ( arr[IDX_BUCKLE] > 0 && token == SEMICOLON ) || ( arr[IDX_BRACE] < 0 ) || (arr[IDX_BRACE] > 0 && token == SEMICOLON) )
+	if ( ( arr[IDX_BUCKLE] < 0 ) ||  ( arr[IDX_BRACE] < 0 )  )
 	{
 		s_messageEngine->printError(MessageEngine::Code::BRACE_COUNTER, yytext);
 	}
