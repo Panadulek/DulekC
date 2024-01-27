@@ -1,8 +1,11 @@
 #pragma once
+
 #include "DuObject.h"
 #include "Variable.h"
 #include <list>
 #include <span>
+
+
 class Scope : public DuObject
 {
 protected:
@@ -60,16 +63,11 @@ public:
 		assert(0);
 		return nullptr;
 	}
-	llvm::BasicBlock* getBasicBlock(llvm::LLVMContext& context, llvm::Function* fn)
+	virtual llvm::BasicBlock* getBasicBlock(llvm::LLVMContext& context, llvm::Function* fn)
 	{
 		if (!m_llvmBlock)
 		{
-			if (m_blockEntryName.empty())
-			{
-				m_blockEntryName = getIdentifier().getName().data();
-				m_blockEntryName += "_du_fun_entry";
-			}
-			m_llvmBlock  = llvm::BasicBlock::Create(context, getEntryName(), fn);
+			m_llvmBlock  = llvm::BasicBlock::Create(context, "global", fn);
 		}
 		return m_llvmBlock;
 	}
@@ -166,6 +164,18 @@ public:
 	const bool isSystemFunction() const { return m_isSystemFunction;  }
 	const bool isProcedure() const { return m_isProcedure;  }
 	virtual bool isFunction() const { return true; }
+	virtual llvm::BasicBlock* getBasicBlock(llvm::LLVMContext& context, llvm::Function* fn) override
+	{
+		if (!m_llvmBlock)
+		{
+			if (m_blockEntryName.empty())
+			{
+				m_blockEntryName = getIdentifier().getName().data();
+				m_blockEntryName += "_du_fun_entry";
+			}
+			m_llvmBlock = llvm::BasicBlock::Create(context, getEntryName(), fn);
+		}
+		return m_llvmBlock;
+	}
 };
-
 

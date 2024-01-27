@@ -13,16 +13,26 @@ public:
 		EMPTY = 0,
 		GLOBAL,
 		FUNCTION,
+		IF,
 		END_CONTEXT
 	};
 private:
 	std::stack<Context> m_contextQueue;
 	Context m_next;
-
+	bool m_expectOpenBuckle;
 public:
-	LexerContext() : m_next(Context::EMPTY)
+	LexerContext() : m_next(Context::EMPTY), m_expectOpenBuckle(false)
 	{
 		m_contextQueue.push(Context::GLOBAL);
+	}
+	bool isExpectedOpenBuckle()
+	{
+		return m_expectOpenBuckle;
+	}
+
+	void setNeedOpenBuckle(bool s)
+	{
+		m_expectOpenBuckle = s;
 	}
 
 	void setNextContext(Context c)

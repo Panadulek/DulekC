@@ -41,6 +41,7 @@ public:
 	virtual bool isType() const  { return false; }
 	virtual bool isScope() const { return false; }
 	virtual bool isConstValue() const { return false; }
+	virtual bool isIfScope() const { return false;  }
 	std::string_view getName() { return m_id.getName(); }
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const = 0;
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const = 0;

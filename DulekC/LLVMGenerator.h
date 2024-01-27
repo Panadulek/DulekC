@@ -21,6 +21,7 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/FileSystem.h>
 #include "SystemFunctions.h"
+#include"Ifscope.h"
 #define NO_CLEAR_MEMORY
 extern void not_implemented_feature();
 
@@ -94,7 +95,16 @@ class LLVMGen final
 	}
 	void genIRForElement(DuObject* obj, Scope* scope)
 	{
-		if (obj->isVariable())
+		if (obj->isIfScope())
+		{
+			IfScope* ifs = static_cast<IfScope*>(obj);
+			ifs->generateLLVMIf(getContext(), m_module.get(), m_builder, [this](DuObject* d, Scope* s)
+				{
+					genIRForElement(d, s);
+				}
+			);
+		}
+		else if (obj->isVariable())
 		{
 			Variable* v = static_cast<Variable*>(obj);
 			genIRForVariable(v, scope);
