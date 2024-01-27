@@ -51,7 +51,6 @@ public:
 	{
 		return m_childs.end();
 	}
-
 	virtual bool isScope() const override { return true; }
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const override
 	{

@@ -63,5 +63,10 @@ public:
 		return m_contextQueue.top() == Context::GLOBAL;
 	}
 
+	Context getCurrentContext()
+	{
+		return m_contextQueue.top();
+	}
+
 	friend class ContextAnalyzer;
 };

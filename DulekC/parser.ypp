@@ -17,14 +17,16 @@
 #include "MessageEngine.h"
 #include "LexerContext.h"
 #include "Ifscope.h"
-extern std::unique_ptr<MessageEngine> s_messageEngine;
+extern void Error(MessageEngine::Code code, const char* additionalMsg);
+extern void Warning(MessageEngine::Code code, const char* additionalMsg);
+extern void Info(MessageEngine::Code code, const char* additionalMsg);
 extern LexerContext* s_lc;
  extern char* yytext;
  int __cdecl yylex(void);
 
 void yyerror(const char *s) 
 { 
-    s_messageEngine->printError(MessageEngine::Code::ERROR_TOKEN, yytext);
+    Error(MessageEngine::Code::ERROR_TOKEN, yytext);
 }
 
 std::vector<Type*> yys_types;
@@ -63,7 +65,7 @@ extern int lex(void);
 }
 
 %token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE ASSIGMENT PLUS MINUS MULTIPLICATION DIV COMMENT
-%token FUNCTION_KEYWORD RETURN_KEYWORD IF_KEYWORD
+%token FUNCTION_KEYWORD RETURN_KEYWORD IF_KEYWORD ELSE_KEYWORD
 %token SYS_DISPLAY
 %token <bytetype> I8 U8 I16 U16 I32 U32 I64 U64
 %token <str> IDENTIFIER
@@ -97,6 +99,7 @@ statement
     | variable_assigment
     | ignored_rules
     | if_block
+    | else_block
     ;
 
 
@@ -106,8 +109,7 @@ function_declaration:
     {
         if(!s_lc->isInGlobalContext())
         {
-            s_messageEngine->printError(MessageEngine::Code::FunctionInsideScope, nullptr);
-            exit(static_cast<uint32_t>(MessageEngine::Code::FunctionInsideScope));
+            Error(MessageEngine::Code::FunctionInsideScope, nullptr);
         }
         if(yys_ids.size() != yys_types.size())
         {
@@ -126,13 +128,31 @@ if_block:
     {
         if(s_lc->isInGlobalContext())
         {
-            s_messageEngine->printError(MessageEngine::Code::FunctionInsideScope, nullptr);
-            exit(static_cast<uint32_t>(MessageEngine::Code::FunctionInsideScope));
+            Error(MessageEngine::Code::FunctionInsideScope, nullptr);
         }
         auto& tree = AstTree::instance();
         IfScope* isc = new IfScope($3);
         tree.addObject(isc);
         tree.beginScope(isc);
+        s_lc->setNeedOpenBuckle(true);
+    }
+    ;
+  else_block:
+    ELSE_KEYWORD
+    {
+        auto& tree = AstTree::instance();
+        Scope* currScope = tree.getCurrentScope();
+        std::span<DuObject*> members = currScope->getList();
+        if(members.empty())
+        {
+          
+        }
+        DuObject* ifScope = members.back();
+        if(!ifScope->isIfScope())
+        {
+            
+        }
+
         s_lc->setNeedOpenBuckle(true);
     }
     ;
@@ -278,8 +298,7 @@ variable_declaration
     {
         if(s_lc->isInGlobalContext())
         {
-            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
-            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+            Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
         }
         auto& tree = AstTree::instance();
 		auto l = dynamic_cast<Variable*>(tree.findObject(*$1));
@@ -294,8 +313,7 @@ variable_declaration
     {
         if(s_lc->isInGlobalContext())
         {
-            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
-            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+            Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
         }
         auto& tree = AstTree::instance();
         auto l = dynamic_cast<Variable*>(tree.findObject(*$1));
@@ -309,8 +327,7 @@ variable_declaration
     {
         if(s_lc->isInGlobalContext())
         {
-            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
-            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+           Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
         }
         auto& tree = AstTree::instance();
         auto l = dynamic_cast<Variable*>(tree.findObject(*$1));
@@ -324,8 +341,7 @@ variable_declaration
     {
         if(s_lc->isInGlobalContext())
         {
-            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
-            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+           Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
         }
         auto& tree = AstTree::instance();
         auto l = tree.findObject(*$2);
@@ -349,8 +365,7 @@ variable_declaration
     {
         if(s_lc->isInGlobalContext())
         {
-            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
-            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+           Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
         }
         auto& tree = AstTree::instance();
         Identifier id(SystemFunctions::getSysFunctionName<SystemFunctions::SysFunctionID::DISPLAY>());
@@ -363,8 +378,7 @@ variable_declaration
     {
         if(s_lc->isInGlobalContext())
         {
-            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
-            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+            Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
         }
         auto& tree = AstTree::instance();
         Function* f = tree.findFunction(*$1);

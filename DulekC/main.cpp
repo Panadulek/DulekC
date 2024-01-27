@@ -24,11 +24,11 @@ void not_implemented_feature()
 #endif
 }
 
-std::unique_ptr<MessageEngine> s_messageEngine;
+
 
 
 extern void initlex(void);
-
+extern void initTerminalMessageEngine(void);
 
 int main(int argc, char* argv[])
 {
@@ -38,8 +38,9 @@ int main(int argc, char* argv[])
 	else
 		code = fopen_s(&yyin, "Main.du", "r");
 	
-	s_messageEngine = std::make_unique<TerminalMessageEngine>();
+
 	initlex();
+	initTerminalMessageEngine();
 	yyparse();
 	LLVMGen generator("test");
 	generator.genIRForFile(AstTree::instance().begin(), AstTree::instance().end());

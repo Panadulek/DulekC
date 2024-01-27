@@ -4,15 +4,8 @@
 #include "MessageEngine.h"
 #include <memory>
 int __cdecl yylex();
-
-
-
 LexerContext* s_lc = nullptr;
-
-
-
-
-extern std::unique_ptr<MessageEngine> s_messageEngine;
+extern void Error(MessageEngine::Code code, const char* additional_msg);
 extern char* yytext;
 static enum 
 {
@@ -48,7 +41,7 @@ static void analyzeBraces(int token, int arr[IDX_END])
 {
 	if ( ( arr[IDX_BUCKLE] < 0 ) ||  ( arr[IDX_BRACE] < 0 )  )
 	{
-		s_messageEngine->printError(MessageEngine::Code::BRACE_COUNTER, yytext);
+		Error(MessageEngine::Code::BRACE_COUNTER, yytext);
 	}
 }
 
@@ -106,15 +99,16 @@ int* getBraces()
 	return braces;
 }
 
+
+
 int __cdecl lex(void)
 {
 	int token = yylex();
-
 	if (s_lc->isExpectedOpenBuckle())
 	{
 		if (token != LBUCKLE)
 		{
-			s_messageEngine->printError(MessageEngine::Code::NeedToOpenScope, nullptr);
+			Error(MessageEngine::Code::NeedToOpenScope, nullptr);
 			exit(static_cast<uint8_t>(MessageEngine::Code::NeedToOpenScope));
 		}
 		else
@@ -124,11 +118,7 @@ int __cdecl lex(void)
 	LexerContext::Context nextContext = LexerContext::Context::EMPTY;
 	calculateBraces(token, braces);
 	analyzeBraces(token, braces);
-
-
 	nextContext = findNextContext(token);
 	changeActualState(token, nextContext);
-
-
 	return token;
 }
