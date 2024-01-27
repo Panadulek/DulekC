@@ -16,6 +16,7 @@
 #include "ContextAnalyzer.h"
 #include "MessageEngine.h"
 #include "LexerContext.h"
+#include "Ifscope.h"
 extern std::unique_ptr<MessageEngine> s_messageEngine;
 extern LexerContext* s_lc;
  extern char* yytext;
@@ -62,7 +63,7 @@ extern int lex(void);
 }
 
 %token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE ASSIGMENT PLUS MINUS MULTIPLICATION DIV COMMENT
-%token FUNCTION_KEYWORD RETURN_KEYWORD 
+%token FUNCTION_KEYWORD RETURN_KEYWORD IF_KEYWORD
 %token SYS_DISPLAY
 %token <bytetype> I8 U8 I16 U16 I32 U32 I64 U64
 %token <str> IDENTIFIER
@@ -95,6 +96,7 @@ statement
     | function_declaration
     | variable_assigment
     | ignored_rules
+    | if_block
     ;
 
 
@@ -115,10 +117,25 @@ function_declaration:
         const bool isProcedure = !$7;
         Function* fn = new Function(Identifier($2), $7, std::move(yys_ids), std::move(yys_types), false, isProcedure);
         AstTree::instance().beginScope(fn);
+        s_lc->setNeedOpenBuckle(true);
         delete [] $2;
     }
 
-
+if_block:
+    IF_KEYWORD LBRACE expression RBRACE
+    {
+        if(s_lc->isInGlobalContext())
+        {
+            s_messageEngine->printError(MessageEngine::Code::FunctionInsideScope, nullptr);
+            exit(static_cast<uint32_t>(MessageEngine::Code::FunctionInsideScope));
+        }
+        auto& tree = AstTree::instance();
+        IfScope* isc = new IfScope($3);
+        tree.addObject(isc);
+        tree.beginScope(isc);
+        s_lc->setNeedOpenBuckle(true);
+    }
+    ;
 variable_declaration
     : 
     IDENTIFIER ARROW type INIT_TYPE just_value_init SEMICOLON
@@ -313,10 +330,13 @@ variable_declaration
         auto& tree = AstTree::instance();
         auto l = tree.findObject(*$2);
         auto s = tree.getCurrentScope();
-        if(s->isFunction())
+        if( s->isFunction() )
         {
             $$ = new ReturnStatement(l, static_cast<Function*>(s)->getType());
             tree.addObject($$);
+        }
+        else if(s->isIfScope())
+        {
         }
         else
         {

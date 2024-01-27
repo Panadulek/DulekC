@@ -37,7 +37,7 @@ public:
 	{
 		auto predicate = [&obj](const DuObject* _obj)
 			{ 	
-				return (!_obj->isStatement() &&  _obj->getIdentifier() == obj->getIdentifier());
+				return (!_obj->isStatement() && !_obj->isIfScope() && _obj->getIdentifier() == obj->getIdentifier());
 			
 			};
 		assert(!m_stack.empty());
@@ -61,14 +61,17 @@ public:
 
 	void beginScope(Scope* scope)
 	{
-		auto predicate = [&scope](const DuObject* _scope) { return _scope->getIdentifier() == scope->getIdentifier(); };
-		auto filteredView = std::views::filter(m_scopes, predicate);
-		if (std::ranges::distance(filteredView) > 0)
+		if (!scope->isIfScope())
 		{
-			assert(0);
+			auto predicate = [&scope](const DuObject* _scope) { return _scope->getIdentifier() == scope->getIdentifier(); };
+			auto filteredView = std::views::filter(m_scopes, predicate);
+			if (std::ranges::distance(filteredView) > 0)
+			{
+				assert(0);
+			}
+			m_scopes.push_back(scope);
 		}
-		m_scopes.push_back(scope);
-		m_stack.push(m_scopes.back());
+		m_stack.push(scope);
 	}
 	void endScope()
 	{
@@ -108,13 +111,28 @@ public:
 		}
 		else
 		{
-			auto it = std::find_if(m_stack.top()->begin(), m_stack.top()->end(), [&id](const DuObject* obj)
+			Scope* scope = m_stack.top();
+			while (true)
+			{
+				if (!scope)
+					break;
+				else if (scope->isScope())
 				{
-					return id == obj->getIdentifier();
+					auto it = std::find_if(scope->begin(), scope->end(), [&id](const DuObject* obj)
+						{
+							return id == obj->getIdentifier();
+						}
+					);
+					if (scope->end() != it)
+					{
+						ret = *it;
+						break;
+					}
+					if (scope == m_root)
+						break;
+					scope = static_cast<Scope*>(scope->getParent());
 				}
-			);
-			if (it != m_stack.top()->end())
-				ret = *it;
+			}
 		}
 		return ret;
 	}
@@ -171,6 +189,12 @@ public:
 		auto top = m_stack.top();
 		return (top == m_root);
 	}
+
+	bool isGlobal(DuObject * d)
+	{
+		return d == m_root;
+	}
+
 	~AstTree()
 	{
 			for (auto it : m_scopes)

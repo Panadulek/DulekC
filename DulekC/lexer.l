@@ -20,6 +20,7 @@
 
 %%
 "fnc"					{return FUNCTION_KEYWORD;}
+"if"                    {return IF_KEYWORD;}
 "return"				{ return RETURN_KEYWORD;}
 "i8"					{ yylval.bytetype = ObjectInByte::BYTE; return I8; }
 "u8"					{ yylval.bytetype = ObjectInByte::BYTE; return U8; }

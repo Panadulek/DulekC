@@ -22,7 +22,8 @@ public:
 		ERROR_TOKEN,
 		BRACE_COUNTER,
 		FunctionInsideScope,
-		ExecuteGlobalExpression
+		ExecuteGlobalExpression,
+		NeedToOpenScope,
 	};
 private:
 	std::string getErrorMessage(Code code)
@@ -38,6 +39,8 @@ private:
 			return "Cannot create function in scoped";
 		case Code::ExecuteGlobalExpression:
 			return "Cannot execute expression in global context";
+		case Code::NeedToOpenScope:
+			return "Scope needs to be open with token \"{\"";
 		default:
 			return "Not implemented message";
 		}
