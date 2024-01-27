@@ -64,6 +64,7 @@ static void changeActualState(int token, CMContext context)
 	}
 	else if (token == RBUCKLE)
 	{
+		AstTree::instance().endScope();
 		s_lc->popContext();
 	}
 	else

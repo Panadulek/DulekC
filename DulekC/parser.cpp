@@ -525,9 +525,9 @@ static const yytype_uint16 yyrline[] =
        0,    88,    88,    90,    94,    95,    96,    97,   103,   124,
      131,   141,   148,   156,   158,   166,   175,   180,   185,   190,
      196,   201,   206,   211,   216,   217,   221,   225,   230,   237,
-     244,   245,   250,   260,   271,   281,   291,   308,   317,   325,
-     333,   334,   336,   342,   343,   347,   352,   356,   361,   365,
-     376,   378,   380
+     244,   245,   250,   260,   276,   291,   306,   328,   342,   355,
+     363,   364,   366,   372,   373,   377,   382,   386,   391,   395,
+     406,   408,   410
 };
 #endif
 
@@ -1722,6 +1722,11 @@ yyreduce:
 /* Line 1455 of yacc.c  */
 #line 261 "parser.ypp"
     {
+        if(s_lc->isInGlobalContext())
+        {
+            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+        }
         auto& tree = AstTree::instance();
 		auto l = dynamic_cast<Variable*>(tree.findObject(*(yyvsp[(1) - (4)].pidentifier)));
 		auto r = dynamic_cast<Variable*>(tree.findObject(*(yyvsp[(3) - (4)].pidentifier)));
@@ -1735,8 +1740,13 @@ yyreduce:
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 272 "parser.ypp"
+#line 277 "parser.ypp"
     {
+        if(s_lc->isInGlobalContext())
+        {
+            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+        }
         auto& tree = AstTree::instance();
         auto l = dynamic_cast<Variable*>(tree.findObject(*(yyvsp[(1) - (4)].pidentifier)));
         Variable* r = new Variable(Identifier(""), l->getType(), (yyvsp[(3) - (4)].pval), tree.inGlobal());
@@ -1749,8 +1759,13 @@ yyreduce:
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 282 "parser.ypp"
+#line 292 "parser.ypp"
     {
+        if(s_lc->isInGlobalContext())
+        {
+            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+        }
         auto& tree = AstTree::instance();
         auto l = dynamic_cast<Variable*>(tree.findObject(*(yyvsp[(1) - (4)].pidentifier)));
         (yyval.pstatement) = new AssigmentStatement(l, (yyvsp[(3) - (4)].pexpr));
@@ -1763,8 +1778,13 @@ yyreduce:
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 292 "parser.ypp"
+#line 307 "parser.ypp"
     {
+        if(s_lc->isInGlobalContext())
+        {
+            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+        }
         auto& tree = AstTree::instance();
         auto l = tree.findObject(*(yyvsp[(2) - (3)].pidentifier));
         auto s = tree.getCurrentScope();
@@ -1784,8 +1804,13 @@ yyreduce:
   case 37:
 
 /* Line 1455 of yacc.c  */
-#line 309 "parser.ypp"
+#line 329 "parser.ypp"
     {
+        if(s_lc->isInGlobalContext())
+        {
+            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+        }
         auto& tree = AstTree::instance();
         Identifier id(SystemFunctions::getSysFunctionName<SystemFunctions::SysFunctionID::DISPLAY>());
         Function* f = tree.findFunction(id);
@@ -1797,8 +1822,13 @@ yyreduce:
   case 38:
 
 /* Line 1455 of yacc.c  */
-#line 318 "parser.ypp"
+#line 343 "parser.ypp"
     {
+        if(s_lc->isInGlobalContext())
+        {
+            s_messageEngine->printError(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+            exit(static_cast<uint32_t>(MessageEngine::Code::ExecuteGlobalExpression));
+        }
         auto& tree = AstTree::instance();
         Function* f = tree.findFunction(*(yyvsp[(1) - (5)].pidentifier));
         (yyval.pstatement) = new CallFunction( new CallFunctionExpression(std::move(yys_ids), f) );
@@ -1810,35 +1840,35 @@ yyreduce:
   case 40:
 
 /* Line 1455 of yacc.c  */
-#line 333 "parser.ypp"
+#line 363 "parser.ypp"
     { (yyval.pexpr) = (yyvsp[(1) - (1)].pexpr);}
     break;
 
   case 41:
 
 /* Line 1455 of yacc.c  */
-#line 335 "parser.ypp"
+#line 365 "parser.ypp"
     { (yyval.pexpr) = new MatematicalExpression(Identifier("+"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr));    ;}
     break;
 
   case 42:
 
 /* Line 1455 of yacc.c  */
-#line 337 "parser.ypp"
+#line 367 "parser.ypp"
     { (yyval.pexpr) = new MatematicalExpression(Identifier("-"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr));    ;}
     break;
 
   case 43:
 
 /* Line 1455 of yacc.c  */
-#line 342 "parser.ypp"
+#line 372 "parser.ypp"
     { (yyval.pexpr) = (yyvsp[(1) - (1)].pexpr) ;}
     break;
 
   case 44:
 
 /* Line 1455 of yacc.c  */
-#line 344 "parser.ypp"
+#line 374 "parser.ypp"
     { 
         (yyval.pexpr) = new MatematicalExpression(Identifier("*"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr));    
     ;}
@@ -1847,14 +1877,14 @@ yyreduce:
   case 45:
 
 /* Line 1455 of yacc.c  */
-#line 348 "parser.ypp"
+#line 378 "parser.ypp"
     { (yyval.pexpr) = new MatematicalExpression(Identifier("/"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr));    ;}
     break;
 
   case 46:
 
 /* Line 1455 of yacc.c  */
-#line 353 "parser.ypp"
+#line 383 "parser.ypp"
     {
            (yyval.pexpr) = new BasicExpression(Identifier(std::to_string((yyvsp[(1) - (1)].num))));
         ;}
@@ -1863,7 +1893,7 @@ yyreduce:
   case 47:
 
 /* Line 1455 of yacc.c  */
-#line 357 "parser.ypp"
+#line 387 "parser.ypp"
     { 
             (yyval.pexpr) = new BasicExpression(*(yyvsp[(1) - (1)].pidentifier));
             delete (yyvsp[(1) - (1)].pidentifier);
@@ -1873,7 +1903,7 @@ yyreduce:
   case 48:
 
 /* Line 1455 of yacc.c  */
-#line 362 "parser.ypp"
+#line 392 "parser.ypp"
     {
             (yyval.pexpr) = (yyvsp[(2) - (3)].pexpr); 
     ;}
@@ -1882,7 +1912,7 @@ yyreduce:
   case 49:
 
 /* Line 1455 of yacc.c  */
-#line 366 "parser.ypp"
+#line 396 "parser.ypp"
     {
         auto& tree = AstTree::instance();
         Function* f = tree.findFunction(*(yyvsp[(1) - (4)].pidentifier));
@@ -1894,28 +1924,28 @@ yyreduce:
   case 50:
 
 /* Line 1455 of yacc.c  */
-#line 376 "parser.ypp"
+#line 406 "parser.ypp"
     {;}
     break;
 
   case 51:
 
 /* Line 1455 of yacc.c  */
-#line 378 "parser.ypp"
+#line 408 "parser.ypp"
     {;}
     break;
 
   case 52:
 
 /* Line 1455 of yacc.c  */
-#line 380 "parser.ypp"
+#line 410 "parser.ypp"
     {;}
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 1919 "parser.cpp"
+#line 1949 "parser.cpp"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2127,7 +2157,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 381 "parser.ypp"
+#line 411 "parser.ypp"
 
 
 
