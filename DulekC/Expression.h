@@ -52,12 +52,133 @@ public:
 
 
 
-class MatematicalExpression : public Expression
+class AdvancedExpression : public Expression
+{
+	Expression* m_l;
+	Expression* m_r;
+
+	void processMathematicalExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool s, char op)
+	{
+		auto var1 = m_l->getRes();
+		auto lVal = m_l->getLLVMValue(m_l->getLLVMType(context));
+		auto rVal = var1->getType()->convertValueBasedOnType(builder, m_r->getLLVMValue(m_l->getLLVMType(context)), m_r->getLLVMType(context), context);
+		llvm::Value* result = nullptr;
+		if (op == '+')
+		{
+			result = builder.CreateAdd(lVal, rVal);
+		}
+		else if (op == '-')
+		{
+			result = builder.CreateSub(lVal, rVal);
+		}
+		else if (op == '*')
+		{
+			result = builder.CreateMul(lVal, rVal);
+		}
+		else if (op == '/')
+		{
+			if (s)
+				result = builder.CreateSDiv(lVal, rVal);
+			else
+				result = builder.CreateUDiv(lVal, rVal);
+		}
+		
+		var1->updateByLLVM(result, result->getType());
+		setRes(var1);
+	}
+	char isMathematicalExpression()
+	{
+		const std::string_view view = getIdentifier().getName();
+		if (!view.compare("+") || !view.compare("-") || !view.compare("*") || !view.compare("/"))
+		{
+			return view[0];
+		}
+		return '\0';
+	}
+
+	void processBooleanExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool s, char op)
+	{
+		auto var1 = m_l->getRes();
+		auto lVal = m_l->getLLVMValue(m_l->getLLVMType(context));
+		auto rVal = var1->getType()->convertValueBasedOnType(builder, m_r->getLLVMValue(m_l->getLLVMType(context)), m_r->getLLVMType(context), context);
+		llvm::Value* result = nullptr;
+		switch (op)
+		{
+		case '>':
+			if(!s)
+				result = builder.CreateICmpUGT(lVal, rVal, ">");
+			else
+				result = builder.CreateICmpSGT(lVal, rVal, ">");
+			break;
+		case '<':
+			if(!s)
+				result = builder.CreateICmpULT(lVal, rVal, "<");
+			else
+				result = builder.CreateICmpSLT(lVal, rVal, "<");
+			break;
+		default:
+			{
+				std::string_view  opStr = getIdentifier().getName();
+				if (!opStr.compare("=="))
+				{
+					result = builder.CreateICmpEQ(lVal, rVal, "==");
+				}
+				else
+					assert(0);
+			}
+		}
+		assert(result->getType()->isIntegerTy(1));
+		var1->setBooleanValue();
+		var1->updateByLLVM(result, result->getType());
+		setRes(var1);
+	}
+
+	char isBooleanExpression()
+	{
+		const std::string_view view = getIdentifier().getName();
+		if (!view.compare("<") || !view.compare(">") || !view.compare("=="))
+		{
+			return view[0];
+		}
+		return '\0';
+	}
+
+public:
+	AdvancedExpression(Identifier op, Expression* l, Expression* r) : Expression(op), m_l(l), m_r(r)
+	{}
+
+	virtual void processExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool s) override
+	{
+		m_l->processExpression(module, builder, context, s);
+		m_r->processExpression(module, builder, context, s);
+		assert(m_l && m_r);
+		char op = isMathematicalExpression();
+		if (op)
+		{
+			processMathematicalExpression(module, builder, context, s, op);
+			return;
+		}
+		op = isBooleanExpression();
+		if (op)
+		{
+			processBooleanExpression(module, builder, context, s, op);
+			return;
+		}
+		assert(0);
+	}
+	virtual ~AdvancedExpression() 
+	{
+		delete m_l;
+		delete m_r;
+	}
+};
+
+class BooleanExpression : public Expression
 {
 	Expression* m_l;
 	Expression* m_r;
 public:
-	MatematicalExpression(Identifier op, Expression* l, Expression* r) : Expression(op), m_l(l), m_r(r)
+	BooleanExpression(Identifier op, Expression* l, Expression* r) : Expression(op), m_l(l), m_r(r)
 	{}
 
 	virtual void processExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool s) override
@@ -66,14 +187,14 @@ public:
 		std::string_view view = getIdentifier().getName();
 		m_l->processExpression(module, builder, context, s);
 		m_r->processExpression(module, builder, context, s);
-		
+
 		auto var1 = m_l->getRes();
 
 		auto lVal = m_l->getLLVMValue(m_l->getLLVMType(context));
 		auto rVal = var1->getType()->convertValueBasedOnType(builder, m_r->getLLVMValue(m_l->getLLVMType(context)), m_r->getLLVMType(context), context);
-		
+
 		llvm::Value* result = nullptr;
-		
+
 		if (!view.compare("+"))
 		{
 			result = builder.CreateAdd(lVal, rVal);
@@ -88,7 +209,7 @@ public:
 		}
 		else if (!view.compare("/"))
 		{
-			if(s)
+			if (s)
 				result = builder.CreateSDiv(lVal, rVal);
 			else
 				result = builder.CreateUDiv(lVal, rVal);
@@ -96,13 +217,7 @@ public:
 		var1->updateByLLVM(result, result->getType());
 		setRes(var1);
 	}
-	virtual ~MatematicalExpression() 
-	{
-		delete m_l;
-		delete m_r;
-	}
 };
-
 
 class CallFunctionExpression : public Expression
 {

@@ -15,6 +15,7 @@ class Variable : public DuObject
 	DECLARELLVM(AllocaInst);
 	bool m_isGlobal;
 	bool m_isTmp = false;
+	bool m_hasBooleanValue;
 	llvm::Value* _getLLVMValue(llvm::Type* type) const
 	{
 		if (m_value->isNumericValue() && m_type->isSimpleNumericType())
@@ -26,7 +27,7 @@ class Variable : public DuObject
 
 public:
 	Variable(Identifier id, Type* type, Value* val, bool globalScope) : DuObject(id), m_type(type), m_value(val), m_isGlobal(globalScope), 
-		m_llvmType(nullptr), m_llvmValue(nullptr), m_llvmAllocaInst(nullptr) {}
+		m_llvmType(nullptr), m_llvmValue(nullptr), m_llvmAllocaInst(nullptr), m_hasBooleanValue(false) {}
 	virtual bool isVariable() const override { return true; }
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext& context) const override
 	{
@@ -89,6 +90,11 @@ public:
 				return false;
 		}
 	}
+	void forceUpdateByLLVM(llvm::Value* val, llvm::Type* type)
+	{
+		m_llvmValue = val;
+		m_llvmType = type;
+	}
 
 	bool updateByLLVM(llvm::Value* val, llvm::Type* type)
 	{
@@ -111,11 +117,13 @@ public:
 	}
 	virtual DuObject* copy() const override
 	{
-		auto variable = new Variable(getIdentifier(), m_type ? static_cast<Type*>(m_type->copy()) : nullptr, m_value ? static_cast<Value*>(m_value->copy()) : nullptr, isGlobalVariable());
+		auto variable = new Variable(getIdentifier(), m_type ? m_type : nullptr, m_value ? static_cast<Value*>(m_value->copy()) : nullptr, isGlobalVariable());
 		if (m_llvmValue && m_llvmType)
 		{
 			variable->updateByLLVM(m_llvmValue, m_llvmType);
 		}
+		if (m_hasBooleanValue)
+			variable->setBooleanValue();
 		return variable;
 	}
 	void setTmp()
@@ -126,6 +134,19 @@ public:
 	{
 		return m_isTmp;
 	}
+
+	void setBooleanValue()
+	{
+		m_hasBooleanValue = true;
+		m_type = TypeContainer::instance().getType(Type::getName(Type::ID::BOOL));
+		m_llvmType = nullptr;
+	}
+
+	bool isBooleanValue()
+	{
+		return m_hasBooleanValue;
+	}
+
 	virtual ~Variable() 
 	{
 		delete m_value;

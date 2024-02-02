@@ -71,7 +71,8 @@ public:
 				assert(0);         
 			}
 			llvm::Value* condition = variable->getLLVMValue(variable->getLLVMType(c));
-			condition = b.CreateICmpNE(condition, b.getInt32(0), "int to bool");
+			if(!variable->isBooleanValue())
+				condition = b.CreateICmpNE(condition, b.getInt32(0), "int to bool");
 			if (!m_mergeBlock)
 				m_mergeBlock = llvm::BasicBlock::Create(c, "merge_block", llvmfnc);
 			if(!m_elseBlock)

@@ -4,6 +4,7 @@
 #include <memory>
 class TypeContainer
 {
+	bool m_isInited = false;
 	struct TypeContainerHash
 	{
 		size_t operator()(const Identifier& id)const {
@@ -26,6 +27,26 @@ public:
 		m_typeMap[id] = std::make_unique<T>(std::forward<Args>(args)...);
 	}
 	
+
+	void init()
+	{
+		if (m_isInited)
+			return;
+		m_isInited = true;
+		insert<SimpleNumericType>(Identifier(Type::getName(Type::ID::BOOL)), Identifier(Type::getName(Type::ID::BOOL)), ObjectInByte::BOOLEAN, false);
+
+		insert<SimpleNumericType>(Type::getName(Type::ID::U8), Identifier(Type::getName(Type::ID::U8)), ObjectInByte::BYTE, false);
+		insert<SimpleNumericType>(Type::getName(Type::ID::U16), Identifier(Type::getName(Type::ID::U16)), ObjectInByte::WORD, false);
+		insert<SimpleNumericType>(Type::getName(Type::ID::U32), Identifier(Type::getName(Type::ID::U32)), ObjectInByte::DWORD, false);
+		insert<SimpleNumericType>(Type::getName(Type::ID::U64), Identifier(Type::getName(Type::ID::U64)), ObjectInByte::QWORD, false);
+
+		insert<SimpleNumericType>(Identifier(Type::getName(Type::ID::I8)), Identifier(Type::getName(Type::ID::I8)), ObjectInByte::BYTE, true);
+		insert<SimpleNumericType>(Identifier(Type::getName(Type::ID::I16)), Identifier(Type::getName(Type::ID::I16)), ObjectInByte::WORD, true);
+		insert<SimpleNumericType>(Identifier(Type::getName(Type::ID::I32)), Identifier(Type::getName(Type::ID::I32)), ObjectInByte::DWORD, true);
+		insert<SimpleNumericType>(Identifier(Type::getName(Type::ID::I64)), Identifier(Type::getName(Type::ID::I64)), ObjectInByte::QWORD, true);
+
+	}
+
 	Type* getType(const Identifier id)
 	{
 		auto ret = m_typeMap.find(id);
@@ -37,6 +58,7 @@ public:
 	static TypeContainer& instance()
 	{
 		static TypeContainer _tc;
+		_tc.init();
 		return _tc;
 	}
 

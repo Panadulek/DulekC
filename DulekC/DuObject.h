@@ -11,6 +11,7 @@ class Identifier
 public:
 	Identifier(const std::string& id) : m_id(id) 
 	{}
+	Identifier(const char* id) : m_id(id) {}
 	std::string_view getName() const { return m_id; }
 	bool operator==(const Identifier& otherId) const
 	{

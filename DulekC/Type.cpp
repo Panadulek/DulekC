@@ -19,6 +19,8 @@ namespace LLVM_GEN
 		{
 			switch (size)
 			{
+				case ObjectInByte::BOOLEAN:
+					return llvm::Type::getInt1Ty(context);
 				case ObjectInByte::BYTE:
 					return llvm::Type::getInt8Ty(context);
 				case ObjectInByte::WORD:

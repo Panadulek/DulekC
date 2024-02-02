@@ -12,11 +12,17 @@
 #include "Value.h"
 enum class ObjectInByte : unsigned char
 {
+	BOOLEAN,
 	BYTE,
 	WORD,
 	DWORD,
 	QWORD,
 };
+
+
+
+
+
 
 class Type : public DuObject
 {
@@ -43,7 +49,52 @@ public:
 	}
 	virtual size_t getSizeInBytes() const = 0;
 	virtual ~Type() {}
+
+	enum ID
+	{
+		BOOL = 0,
+		I8,
+		U8,
+		I16,
+		U16,
+		I32,
+		U32,
+		I64,
+		U64,
+		END_TYPE
+	};
+
+	static const char* getName(Type::ID id)
+	{
+		switch (id)
+		{
+		case ID::BOOL:
+			return "bool";
+		
+		case ID::U8:
+			return "u8";
+		case ID::U16:
+			return "u16";
+		case ID::U32:
+			return "u32";
+		case ID::U64:
+			return "u64";
+
+		case ID::I8:
+			return "i8";
+		case ID::I16:
+			return "i16";
+		case ID::I32:
+			return "i32";
+		case ID::I64:
+			return "i64";
+		default:
+			return nullptr;
+		}
+	}
+
 };
+
 
 class SimpleNumericType final : public Type
 {
@@ -55,26 +106,28 @@ public:
 	{
 		switch (id)
 		{
+		case ObjectInByte::BOOLEAN:
+			return Identifier(Type::getName(Type::ID::BOOL));
 		case ObjectInByte::BYTE:
 			if (isSigned)
-				return Identifier("i8");
+				return Identifier(Type::getName(Type::ID::I8));
 			else
-				return Identifier("u8");
+				return Identifier(Type::getName(Type::ID::U8));
 		case ObjectInByte::WORD:
 			if (isSigned)
-				return Identifier("i16");
+				return Identifier(Type::getName(Type::ID::I16));
 			else
-				return Identifier("u16");
+				return Identifier(Type::getName(Type::ID::U16));
 		case ObjectInByte::DWORD:
 			if (isSigned)
-				return Identifier("i32");
+				return Identifier(Type::getName(Type::ID::I32));
 			else
-				return Identifier("u32");
+				return Identifier(Type::getName(Type::ID::U32));
 		case ObjectInByte::QWORD:
 			if (isSigned)
-				return Identifier("i64");
+				return Identifier(Type::getName(Type::ID::I64));
 			else
-				return Identifier("u64");
+				return Identifier(Type::getName(Type::ID::U64));
 		}
 	}
 	virtual bool isSimpleNumericType() const override { return true; }

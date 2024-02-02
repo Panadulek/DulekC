@@ -400,9 +400,9 @@ variable_declaration
     : term { $$ = $1 ; }
     | boolean_expr { $$ = $1; }
     | expression PLUS term
-        { $$ = new MatematicalExpression(Identifier("+"), $1, $3);    }
+        { $$ = new AdvancedExpression(Identifier("+"), $1, $3);    }
     | expression MINUS term
-        { $$ = new MatematicalExpression(Identifier("-"), $1, $3);    }
+        { $$ = new AdvancedExpression(Identifier("-"), $1, $3);    }
 
     ;
 
@@ -410,10 +410,10 @@ term
     : factor { $$ = $1 }
     | term MULTIPLICATION factor
     { 
-        $$ = new MatematicalExpression(Identifier("*"), $1, $3);    
+        $$ = new AdvancedExpression(Identifier("*"), $1, $3);    
     }
     | term DIV factor
-        { $$ = new MatematicalExpression(Identifier("/"), $1, $3);    }
+        { $$ = new AdvancedExpression(Identifier("/"), $1, $3);    }
     ;
 
 factor
@@ -442,15 +442,15 @@ factor
 boolean_expr
     : expression LT expression
         {
-            $$ = nullptr;
+            $$ = new AdvancedExpression(Identifier("<"), $1, $3)
         }
     | expression GT expression
         {
-            $$ = nullptr;
+            $$ = new AdvancedExpression(Identifier(">"), $1, $3)
         }
     | expression EQ expression
         {
-            $$ = nullptr;
+            $$ = new AdvancedExpression(Identifier("=="), $1, $3);
         }
     ;
 
