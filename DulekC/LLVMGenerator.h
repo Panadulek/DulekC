@@ -170,6 +170,7 @@ public:
 		std::unique_ptr<llvm::ExecutionEngine> EE(
 			llvm::EngineBuilder(std::move(m_module))
 			.setErrorStr(&ErrStr)
+			.setOptLevel(llvm::CodeGenOptLevel::None)
 			.create());
 
 		if (!EE)

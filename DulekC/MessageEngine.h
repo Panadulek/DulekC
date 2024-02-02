@@ -25,6 +25,7 @@ public:
 		ExecuteGlobalExpression,
 		NeedToOpenScope,
 		ElseNeedsIfContext,
+		CannotConvertToBoolean,
 	};
 private:
 	std::string getErrorMessage(Code code)
@@ -44,6 +45,8 @@ private:
 			return "Scope needs to be open with token \"{\"";
 		case Code::ElseNeedsIfContext:
 			return "Else statement needs if statement before";
+		case Code::CannotConvertToBoolean:
+			return "Variable cannot been convert to boolean type";
 		default:
 			return "Not implemented message";
 		}

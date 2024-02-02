@@ -3,9 +3,13 @@
 #include "Value.h"
 #include "llvm/IR/IRBuilder.h"
 #include "TypeContainer.h"
+#include "LexerContext.h"
+#include "MessageEngine.h"
 class AstTree;
 #define DECLARELLVM(X) mutable llvm::##X* m_llvm##X
-
+extern void Error(MessageEngine::Code code, const char* additionalMsg);
+extern void Warning(MessageEngine::Code code, const char* additionalMsg);
+extern void Info(MessageEngine::Code code, const char* additionalMsg);
 class Variable : public DuObject
 {
 	Type* m_type;
@@ -118,12 +122,12 @@ public:
 	virtual DuObject* copy() const override
 	{
 		auto variable = new Variable(getIdentifier(), m_type ? m_type : nullptr, m_value ? static_cast<Value*>(m_value->copy()) : nullptr, isGlobalVariable());
+		if (m_hasBooleanValue)
+			variable->setBooleanValue();
 		if (m_llvmValue && m_llvmType)
 		{
 			variable->updateByLLVM(m_llvmValue, m_llvmType);
 		}
-		if (m_hasBooleanValue)
-			variable->setBooleanValue();
 		return variable;
 	}
 	void setTmp()
@@ -146,7 +150,17 @@ public:
 	{
 		return m_hasBooleanValue;
 	}
-
+	llvm::Value* toBoolean(llvm::LLVMContext& c, llvm::IRBuilder<>& b)
+	{
+		if (m_hasBooleanValue)
+			return getLLVMValue(getLLVMType(c));
+		if (m_type->isSimpleNumericType())
+		{
+			return b.CreateICmpNE(getLLVMValue(getLLVMType(c)), b.getInt32(0), "int to bool");
+		}
+		Error(MessageEngine::Code::CannotConvertToBoolean, getIdentifier().getName().data());
+		return nullptr;
+	}
 	virtual ~Variable() 
 	{
 		delete m_value;

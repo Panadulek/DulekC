@@ -356,6 +356,8 @@ variable_declaration
         }
         else if(s->isIfScope())
         {
+            $$ = new ReturnStatement(l, static_cast<IfScope*>(s)->getFunctionParent()->getType());
+            tree.addObject($$);
         }
         else
         {

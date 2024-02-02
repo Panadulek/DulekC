@@ -60,6 +60,8 @@ public:
 		}
 		if (!isParentGlobal)
 		{
+			bool ifReturn = false;
+			bool elseReturn = false;
 			bool isElse = false;
 			Function* fnc = static_cast<Function*>(it);
 			llvm::Function* llvmfnc = fnc->getLLVMFunction(c, m, b);
@@ -70,13 +72,8 @@ public:
 			{
 				assert(0);         
 			}
-			llvm::Value* condition = variable->getLLVMValue(variable->getLLVMType(c));
-			if(!variable->isBooleanValue())
-				condition = b.CreateICmpNE(condition, b.getInt32(0), "int to bool");
-			if (!m_mergeBlock)
-				m_mergeBlock = llvm::BasicBlock::Create(c, "merge_block", llvmfnc);
-			if(!m_elseBlock)
-				m_elseBlock = llvm::BasicBlock::Create(c, "else_block", llvmfnc, m_mergeBlock);
+			llvm::Value* condition = variable->toBoolean(c, b);
+
 			bool foundElseSplitter = false;
 			for (auto it : m_childs)
 			{
@@ -84,13 +81,26 @@ public:
 				{
 					foundElseSplitter = true;
 				}
+				if (it->isStatement() && static_cast<ReturnStatement*>(it)->isReturnStatement())
+				{
+					if (!foundElseSplitter)
+						ifReturn = true;
+					else
+						elseReturn = true;
+				}
 			}
-			if (!foundElseSplitter)
+
+			const bool isNeedMergeBlock = !(elseReturn && ifReturn);
+			if (!m_elseBlock && foundElseSplitter)
+				m_elseBlock = llvm::BasicBlock::Create(c, "else_block", llvmfnc, then);
+			if (!m_mergeBlock && isNeedMergeBlock)
+				m_mergeBlock = llvm::BasicBlock::Create(c, "merge_block", llvmfnc);
+			if(isNeedMergeBlock)
+				b.CreateCondBr(condition, then, m_elseBlock ? m_elseBlock : m_mergeBlock);
+			else if (!isNeedMergeBlock)
 			{
-				m_elseBlock->eraseFromParent();
-				m_elseBlock = nullptr;
+				b.CreateCondBr(condition, then, m_elseBlock);
 			}
-			b.CreateCondBr(condition, then, m_elseBlock ? m_elseBlock : m_mergeBlock);
 			b.SetInsertPoint(then);
 			auto it = m_childs.begin();
 			std::vector<DuObject*> elseStatements;
@@ -102,11 +112,16 @@ public:
 					continue;
 				}
 				if (!isElse)
+				{
 					m_cb(*it, this);
+				}
 				else
+				{
 					elseStatements.push_back(*it);
+				}
 			}
-			b.CreateBr(m_mergeBlock);
+			if(isNeedMergeBlock)
+				b.CreateBr(m_mergeBlock);
 			if(isElse)
 			{
 				b.SetInsertPoint(m_elseBlock);
@@ -114,10 +129,11 @@ public:
 				{
 					m_cb(it, this);
 				}
-				b.CreateBr(m_mergeBlock);
+				if (isNeedMergeBlock)
+					b.CreateBr(m_mergeBlock);
 			}
-
-			b.SetInsertPoint(m_mergeBlock);
+			if(isNeedMergeBlock)
+				b.SetInsertPoint(m_mergeBlock);
 		}
 	}
 	virtual llvm::BasicBlock* getBasicBlock(llvm::LLVMContext& context, llvm::Function* fn) override
@@ -129,6 +145,17 @@ public:
 		return m_llvmBlock;
 	}
 	virtual bool isIfScope() const override { return true; }
+	Function* getFunctionParent()
+	{
+		DuObject* ret = this;
+		if (!ret->isFunction())
+		{
+			ret = ret->getParent();
+			if (!ret)
+				assert(0);
+		}
+		return static_cast<Function*>(ret);
+	}
 	~IfScope()
 	{
 		delete m_expr;
