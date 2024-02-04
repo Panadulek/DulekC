@@ -29,6 +29,17 @@ class Variable : public DuObject
 		return m_value->getLLVMValue(type);
 	}
 
+
+	llvm::Value* _getLLVMValue(llvm::IRBuilder<>& builder, llvm::Type* type) const
+	{
+		if (m_value->isNumericValue() && m_type->isSimpleNumericType())
+		{
+			static_cast<NumericValue*>(m_value)->setSigned(static_cast<SimpleNumericType*>(m_type)->isSigned());
+		}
+		return m_value->getLLVMValueOnStack(builder, type);
+	}
+
+
 public:
 	Variable(Identifier id, Type* type, Value* val, bool globalScope) : DuObject(id), m_type(type), m_value(val), m_isGlobal(globalScope), 
 		m_llvmType(nullptr), m_llvmValue(nullptr), m_llvmAllocaInst(nullptr), m_hasBooleanValue(false) {}
@@ -47,7 +58,12 @@ public:
 		return m_llvmValue;
 
 	}
-
+	llvm::Value* getLLVMValueOnStack(llvm::IRBuilder<>& b, llvm::Type* type)
+	{
+		if (!m_llvmValue)
+			m_llvmValue = _getLLVMValue(b, type);
+		return m_llvmValue;
+	}
 	void init(llvm::AllocaInst* inst, llvm::IRBuilder<>& builder)
 	{
 		if (m_llvmAllocaInst)
@@ -71,29 +87,7 @@ public:
 	{
 		return m_isGlobal;
 	}
-	bool update(Variable* var, llvm::Value* newLLVMValue = nullptr)
-	{
-		if (typeid(var->getType()) == typeid(m_type))
-		{	
-			Value* val = var->getValue();
-			delete m_value;
-			m_value = nullptr;
-			m_llvmValue = newLLVMValue;
-			if (val)
-			{
-				m_value = val ? static_cast<Value*>(val->copy()) : var->getType()->getDefaultValue();
-				m_value->setNewValue(newLLVMValue);
-				return true;
-			}
-			else if (!m_value && !val && newLLVMValue)
-			{
-				m_llvmValue = newLLVMValue;
-				return true;
-			}
-			else
-				return false;
-		}
-	}
+
 	void forceUpdateByLLVM(llvm::Value* val, llvm::Type* type)
 	{
 		m_llvmValue = val;
@@ -128,6 +122,7 @@ public:
 		{
 			variable->updateByLLVM(m_llvmValue, m_llvmType);
 		}
+		variable->setKey(getKey());
 		return variable;
 	}
 	void setTmp()

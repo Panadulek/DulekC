@@ -2,6 +2,7 @@
 #include "Expression.h"
 #include "AstTree.h"
 #include "Scope.h"
+#include <string_view>
 class IfScope : public Scope
 {
 	Expression* m_expr;
@@ -27,11 +28,31 @@ class IfScope : public Scope
 			return nullptr;
 		}
 	};
+
+	void updatePhi(std::map<std::shared_ptr<KeyType>, llvm::PHINode*>&phiMap, Function* parent)
+	{
+		if (!parent)
+			return;
+		for (auto it : phiMap)
+		{
+			DuObject* obj = findObject(it.first);
+			DuObject* var = parent->findObject(obj->getObject()->getIdentifier());
+			var->updateByLLVM(it.second, it.second->getType());
+		}
+	}
+	void defaultCopiedValues(Function* parent, const size_t maxOrginalSize)
+	{
+		for (auto it = m_childs.begin() + maxOrginalSize; it != m_childs.end(); ++it )
+		{
+			DuObject*& _it = *it;
+			_it->getLLVMValue(nullptr)->print(llvm::outs());
+			*it = parent->findObject(_it->getIdentifier());
+			(*it)->getLLVMValue(nullptr)->print(llvm::outs());
+		}
+	}
 public:
 	IfScope(Expression* expr) : Scope(Identifier("If")), m_expr(expr),  m_mergeBlock(nullptr), m_elseBlock(nullptr)
 	{
-		AstTree& tree = AstTree::instance();
-
 	}
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext& context) const override
 	{
@@ -48,7 +69,8 @@ public:
 	{
 		DuObject* it = this;
 		bool isParentGlobal = false;
-		auto& tree = AstTree::instance();
+		auto& tree = AstTree::instance();	
+		Function* parentFun;
 		while (!it->isFunction())
 		{
 			if (tree.isGlobal(it))
@@ -58,6 +80,7 @@ public:
 			}
 			it = it->getParent();
 		}
+		parentFun = static_cast<Function*>(it);
 		if (!isParentGlobal)
 		{
 			bool ifReturn = false;
@@ -73,7 +96,6 @@ public:
 				assert(0);         
 			}
 			llvm::Value* condition = variable->toBoolean(c, b);
-
 			bool foundElseSplitter = false;
 			for (auto it : m_childs)
 			{
@@ -81,7 +103,7 @@ public:
 				{
 					foundElseSplitter = true;
 				}
-				if (it->isStatement() && static_cast<ReturnStatement*>(it)->isReturnStatement())
+				if (it && it->isStatement() && static_cast<ReturnStatement*>(it)->isReturnStatement())
 				{
 					if (!foundElseSplitter)
 						ifReturn = true;
@@ -89,51 +111,110 @@ public:
 						elseReturn = true;
 				}
 			}
-
 			const bool isNeedMergeBlock = !(elseReturn && ifReturn);
 			if (!m_elseBlock && foundElseSplitter)
-				m_elseBlock = llvm::BasicBlock::Create(c, "else_block", llvmfnc, then);
+				m_elseBlock = llvm::BasicBlock::Create(c, "else_block", llvmfnc);
 			if (!m_mergeBlock && isNeedMergeBlock)
 				m_mergeBlock = llvm::BasicBlock::Create(c, "merge_block", llvmfnc);
 			if(isNeedMergeBlock)
 				b.CreateCondBr(condition, then, m_elseBlock ? m_elseBlock : m_mergeBlock);
-			else if (!isNeedMergeBlock)
+			else
 			{
 				b.CreateCondBr(condition, then, m_elseBlock);
 			}
+			std::map<std::shared_ptr<KeyType>, llvm::PHINode*> m_phiMap;
+			std::map<std::shared_ptr<KeyType>, DuObject*> orginalMap;
 			b.SetInsertPoint(then);
-			auto it = m_childs.begin();
-			std::vector<DuObject*> elseStatements;
-			for (; it != m_childs.end(); it++)
+			for (auto i = 0; i < m_childs.size(); i++)
 			{
-				if (dynamic_cast<ElseSplitter*>(*it) && !isElse)
+				DuObject* it = m_childs[i];
+				if (dynamic_cast<ElseSplitter*>(it) && !isElse)
 				{
+					b.CreateBr(m_mergeBlock);
 					isElse = true;
+					b.SetInsertPoint(m_elseBlock);
+					for (auto mapIt : orginalMap)
+					{
+						DuObject* fo = findObject(mapIt.second->getIdentifier());
+						llvm::Value* val = mapIt.second->getLLVMValue(nullptr);
+						llvm::Type* type = mapIt.second->getLLVMType(b.getContext());
+						fo->updateByLLVM(val, type);
+					}
 					continue;
 				}
-				if (!isElse)
+
+
+				DuObject* child = findObject(it->getObject()->getIdentifier());
+				if(!child)
 				{
-					m_cb(*it, this);
+					child = AstTree::instance().findObject(it->getObject()->getIdentifier());
+				
+					orginalMap.insert({ it->getObject()->getKey(), child});
+					child = nullptr;
+				}
+				m_cb(it, this);
+				if (!child)
+				{
+					addChild(it->getObject());
+					Identifier id = it->getObject()->getIdentifier();
+					it->getLLVMValue(nullptr)->print(llvm::outs());
+					orginalMap[it->getObject()->getKey()]->getLLVMValue(nullptr)->print(llvm::outs());	
 				}
 				else
 				{
-					elseStatements.push_back(*it);
-				}
-			}
-			if(isNeedMergeBlock)
-				b.CreateBr(m_mergeBlock);
-			if(isElse)
-			{
-				b.SetInsertPoint(m_elseBlock);
-				for (auto it : elseStatements)
-				{
-					m_cb(it, this);
+					DuObject* ptr = it->getObject();
+					findObject(it->getObject()->getIdentifier())->updateByLLVM(it->getObject()->getLLVMValue(nullptr), ptr->getLLVMType(b.getContext()));
 				}
 				if (isNeedMergeBlock)
-					b.CreateBr(m_mergeBlock);
+				{
+					auto found = m_phiMap.find(it->getKey());
+					if (found != m_phiMap.end())
+					{
+						llvm::PHINode*& node = found->second;
+
+						size_t numIncomingValues = node->getNumIncomingValues();
+						if (numIncomingValues == 1 && b.GetInsertBlock() == then)
+						{
+							node->eraseFromParent();
+							llvm::BasicBlock* block = b.GetInsertBlock();
+							b.SetInsertPoint(m_mergeBlock);
+							m_phiMap.erase(it->getKey());
+							m_phiMap.insert({ it->getKey(), b.CreatePHI(llvm::Type::getInt32Ty(b.getContext()), 2, "phi")});
+							b.SetInsertPoint(block);
+						}
+						else if (numIncomingValues == 2)
+						{
+							llvm::BasicBlock* thenBlock = node->getIncomingBlock(0);
+							llvm::Value* thenValue = node->getIncomingValue(0);
+							llvm::BasicBlock* block = b.GetInsertBlock();
+							node->eraseFromParent();
+							b.SetInsertPoint(m_mergeBlock);
+							m_phiMap.erase(it->getKey());
+							m_phiMap.insert({ it->getKey(), b.CreatePHI(llvm::Type::getInt32Ty(b.getContext()), 2, "phi")});
+							b.SetInsertPoint(block);
+							m_phiMap[it->getKey()]->addIncoming(thenValue, thenBlock);
+
+						}
+						it->getLLVMValue(nullptr)->print(llvm::outs());
+						m_phiMap[it->getKey()]->addIncoming(it->getLLVMValue(nullptr), b.GetInsertBlock());
+					}
+					else
+					{
+						llvm::BasicBlock* block = b.GetInsertBlock();
+						b.SetInsertPoint(m_mergeBlock);
+						m_phiMap.insert({ it->getKey(), b.CreatePHI(llvm::Type::getInt32Ty(b.getContext()), 2, "phi")});
+						b.SetInsertPoint(block);
+						m_phiMap[it->getKey()]->addIncoming(it->getLLVMValue(nullptr), b.GetInsertBlock());
+					}
+
+				}
 			}
-			if(isNeedMergeBlock)
+			updatePhi(m_phiMap, parentFun);
+			if (isNeedMergeBlock)
+			{
+				b.CreateBr(m_mergeBlock);
 				b.SetInsertPoint(m_mergeBlock);
+			}
 		}
 	}
 	virtual llvm::BasicBlock* getBasicBlock(llvm::LLVMContext& context, llvm::Function* fn) override

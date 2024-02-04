@@ -15,11 +15,11 @@ llvm::Function* Function::getLLVMFunction(llvm::LLVMContext& context, llvm::Modu
 				{
 					auto arg = m_llvmFunction->getArg(i);
 					Variable* v = static_cast<Variable*>(AstTree::instance().findObject(m_args[i]));
-					v->getLLVMValue(v->getLLVMType(context));
+					v->getLLVMValueOnStack(b, v->getLLVMType(context));
 					v->init(b.CreateAlloca(v->getLLVMType(context), nullptr, v->getIdentifier().getName()), b);
 					auto ret = b.CreateStore(arg, v->getAlloca());
 					Variable* _arg = new Variable(Identifier(""), m_typesArgs[i], m_typesArgs[i]->convertLLVMToValue(arg), false);
-					v->update(_arg, ret->getValueOperand());
+					v->updateByLLVM(ret->getValueOperand(), ret->getValueOperand()->getType());
 					delete _arg;
 					v->setParent(this);
 				}

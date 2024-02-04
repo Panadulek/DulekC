@@ -29,6 +29,17 @@ public:
 		}
 		return nullptr;
 	}
+
+	virtual DuPtr findObject(std::shared_ptr<KeyType> key)
+	{
+		for (auto it : m_childs)
+		{
+			if (it->getKey() == key)
+				return it;
+		}
+		return nullptr;
+	}
+
 	std::span<DuPtr> getList()
 	{
 		return m_childs;
@@ -80,16 +91,33 @@ public:
 		assert(0);
 		return nullptr;
 	}
+
+	bool replace(DuObject* obj)
+	{
+		for (auto& it : m_childs)
+		{
+			if (it->getIdentifier() == obj->getObject()->getIdentifier())
+			{
+				it = obj->getObject();
+				return true;
+			}
+		}
+		return false;
+	}
+
 	virtual ~Scope()
 	{
 		for (auto& it : m_childs)
 		{
 			auto toDelete = it;
 			it = nullptr;
-			delete toDelete;
+			
 		}
 
 	}
+
+
+
 };
 
 

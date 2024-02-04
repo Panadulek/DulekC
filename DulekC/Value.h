@@ -25,6 +25,11 @@ public:
 		assert(0);
 		return;
 	}
+	virtual llvm::Value* getLLVMValueOnStack(llvm::IRBuilder<>& builder, llvm::Type* type) const
+	{
+		assert(0);
+		return nullptr;
+	}
 	virtual ~Value() {}
 };
 
@@ -40,6 +45,14 @@ public:
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const override
 	{
 		return llvm::ConstantInt::get(type, m_value, m_isSigned);
+	}
+	virtual llvm::Value* getLLVMValueOnStack(llvm::IRBuilder<>& builder, llvm::Type* type) const override
+	{
+		llvm::Value* var = builder.CreateAlloca(type, nullptr, "numeric_value");
+		llvm::Value* valueToStore = llvm::ConstantInt::get(type, m_value, m_isSigned);
+		builder.CreateStore(valueToStore, var);
+		llvm::Value* load = builder.CreateLoad(type, var);
+		return load;
 	}
 	uint64_t getValue() const { return m_value; }
 	void setSigned(bool flag) { m_isSigned = flag; }
@@ -57,3 +70,6 @@ public:
 	}
 	virtual ~NumericValue() {}
 };
+
+
+

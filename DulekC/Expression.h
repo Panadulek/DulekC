@@ -44,6 +44,11 @@ public:
 		assert(0);
 		return nullptr;
 	}
+	virtual std::shared_ptr<KeyType> getKey() const
+	{
+		assert(m_res);
+		return m_res->getKey();
+	}
 	virtual ~Expression()
 	{
 		delete m_res;
@@ -161,6 +166,11 @@ public:
 		op = isBooleanExpression();
 		if (op)
 		{
+			auto lt = m_l->getRes()->getType();
+			if (lt && lt->isSimpleNumericType())
+			{
+				s = static_cast<SimpleNumericType*>(lt)->isSigned();
+			}
 			processBooleanExpression(module, builder, context, s, op);
 			return;
 		}
@@ -173,51 +183,7 @@ public:
 	}
 };
 
-class BooleanExpression : public Expression
-{
-	Expression* m_l;
-	Expression* m_r;
-public:
-	BooleanExpression(Identifier op, Expression* l, Expression* r) : Expression(op), m_l(l), m_r(r)
-	{}
 
-	virtual void processExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool s) override
-	{
-		assert(m_l && m_r);
-		std::string_view view = getIdentifier().getName();
-		m_l->processExpression(module, builder, context, s);
-		m_r->processExpression(module, builder, context, s);
-
-		auto var1 = m_l->getRes();
-
-		auto lVal = m_l->getLLVMValue(m_l->getLLVMType(context));
-		auto rVal = var1->getType()->convertValueBasedOnType(builder, m_r->getLLVMValue(m_l->getLLVMType(context)), m_r->getLLVMType(context), context);
-
-		llvm::Value* result = nullptr;
-
-		if (!view.compare("+"))
-		{
-			result = builder.CreateAdd(lVal, rVal);
-		}
-		else if (!view.compare("-"))
-		{
-			result = builder.CreateSub(lVal, rVal);
-		}
-		else if (!view.compare("*"))
-		{
-			result = builder.CreateMul(lVal, rVal);
-		}
-		else if (!view.compare("/"))
-		{
-			if (s)
-				result = builder.CreateSDiv(lVal, rVal);
-			else
-				result = builder.CreateUDiv(lVal, rVal);
-		}
-		var1->updateByLLVM(result, result->getType());
-		setRes(var1);
-	}
-};
 
 class CallFunctionExpression : public Expression
 {

@@ -26,12 +26,22 @@ public:
 	}
 };
 
+
 class DuObject
 {
+public:
+	using KeyType = int;
+private:
+
 	Identifier m_id;
 protected:
+	
 	DuObject* m_parent;
-	DuObject(const Identifier& identfier) : m_id(identfier), m_parent(nullptr) {}
+	mutable std::shared_ptr<KeyType> m_key;
+	DuObject(const Identifier& identfier) : m_id(identfier), m_parent(nullptr)
+	{
+		m_key = std::make_shared<KeyType>(1);
+	}
 
 public:
 	virtual bool isNumericValue() const { return false; }
@@ -47,13 +57,29 @@ public:
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const = 0;
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const = 0;
 	virtual DuObject* copy() const = 0;
+	virtual DuObject* getObject()
+	{
+		return this;
+	}
 	const Identifier& getIdentifier() const { return m_id; }
+	virtual bool updateByLLVM(llvm::Value* val, llvm::Type* type)
+	{
+		return false;
+	}
 	void setParent(DuObject* p)
 	{
 		assert(p->isScope());
 		m_parent = p;
 	}
 	DuObject* getParent() { return m_parent; }
+	virtual std::shared_ptr<KeyType>getKey() const
+	{
+		return m_key;
+	}
+	void setKey(std::shared_ptr<KeyType>key) const
+	{
+		m_key = key;
+	}
 	virtual ~DuObject() {}
 
 

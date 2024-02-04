@@ -12,6 +12,8 @@
 
 class Statement : public DuObject
 {
+protected:
+	mutable bool m_beforeProcess{ true };
 
 
 public:
@@ -32,11 +34,22 @@ public:
 
 class AssigmentStatement : public Statement
 {
-	Variable* m_left;
+	mutable Variable* m_left;
 	Variable* m_right;
 	mutable Expression* m_expr;
 	bool m_hasExpr;
-
+	void updateAssigment(Variable* var, llvm::Value* val) const
+	{
+		Variable* res = m_left;
+		res->updateByLLVM(val, val->getType());
+		m_left = res;
+	}
+	void updateCopyAssigment(Variable* var, llvm::Value* val) const
+	{
+		Variable* res = static_cast<Variable*>(var->copy());
+		res->updateByLLVM(val, val->getType());
+		m_left = res;
+	}
 	void _processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* module) const
 	{
 		if (m_right && m_right->getIdentifier().getName().empty())
@@ -46,7 +59,7 @@ class AssigmentStatement : public Statement
 			{
 				auto store = builder.CreateStore(llvm::ConstantInt::get(m_left->getLLVMType(context), static_cast<NumericValue*>(value)->getValue()), m_left->getAlloca());
 				store->setAlignment(m_left->getAlligment());
-				m_left->update(m_right, store->getValueOperand());
+				m_left->updateByLLVM(store->getValueOperand(), store->getPointerOperandType());
 			}
 			else
 				assert(0);
@@ -68,7 +81,11 @@ class AssigmentStatement : public Statement
 			}
 			auto store = builder.CreateStore(val, m_left->getAlloca());
 			store->setAlignment(m_left->getAlligment());
-			m_left->update(m_right, store->getValueOperand());
+			if (m_left->getParent() == AstTree::instance().getCurrentScope())
+				updateAssigment(m_left, store->getValueOperand());
+			else
+				updateCopyAssigment(m_left, store->getValueOperand());
+			std::cout << "m_left: ";
 		}
 		else
 		{
@@ -98,7 +115,11 @@ class AssigmentStatement : public Statement
 			}
 			auto store = builder.CreateStore(val, m_left->getAlloca());
 			store->setAlignment(m_left->getAlligment());
-			m_left->updateByLLVM(store->getValueOperand(), store->getValueOperand()->getType());
+			store->setAlignment(m_left->getAlligment());
+			if (m_left->getParent() == AstTree::instance().getCurrentScope())
+				updateAssigment(m_left, store->getValueOperand());
+			else
+				updateCopyAssigment(m_left, store->getValueOperand());
 		}
 		else
 		{
@@ -127,8 +148,12 @@ public:
 	}
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const override
 	{
-		assert(0);
-		return nullptr;
+		if (m_beforeProcess)
+		{
+			assert(0);
+			return nullptr;
+		}
+		m_left->getLLVMValue(type);
 	}
 	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* module) const  override
 	{
@@ -136,6 +161,7 @@ public:
 			_processStatement(builder, context, module);
 		else
 			_processStatementExpr(builder, context, module);
+		m_beforeProcess = false;
 	}
 
 	virtual bool isAssigmentStatement() const override { return true; }
@@ -144,7 +170,21 @@ public:
 	{
 		DELETE_TMP_VARIABLE(m_right)
 	}
+	virtual std::shared_ptr<KeyType>getKey() const
+	{
+		assert(m_left);
+		return m_left->getKey();
+	}
 
+
+	bool updateByLLVM(llvm::Value* val, llvm::Type* type) override
+	{
+		return m_left->updateByLLVM(val, type);
+	}
+	virtual DuObject* getObject()
+	{
+		return m_left;
+	}
 };
 
 class ReturnStatement : public Statement
@@ -199,6 +239,14 @@ public:
 	llvm::ReturnInst* _return()
 	{
 		return m_retInstance;
+	}
+	bool updateByLLVM(llvm::Value* val, llvm::Type* type) override
+	{
+		return m_var->updateByLLVM(val, type);
+	}
+	virtual DuObject* getObject()
+	{
+		return m_var;
 	}
 	virtual bool isReturnStatement() const override { return true; }
 	virtual ~ReturnStatement()

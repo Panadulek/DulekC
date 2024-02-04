@@ -65,14 +65,15 @@ class LLVMGen final
 		assert(v);
 		auto& context = getContext();
 		llvm::Type* type = v->getLLVMType(context);
-		llvm::Value* value = v->getLLVMValue(type);
 		if (v->isGlobalVariable())
 		{
+			llvm::Value* value = v->getLLVMValue(type);
 			llvm::Constant* _const = llvm::dyn_cast<llvm::Constant>(value);
 			llvm::GlobalVariable* global = new llvm::GlobalVariable(*m_module, type, false, llvm::GlobalValue::ExternalLinkage, _const, v->getIdentifier().getName().data());
 		}
 		else if(!v->isGlobalVariable() && scope->isFunction())
 		{
+			llvm::Value* value = v->getLLVMValueOnStack(m_builder, type);
 			generateLocalVariableIrInfo(v, scope);
 		}
 	}
@@ -98,11 +99,13 @@ class LLVMGen final
 		if (obj->isIfScope())
 		{
 			IfScope* ifs = static_cast<IfScope*>(obj);
+			AstTree::instance().beginScope(ifs);
 			ifs->generateLLVMIf(getContext(), m_module.get(), m_builder, [this](DuObject* d, Scope* s)
 				{
 					genIRForElement(d, s);
 				}
 			);
+			AstTree::instance().endScope();
 		}
 		else if (obj->isVariable())
 		{
@@ -170,7 +173,6 @@ public:
 		std::unique_ptr<llvm::ExecutionEngine> EE(
 			llvm::EngineBuilder(std::move(m_module))
 			.setErrorStr(&ErrStr)
-			.setOptLevel(llvm::CodeGenOptLevel::None)
 			.create());
 
 		if (!EE)
