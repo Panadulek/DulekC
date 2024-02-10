@@ -67,20 +67,23 @@ public:
 				}
 			}
 		}
-		span = m_ifelse.second->getList();
-		for (auto it : span)
+		if (m_ifelse.second)
 		{
-			if (it->isVariable())
+			span = m_ifelse.second->getList();
+			for (auto it : span)
 			{
-				Variable* var = static_cast<Variable*>(it);
-				if (var->isCopy())
+				if (it->isVariable())
 				{
-					Variable* _var = static_cast<Variable*>(m_ifelse.first->findUpperObject(var->getKey(), true));
-					var->setAlloca(_var->getAlloca());
-				}
-				else
-				{
-					var->init(b.CreateAlloca(var->getLLVMType(b.getContext()), nullptr, var->getIdentifier().getName()), b);
+					Variable* var = static_cast<Variable*>(it);
+					if (var->isCopy())
+					{
+						Variable* _var = static_cast<Variable*>(m_ifelse.first->findUpperObject(var->getKey(), true));
+						var->setAlloca(_var->getAlloca());
+					}
+					else
+					{
+						var->init(b.CreateAlloca(var->getLLVMType(b.getContext()), nullptr, var->getIdentifier().getName()), b);
+					}
 				}
 			}
 		}
