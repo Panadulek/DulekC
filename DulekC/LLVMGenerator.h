@@ -21,7 +21,7 @@
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/FileSystem.h>
 #include "SystemFunctions.h"
-#include"Ifscope.h"
+#include "IfManager.h"
 #define NO_CLEAR_MEMORY
 extern void not_implemented_feature();
 
@@ -58,7 +58,6 @@ class LLVMGen final
 		{
 			v->init(m_builder.CreateAlloca(v->getLLVMType(getContext()), nullptr , v->getIdentifier().getName()), m_builder);
 		}
-
 	}
 	void genIRForVariable(Variable* v, Scope* scope)
 	{
@@ -71,7 +70,7 @@ class LLVMGen final
 			llvm::Constant* _const = llvm::dyn_cast<llvm::Constant>(value);
 			llvm::GlobalVariable* global = new llvm::GlobalVariable(*m_module, type, false, llvm::GlobalValue::ExternalLinkage, _const, v->getIdentifier().getName().data());
 		}
-		else if(!v->isGlobalVariable() && scope->isFunction())
+		else if(!v->isGlobalVariable() && ( scope->isFunction() || scope->isIfScope()))
 		{
 			llvm::Value* value = v->getLLVMValueOnStack(m_builder, type);
 			generateLocalVariableIrInfo(v, scope);
@@ -79,6 +78,7 @@ class LLVMGen final
 	}
 	void genIRForStatement(Statement* s, Scope* scope)
 	{
+		
 		if (s->isCallFunctionStatement())
 		{
 			CallFunction* cfs = static_cast<CallFunction*>(s);
@@ -98,14 +98,9 @@ class LLVMGen final
 	{
 		if (obj->isIfScope())
 		{
-			IfScope* ifs = static_cast<IfScope*>(obj);
-			AstTree::instance().beginScope(ifs);
-			ifs->generateLLVMIf(getContext(), m_module.get(), m_builder, [this](DuObject* d, Scope* s)
-				{
-					genIRForElement(d, s);
-				}
-			);
-			AstTree::instance().endScope();
+			IfManager* ifm = static_cast<IfManager*>(obj);
+			ifm->assigmentMemory(m_builder);
+			ifm->generateLLVM(m_builder, m_module.get(), [this](Scope* scope) { genIRForScope(scope); });
 		}
 		else if (obj->isVariable())
 		{

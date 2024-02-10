@@ -38,7 +38,8 @@ protected:
 	
 	DuObject* m_parent;
 	mutable std::shared_ptr<KeyType> m_key;
-	DuObject(const Identifier& identfier) : m_id(identfier), m_parent(nullptr)
+	bool m_isCopy;
+	DuObject(const Identifier& identfier) : m_id(identfier), m_parent(nullptr), m_isCopy(false)
 	{
 		m_key = std::make_shared<KeyType>(1);
 	}
@@ -54,9 +55,21 @@ public:
 	virtual bool isConstValue() const { return false; }
 	virtual bool isIfScope() const { return false;  }
 	std::string_view getName() { return m_id.getName(); }
-	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const = 0;
-	virtual llvm::Value* getLLVMValue(llvm::Type* type) const = 0;
-	virtual DuObject* copy() const = 0;
+	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const
+	{
+		assert(0);
+		return nullptr;
+	}
+	virtual llvm::Value* getLLVMValue(llvm::Type* type) const
+	{
+		assert(0);
+		return nullptr;
+	}
+	virtual DuObject* copy() const
+	{
+		assert(0);
+		return nullptr;
+	}
 	virtual DuObject* getObject()
 	{
 		return this;
@@ -66,7 +79,7 @@ public:
 	{
 		return false;
 	}
-	void setParent(DuObject* p)
+	virtual void setParent(DuObject* p)
 	{
 		assert(p->isScope());
 		m_parent = p;
@@ -81,9 +94,18 @@ public:
 		m_key = key;
 	}
 	virtual ~DuObject() {}
-
+	void setCopy()
+	{
+		m_isCopy = true;
+	}
+	bool isCopy()
+	{
+		return m_isCopy;
+	}
 
 };
 
 using DuPtr = DuObject*;
 using weakDuPtr = std::weak_ptr<DuObject>;
+
+extern DuObject* s_GlobalScope;

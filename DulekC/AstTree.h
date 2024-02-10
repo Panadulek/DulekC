@@ -9,7 +9,7 @@
 #include <ranges>
 #include "SystemFunctions.h"
 #include "TypeContainer.h"
-
+extern DuObject* s_GlobalScope;
 class AstTree
 {
 	Scope* m_root;
@@ -22,6 +22,7 @@ class AstTree
 	AstTree()
 	{
 		m_root = new Scope(Identifier("GLOBAL_SCOPE"));
+		s_GlobalScope = m_root;
 		m_stack.push(m_root);
 		m_scopes.push_back(m_root);
 		createSysFunction();

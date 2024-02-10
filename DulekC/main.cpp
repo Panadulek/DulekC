@@ -28,7 +28,7 @@ void not_implemented_feature()
 
 
 
-
+DuObject* s_GlobalScope = nullptr;
 extern void initlex(void);
 extern void initTerminalMessageEngine(void);
 

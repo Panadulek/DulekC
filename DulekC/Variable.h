@@ -74,7 +74,10 @@ public:
 		store->setAlignment(align);
 		m_llvmAllocaInst = inst;
 	}
-
+	void setAlloca(llvm::AllocaInst* inst)
+	{
+		m_llvmAllocaInst = inst;
+	}
 	llvm::AllocaInst* getAlloca()
 	{
 		return m_llvmAllocaInst;
@@ -116,6 +119,7 @@ public:
 	virtual DuObject* copy() const override
 	{
 		auto variable = new Variable(getIdentifier(), m_type ? m_type : nullptr, m_value ? static_cast<Value*>(m_value->copy()) : nullptr, isGlobalVariable());
+		variable->setCopy();
 		if (m_hasBooleanValue)
 			variable->setBooleanValue();
 		if (m_llvmValue && m_llvmType)

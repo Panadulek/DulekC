@@ -16,7 +16,7 @@
 #include "ContextAnalyzer.h"
 #include "MessageEngine.h"
 #include "LexerContext.h"
-#include "Ifscope.h"
+#include "IfManager.h"
 extern void Error(MessageEngine::Code code, const char* additionalMsg);
 extern void Warning(MessageEngine::Code code, const char* additionalMsg);
 extern void Info(MessageEngine::Code code, const char* additionalMsg);
@@ -133,9 +133,9 @@ if_block:
             Error(MessageEngine::Code::FunctionInsideScope, nullptr);
         }
         auto& tree = AstTree::instance();
-        IfScope* isc = new IfScope($3);
-        tree.addObject(isc);
-        tree.beginScope(isc);
+        IfManager* ifm = new IfManager(new IfManager::IfScope, $3);
+        tree.addObject(ifm);
+        tree.beginScope(ifm->getActualScope());
         s_lc->setNeedOpenBuckle(true);
     }
     ;
@@ -154,8 +154,8 @@ if_block:
         {
             Error(MessageEngine::Code::ElseNeedsIfContext, nullptr);
         }
-        static_cast<IfScope*>(ifScope)->beginElse();
-        tree.beginScope(static_cast<Scope*>(ifScope));
+        static_cast<IfManager*>(ifScope)->beginElse();
+        tree.beginScope(static_cast<Scope*>(static_cast<IfManager*>(ifScope)->getActualScope()));
         s_lc->setNeedOpenBuckle(true);
     }
     ;
@@ -352,11 +352,6 @@ variable_declaration
         if( s->isFunction() )
         {
             $$ = new ReturnStatement(l, static_cast<Function*>(s)->getType());
-            tree.addObject($$);
-        }
-        else if(s->isIfScope())
-        {
-            $$ = new ReturnStatement(l, static_cast<IfScope*>(s)->getFunctionParent()->getType());
             tree.addObject($$);
         }
         else

@@ -38,6 +38,7 @@ class AssigmentStatement : public Statement
 	Variable* m_right;
 	mutable Expression* m_expr;
 	bool m_hasExpr;
+	bool m_copyOpt;
 	void updateAssigment(Variable* var, llvm::Value* val) const
 	{
 		Variable* res = m_left;
@@ -116,7 +117,7 @@ class AssigmentStatement : public Statement
 			auto store = builder.CreateStore(val, m_left->getAlloca());
 			store->setAlignment(m_left->getAlligment());
 			store->setAlignment(m_left->getAlligment());
-			if (m_left->getParent() == AstTree::instance().getCurrentScope())
+			if (m_left->getParent() == AstTree::instance().getCurrentScope() || m_left->isCopy())
 				updateAssigment(m_left, store->getValueOperand());
 			else
 				updateCopyAssigment(m_left, store->getValueOperand());
@@ -132,9 +133,9 @@ class AssigmentStatement : public Statement
 
 
 public:
-	AssigmentStatement(Variable* l, Variable* r) : Statement(Identifier("assigment statement")), m_left(l), m_right(r), m_expr(nullptr), m_hasExpr(false)
+	AssigmentStatement(Variable* l, Variable* r) : Statement(Identifier("assigment statement")), m_left(l), m_right(r), m_expr(nullptr), m_hasExpr(false), m_copyOpt(false)
 	{}
-	AssigmentStatement(Variable* l, Expression* r) : Statement(Identifier("assigment statement")), m_left(l), m_right(nullptr), m_expr(r), m_hasExpr(true)
+	AssigmentStatement(Variable* l, Expression* r) : Statement(Identifier("assigment statement")), m_left(l), m_right(nullptr), m_expr(r), m_hasExpr(true), m_copyOpt(false)
 	{}
 	void setRightElement(Variable* r)
 	{
@@ -169,6 +170,8 @@ public:
 	virtual ~AssigmentStatement() 
 	{
 		DELETE_TMP_VARIABLE(m_right)
+		if (m_copyOpt)
+			delete m_left;
 	}
 	virtual std::shared_ptr<KeyType>getKey() const
 	{
@@ -185,6 +188,14 @@ public:
 	{
 		return m_left;
 	}
+
+	void setCopyOpt()
+	{
+		m_copyOpt = true;
+		m_left = static_cast<Variable*>( m_left->copy() );
+		
+	}
+
 };
 
 class ReturnStatement : public Statement
