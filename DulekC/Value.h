@@ -1,7 +1,7 @@
 #pragma once
 #include "DuObject.h"
 #include <cstdint>
-
+#include <iostream>
 class Value : public DuObject
 {
 protected:

@@ -72,7 +72,18 @@ class LLVMGen final
 		}
 		else if(!v->isGlobalVariable() && ( scope->isFunction() || scope->isIfScope()))
 		{
-			llvm::Value* value = v->getLLVMValueOnStack(m_builder, type);
+			
+
+			Variable* found = nullptr;
+			if(scope->isIfScope())
+				found = dynamic_cast<Variable*>(scope->findUpperObject(v->getIdentifier()));
+			if (found)
+			{
+				llvm::Type* t = found->getLLVMType(getContext());
+				v->updateByLLVM(found->getLLVMValue(t), t);
+			}
+			else
+				llvm::Value* value = v->getLLVMValueOnStack(m_builder, type);
 			generateLocalVariableIrInfo(v, scope);
 		}
 	}
@@ -100,7 +111,7 @@ class LLVMGen final
 		{
 			IfManager* ifm = static_cast<IfManager*>(obj);
 			ifm->assigmentMemory(m_builder);
-			ifm->generateLLVM(m_builder, m_module.get(), [this](Scope* scope) { genIRForScope(scope); });
+			ifm->generateLLVM(m_builder, m_module.get(), [this](Scope* scope, DuObject* obj) { genIRForElement(obj, scope); });
 		}
 		else if (obj->isVariable())
 		{

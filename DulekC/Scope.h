@@ -64,6 +64,31 @@ public:
 
 		} while (parent);
 	}
+	DuObject* findUpperObject(Identifier key, bool orginal = false)
+	{
+		DuObject* parent = this;
+		do
+		{
+			parent = parent->getParent();
+			if (parent == s_GlobalScope)
+				return nullptr;
+			if (parent->isScope())
+			{
+				DuObject* ret = static_cast<Scope*>(parent)->findObject(key);
+				if (ret)
+				{
+					if (orginal)
+					{
+						if (!ret->isCopy())
+							return ret;
+					}
+					else
+						return ret;
+				}
+			}
+
+		} while (parent);
+	}
 	std::span<DuPtr> getList()
 	{
 		return m_childs;

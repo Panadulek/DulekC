@@ -28,15 +28,18 @@ public:
 				{
 					AssigmentStatement* as = static_cast<AssigmentStatement*>(child);
 					Variable* left = static_cast<Variable*>(as->getObject());
-					bool hasItem =	findObject(left->getIdentifier()) != nullptr;
+					bool hasItem =	findObject(left->getKey()) != nullptr;
 					if (!hasItem)
 					{
 						as->setCopyOpt();
-						addChild(as->getObject());
-						if (as->getObject()->isVariable())
+						Variable* obj = static_cast<Variable*>(as->getObject());
+						if (obj->isVariable())
 						{
-							static_cast<Variable*>(as->getObject())->setAlloca(left->getAlloca());
+							static_cast<Variable*>(obj)->setAlloca(left->getAlloca());
 						}
+						Scope::addChild(obj);
+						Scope::addChild(as);
+						return;
 					}
 				}
 			}
@@ -47,6 +50,11 @@ public:
 			return m_hasRet;
 		}
 		virtual bool isIfScope() const { return true; }
+		void setBlock(llvm::BasicBlock* bb)
+		{
+			m_llvmBlock = bb;
+		}
+
 	};
 	void assigmentMemory(llvm::IRBuilder<>& b)
 	{
@@ -58,7 +66,7 @@ public:
 				Variable* var = static_cast<Variable*>(it);
 				if (var->isCopy())
 				{
-					Variable* _var = static_cast<Variable*>(m_ifelse.first->findUpperObject(var->getKey(), true));
+					Variable* _var = static_cast<Variable*>(m_ifelse.first->findUpperObject(var->getKey()));
 					var->setAlloca(_var->getAlloca());
 				}
 				else
@@ -77,7 +85,7 @@ public:
 					Variable* var = static_cast<Variable*>(it);
 					if (var->isCopy())
 					{
-						Variable* _var = static_cast<Variable*>(m_ifelse.first->findUpperObject(var->getKey(), true));
+						Variable* _var = static_cast<Variable*>(m_ifelse.first->findUpperObject(var->getKey()));
 						var->setAlloca(_var->getAlloca());
 					}
 					else
@@ -146,7 +154,7 @@ private:
 		{
 			if (it.second->getNumIncomingValues() < 2)
 			{
-				DuObject* obj = m_ifelse.first->findUpperObject(it.first, true);
+				DuObject* obj = m_ifelse.first->findUpperObject(it.first);
 				if (obj)
 				{
 					it.second->addIncoming(obj->getLLVMValue(obj->getLLVMType(b.getContext())), m_defaultInsert);
@@ -157,23 +165,23 @@ private:
 
 		for (auto it : phiMap)
 		{
-			DuObject* orginObj = m_ifelse.first->findUpperObject(it.first, true);
+			DuObject* orginObj = m_ifelse.first->findUpperObject(it.first);
 			orginObj->updateByLLVM(it.second, it.second->getType());
 		}
 	}
-	Scope* getDefault()
+	IfScope* getDefault()
 	{
 		if (!m_ifelse.second)
 			return m_ifelse.first;
 		return m_ifelse.second;
 	}
 
-	Scope* getElse()
+	IfScope* getElse()
 	{
 		return m_ifelse.second;
 	}
 
-	Scope* getIf()
+	IfScope* getIf()
 	{
 		return m_ifelse.first;
 	}
@@ -185,7 +193,7 @@ private:
 		auto& tree = AstTree::instance();
 		do
 		{
-			it = getParent();
+			it = it->getParent();
 			if (tree.isGlobal(it))
 			{
 				it = nullptr;
@@ -210,55 +218,84 @@ public:
 	{
 
 	}
-	void generateLLVM(llvm::IRBuilder<>& b, llvm::Module* m, std::function<void(Scope* scope)> m_cb)
+
+	void callCallback(std::function<void(Scope*, DuObject*)> cb, IfScope* scope)
 	{
+		AstTree::instance().beginScope(scope);
+		for (auto it = scope->begin(); it != scope->end(); it++)
+		{
+			cb(scope, *it);
+			IfManager* ifm = dynamic_cast<IfManager*>(*it);
+			if (ifm)
+			{
+				llvm::BasicBlock* newBB = ifm->getMergeBlock();
+				scope->setBlock(newBB);
+			}
+		}
+		AstTree::instance().endScope();
+	}
+
+	void generateLLVM(llvm::IRBuilder<>& b, llvm::Module* m, std::function<void(Scope*, DuObject*)> cb)
+	{
+		
 		assert(m_ifelse.first);
 		initParentFun();
 		m_defaultInsert = b.GetInsertBlock();
 		m_cond->processExpression(m, b, b.getContext(), false);
+
 		auto condVar = m_cond->getRes();
 		if (!condVar)
 		{
 			assert(0);
 		}
 		condVar->toBoolean(b.getContext(), b);
+		
+		
 		llvm::Value* valCond = condVar->getLLVMValue(condVar->getLLVMType(b.getContext()));
-		llvm::Function* llvmFun = m_function->getLLVMFunction(b.getContext(), m, b);
-		m_llvmFun = llvmFun;
-		bool hasBothRet = m_ifelse.first->hasRet() && m_ifelse.second && m_ifelse.second->hasRet();
+		m_llvmFun = m_function->getLLVMFunction(b.getContext(), m, b);
+		
+		const bool hasBothRet = m_ifelse.first->hasRet() && m_ifelse.second && m_ifelse.second->hasRet();
 		if (!hasBothRet)
-			m_mergeBlock = llvm::BasicBlock::Create(b.getContext(), "merge_block", llvmFun);
+			m_mergeBlock = llvm::BasicBlock::Create(b.getContext(), "merge_block", m_llvmFun);
 		
 		llvm::BasicBlock* then = m_ifelse.first->getBasicBlock(b.getContext(), m_function->getLLVMFunction(b.getContext(), m, b));
 		then->setName("then");
 		b.SetInsertPoint(then);
-		m_cb(m_ifelse.first);
+		AstTree::instance().beginScope(m_ifelse.first);
+		callCallback(cb, getActualScope(IfManager::ScopeFlag::If));
 		if (!hasBothRet)
 			b.CreateBr(m_mergeBlock);
+		AstTree::instance().endScope();
+
 		if (m_ifelse.second)
 		{
 			llvm::BasicBlock* _else = m_ifelse.second->getBasicBlock(b.getContext(), m_function->getLLVMFunction(b.getContext(), m, b));
 			_else->setName("else");
 			b.SetInsertPoint(_else);
-			m_cb(m_ifelse.second);
+			AstTree::instance().beginScope(m_ifelse.second);
+			callCallback(cb, getActualScope(IfManager::ScopeFlag::Else));
 			if (!hasBothRet)
 				b.CreateBr(m_mergeBlock);
+			AstTree::instance().endScope();
 			b.SetInsertPoint(m_defaultInsert);
-			b.CreateCondBr(valCond, m_ifelse.first->getBasicBlock(b.getContext(), llvmFun), m_ifelse.second->getBasicBlock(b.getContext(), llvmFun));
+			b.CreateCondBr(valCond, then, _else);
+
 		}
 		else
 		{
 			b.SetInsertPoint(m_defaultInsert);
-			b.CreateCondBr(valCond, m_ifelse.first->getBasicBlock(b.getContext(), llvmFun), m_mergeBlock);
+			b.CreateCondBr(valCond, then, m_mergeBlock);
+
 		}
-		if (m_ifelse.second && m_mergeBlock)
+
+		if (m_mergeBlock)
 		{
 			b.SetInsertPoint(m_mergeBlock);
 			merge(b);
 		}
-		
+
 	}
-	Scope* getActualScope(ScopeFlag sf = ScopeFlag::Default)
+	IfScope* getActualScope(ScopeFlag sf = ScopeFlag::Default)
 	{
 		switch (sf)
 		{
@@ -284,6 +321,10 @@ public:
 		assert(p->isScope() && m_ifelse.first);
 		m_parent = p;
 		m_ifelse.first->setParent(p);
+	}
+	llvm::BasicBlock* getMergeBlock()
+	{
+		return m_mergeBlock;
 	}
 	~IfManager()
 	{
