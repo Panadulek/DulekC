@@ -31,7 +31,7 @@ void not_implemented_feature()
 DuObject* s_GlobalScope = nullptr;
 extern void initlex(void);
 extern void initTerminalMessageEngine(void);
-
+static constexpr bool LLVM_IR_PRINT = false;
 int main(int argc, char* argv[])
 {
 	errno_t code;
@@ -46,7 +46,10 @@ int main(int argc, char* argv[])
 	yyparse();
 	LLVMGen generator("test");
 	generator.genIRForFile(AstTree::instance().begin(), AstTree::instance().end());
-	generator.executeCodeToByteCode();
+	if (LLVM_IR_PRINT)
+		generator.print();
+	else
+		generator.executeCodeToByteCode();
 	return 0;
 }
 #else

@@ -128,10 +128,16 @@ class LLVMGen final
 	{
 		const bool isSettedScope = AstTree::instance().setCurrentScope(scope);
 		generateMemoryForFunction(scope);
-		std::for_each(scope->begin(), scope->end(), [&](DuObject* it) ->void
+		for ( auto it : scope->getList())
 		{
 			genIRForElement(it, scope);
-		});
+			IfManager* ifm = dynamic_cast<IfManager*>(it);
+			if (ifm)
+			{
+				if (ifm->hasBothRet())
+					break;
+			}
+		}
 		if(isSettedScope)
 			AstTree::instance().endScope();
 		generateDefaultReturnForProcedure(scope);

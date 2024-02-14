@@ -354,6 +354,15 @@ variable_declaration
             $$ = new ReturnStatement(l, static_cast<Function*>(s)->getType());
             tree.addObject($$);
         }
+        else if(s->isIfScope())
+        {
+            IfManager::IfScope* _s = dynamic_cast<IfManager::IfScope*>(s);
+            if(_s)
+            {
+                $$ = new ReturnStatement(l, _s->getRetType());
+                tree.addObject($$);
+            }
+        }
         else
         {
              throw std::runtime_error("NOT FUNCTION");

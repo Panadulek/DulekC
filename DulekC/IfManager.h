@@ -7,12 +7,25 @@
 
 class IfManager : public DuObject
 {
+protected:
+	friend class IfManager;
+	Type* getRetType()
+	{	
+		initParentFun();
+		return m_function ? m_function->getType() : nullptr;
+	}
 public:
 	class IfScope : public Scope
 	{
+		friend class IfManager;
 		bool m_hasRet;
+		IfManager* m_manager;
+		void setManager(IfManager* m)
+		{
+			m_manager = m;
+		}
 	public:
-		IfScope() : Scope("IfScope"), m_hasRet(false) {}
+		IfScope() : Scope("IfScope"), m_hasRet(false), m_manager(nullptr) {}
 		virtual void addChild(DuObject* child) override
 		{
 			if (m_hasRet)
@@ -54,7 +67,10 @@ public:
 		{
 			m_llvmBlock = bb;
 		}
-
+		Type* getRetType()
+		{
+			return m_manager->getRetType();
+		}
 	};
 	void assigmentMemory(llvm::IRBuilder<>& b)
 	{
@@ -104,6 +120,7 @@ private:
 	llvm::Function* m_llvmFun;
 	Expression* m_cond;
 	llvm::BasicBlock* m_mergeBlock{ nullptr };
+	bool m_hasBothRet{ false };
 	void merge(llvm::IRBuilder<>& b)
 	{
 		std::map<std::shared_ptr<KeyType>, llvm::PHINode*> phiMap;
@@ -216,7 +233,8 @@ public:
 	};
 	IfManager(IfScope* _if, Expression* cond) : DuObject("IfManager"), m_ifelse({ _if, nullptr }), m_function(nullptr), m_cond(cond), m_llvmFun(nullptr)
 	{
-
+		m_ifelse.first->setManager(this);
+		
 	}
 
 	void callCallback(std::function<void(Scope*, DuObject*)> cb, IfScope* scope)
@@ -254,8 +272,8 @@ public:
 		llvm::Value* valCond = condVar->getLLVMValue(condVar->getLLVMType(b.getContext()));
 		m_llvmFun = m_function->getLLVMFunction(b.getContext(), m, b);
 		
-		const bool hasBothRet = m_ifelse.first->hasRet() && m_ifelse.second && m_ifelse.second->hasRet();
-		if (!hasBothRet)
+		m_hasBothRet = m_ifelse.first->hasRet() && m_ifelse.second && m_ifelse.second->hasRet();
+		if (!m_hasBothRet)
 			m_mergeBlock = llvm::BasicBlock::Create(b.getContext(), "merge_block", m_llvmFun);
 		
 		llvm::BasicBlock* then = m_ifelse.first->getBasicBlock(b.getContext(), m_function->getLLVMFunction(b.getContext(), m, b));
@@ -263,7 +281,7 @@ public:
 		b.SetInsertPoint(then);
 		AstTree::instance().beginScope(m_ifelse.first);
 		callCallback(cb, getActualScope(IfManager::ScopeFlag::If));
-		if (!hasBothRet)
+		if (!m_hasBothRet)
 			b.CreateBr(m_mergeBlock);
 		AstTree::instance().endScope();
 
@@ -274,7 +292,7 @@ public:
 			b.SetInsertPoint(_else);
 			AstTree::instance().beginScope(m_ifelse.second);
 			callCallback(cb, getActualScope(IfManager::ScopeFlag::Else));
-			if (!hasBothRet)
+			if (!m_hasBothRet)
 				b.CreateBr(m_mergeBlock);
 			AstTree::instance().endScope();
 			b.SetInsertPoint(m_defaultInsert);
@@ -314,6 +332,7 @@ public:
 		assert(!m_ifelse.second);
 		m_ifelse.second = new IfScope();
 		m_ifelse.second->setParent(getParent());
+		m_ifelse.second->setManager(this);
 	}
 	virtual bool isIfScope() const { return true; }
 	virtual void setParent(DuObject* p) override
@@ -326,6 +345,12 @@ public:
 	{
 		return m_mergeBlock;
 	}
+
+	bool hasBothRet()
+	{
+		return m_hasBothRet;
+	}
+
 	~IfManager()
 	{
 		delete m_ifelse.first;
