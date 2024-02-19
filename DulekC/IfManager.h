@@ -19,13 +19,14 @@ public:
 	{
 		friend class IfManager;
 		bool m_hasRet;
+		bool m_hasNoMerge;
 		IfManager* m_manager;
 		void setManager(IfManager* m)
 		{
 			m_manager = m;
 		}
 	public:
-		IfScope() : Scope("IfScope"), m_hasRet(false), m_manager(nullptr) {}
+		IfScope() : Scope("IfScope"), m_hasRet(false), m_manager(nullptr), m_hasNoMerge(false) {}
 		virtual void addChild(DuObject* child) override
 		{
 			if (m_hasRet)
@@ -70,6 +71,15 @@ public:
 		Type* getRetType()
 		{
 			return m_manager->getRetType();
+		}
+
+		void setNoMerge()
+		{
+			m_hasNoMerge = true;
+		}
+		const bool getNoMerge() const
+		{
+			return m_hasNoMerge;
 		}
 	};
 	void assigmentMemory(llvm::IRBuilder<>& b)
@@ -124,27 +134,29 @@ private:
 	void merge(llvm::IRBuilder<>& b)
 	{
 		std::map<std::shared_ptr<KeyType>, llvm::PHINode*> phiMap;
-		auto ifChilds = m_ifelse.first->getList();
-		for (auto it : ifChilds)
+		if (!m_ifelse.first->getNoMerge())
 		{
-			if (it->isVariable())
+			auto ifChilds = m_ifelse.first->getList();
+			for (auto it : ifChilds)
 			{
-				Variable* varIt = static_cast<Variable*>(it);
-				if (varIt->isCopy())
+				if (it->isVariable())
 				{
-					auto it = phiMap.find(varIt->getKey());
-					if (it == phiMap.end())
+					Variable* varIt = static_cast<Variable*>(it);
+					if (varIt->isCopy())
 					{
-						auto _it = phiMap.insert({ varIt->getKey(), b.CreatePHI(varIt->getLLVMType(b.getContext()), 0, "")});
-						_it.first->second->addIncoming(varIt->getLLVMValue(varIt->getLLVMType(b.getContext())), m_ifelse.first->getBasicBlock(b.getContext(), nullptr));
+						auto it = phiMap.find(varIt->getKey());
+						if (it == phiMap.end())
+						{
+							auto _it = phiMap.insert({ varIt->getKey(), b.CreatePHI(varIt->getLLVMType(b.getContext()), 0, "") });
+							_it.first->second->addIncoming(varIt->getLLVMValue(varIt->getLLVMType(b.getContext())), m_ifelse.first->getBasicBlock(b.getContext(), nullptr));
+						}
 					}
 				}
 			}
 		}
-
-		if (m_ifelse.second)
+		if (m_ifelse.second && !m_ifelse.second->getNoMerge())
 		{
-			ifChilds = m_ifelse.second->getList();
+			auto ifChilds = m_ifelse.second->getList();
 			for (auto it : ifChilds)
 			{
 				if (it->isVariable())
@@ -248,6 +260,11 @@ public:
 			{
 				llvm::BasicBlock* newBB = ifm->getMergeBlock();
 				scope->setBlock(newBB);
+				if (ifm->hasBothRet())
+				{
+					scope->setNoMerge();
+					break;
+				}
 			}
 		}
 		AstTree::instance().endScope();
@@ -281,7 +298,7 @@ public:
 		b.SetInsertPoint(then);
 		AstTree::instance().beginScope(m_ifelse.first);
 		callCallback(cb, getActualScope(IfManager::ScopeFlag::If));
-		if (!m_hasBothRet)
+		if (!m_hasBothRet && !m_ifelse.first->getNoMerge())
 			b.CreateBr(m_mergeBlock);
 		AstTree::instance().endScope();
 
@@ -292,7 +309,7 @@ public:
 			b.SetInsertPoint(_else);
 			AstTree::instance().beginScope(m_ifelse.second);
 			callCallback(cb, getActualScope(IfManager::ScopeFlag::Else));
-			if (!m_hasBothRet)
+			if (!m_hasBothRet && !m_ifelse.second->getNoMerge())
 				b.CreateBr(m_mergeBlock);
 			AstTree::instance().endScope();
 			b.SetInsertPoint(m_defaultInsert);
