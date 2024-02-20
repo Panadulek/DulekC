@@ -299,7 +299,7 @@ public:
 		b.SetInsertPoint(then);
 		AstTree::instance().beginScope(m_ifelse.first);
 		callCallback(cb, getActualScope(IfManager::ScopeFlag::If));
-		if (!m_hasBothRet && !m_ifelse.first->getNoMerge())
+		if (!m_hasBothRet && !m_ifelse.first->getNoMerge() && !m_ifelse.first->hasRet())
 			b.CreateBr(m_mergeBlock);
 		AstTree::instance().endScope();
 
@@ -310,7 +310,7 @@ public:
 			b.SetInsertPoint(_else);
 			AstTree::instance().beginScope(m_ifelse.second);
 			callCallback(cb, getActualScope(IfManager::ScopeFlag::Else));
-			if (!m_hasBothRet && !m_ifelse.second->getNoMerge())
+			if (!m_hasBothRet && !m_ifelse.second->getNoMerge() && !m_ifelse.second->hasRet())
 				b.CreateBr(m_mergeBlock);
 			AstTree::instance().endScope();
 			b.SetInsertPoint(m_defaultInsert);
