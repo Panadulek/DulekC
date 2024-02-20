@@ -70,7 +70,7 @@ public:
 		do
 		{
 			parent = parent->getParent();
-			if (parent == s_GlobalScope)
+			if (!parent || parent == s_GlobalScope)
 				return nullptr;
 			if (parent->isScope())
 			{

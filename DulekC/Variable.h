@@ -70,7 +70,7 @@ public:
 			return;
 		auto align = getAlligment();
 		inst->setAlignment(align);
-		auto store = builder.CreateStore(m_llvmValue, inst, false);
+		auto store = builder.CreateStore(getLLVMValue(getLLVMType(builder.getContext())), inst, false);
 		store->setAlignment(align);
 		m_llvmAllocaInst = inst;
 	}
