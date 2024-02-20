@@ -86,7 +86,6 @@ class AssigmentStatement : public Statement
 				updateAssigment(m_left, store->getValueOperand());
 			else
 				updateCopyAssigment(m_left, store->getValueOperand());
-			std::cout << "m_left: ";
 		}
 		else
 		{
