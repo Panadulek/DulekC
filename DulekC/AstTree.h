@@ -95,7 +95,19 @@ public:
 	{
 		Scope* s1 = static_cast<Scope*>(obj1->getParent());
 		Scope* s2 = static_cast<Scope*>(obj2->getParent());
-		return (s1 == s2);
+		if (s1 == s2)
+		{
+			return true;
+		}
+		DuObject* parent = s1->getParent();
+		while (parent)
+		{
+			if (parent == s2)
+				return true;
+			parent = parent->getParent();
+		}
+
+		return false;
 	}
 	DuObject* _findObject(Identifier id, bool global)
 	{

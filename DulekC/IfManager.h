@@ -53,6 +53,7 @@ public:
 						}
 						Scope::addChild(obj);
 						Scope::addChild(as);
+						obj->setParent(this);
 						return;
 					}
 				}

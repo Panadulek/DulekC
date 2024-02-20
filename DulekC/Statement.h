@@ -60,7 +60,7 @@ class AssigmentStatement : public Statement
 			{
 				auto store = builder.CreateStore(llvm::ConstantInt::get(m_left->getLLVMType(context), static_cast<NumericValue*>(value)->getValue()), m_left->getAlloca());
 				store->setAlignment(m_left->getAlligment());
-				m_left->updateByLLVM(store->getValueOperand(), store->getPointerOperandType());
+				updateAssigment(m_left, store->getValueOperand());
 			}
 			else
 				assert(0);
@@ -115,7 +115,6 @@ class AssigmentStatement : public Statement
 				val = m_left->getType()->convertValueBasedOnType(builder, val, val->getType(), context);
 			}
 			auto store = builder.CreateStore(val, m_left->getAlloca());
-			store->setAlignment(m_left->getAlligment());
 			store->setAlignment(m_left->getAlligment());
 			if (m_left->getParent() == AstTree::instance().getCurrentScope() || m_left->isCopy())
 				updateAssigment(m_left, store->getValueOperand());
