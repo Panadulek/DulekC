@@ -65,11 +65,7 @@ public:
 			return m_hasNoMerge;
 		}
 	};
-	void assigmentMemory(llvm::IRBuilder<>& b)
-	{
-		_assigmentMemory(m_ifelse.first, b);
-		_assigmentMemory(m_ifelse.second, b);
-	}
+
 private:
 	using IfElseStatement = std::pair<IfScope*, IfScope*>;
 	IfElseStatement m_ifelse;
@@ -139,28 +135,7 @@ private:
 			b.CreateBr(m_mergeBlock);
 		AstTree::instance().endScope();
 	}
-	void _assigmentMemory(IfScope* ifm, llvm::IRBuilder<>& b)
-	{
-		if (!ifm)
-			return;
-		auto span = ifm->getList();
-		for (auto it : span)
-		{
-			if (it->isVariable())
-			{
-				Variable* var = static_cast<Variable*>(it);
-				if (var->isCopy())
-				{
-					Variable* _var = static_cast<Variable*>(m_ifelse.first->findUpperObject(var->getKey()));
-					var->setAlloca(_var->getAlloca());
-				}
-				else
-				{
-					var->init(b.CreateAlloca(var->getLLVMType(b.getContext()), nullptr, var->getIdentifier().getName()), b);
-				}
-			}
-		}
-	}
+
 
 	void merge(llvm::IRBuilder<>& b, Scope* ifs, std::map<std::shared_ptr<KeyType>, llvm::PHINode*>& map);
 	void merge(llvm::IRBuilder<>& b)

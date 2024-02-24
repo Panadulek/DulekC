@@ -55,7 +55,7 @@ class LLVMGen final
 
 	void generateLocalVariableIrInfo(Variable* v, Scope* scope)
 	{
-		if (scope->isFunction())
+		if (scope->isFunction() || scope->isIfScope())
 		{
 			llvm::Value* val = v->init(m_builder.CreateAlloca(v->getLLVMType(getContext()), nullptr , v->getIdentifier().getName()), m_builder);
 			if (val)
@@ -114,7 +114,6 @@ class LLVMGen final
 		if (obj->isIfScope())
 		{
 			IfManager* ifm = static_cast<IfManager*>(obj);
-			ifm->assigmentMemory(m_builder);
 			ifm->generateLLVM(m_builder, m_module.get(), [this](Scope* scope, DuObject* obj) { genIRForElement(obj, scope); });
 		}
 		else if (obj->isVariable())
