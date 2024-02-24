@@ -13,6 +13,8 @@ void IfManager::merge(llvm::IRBuilder<>& b, Scope* ifs, std::map<std::shared_ptr
 		{
 
 			Variable* _var = static_cast<Variable*>(static_cast<Scope*>(ifs)->findUpperObject(var->getKey()));
+			if (!_var)
+				continue;
 			auto _it = map.find(_var->getKey());
 			if ( _it != map.end())
 			{
