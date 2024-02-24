@@ -208,6 +208,33 @@ public:
 		return d == m_root;
 	}
 
+
+	void replaceObject(Variable* var)
+	{
+		Scope* curr = getCurrentScope();
+		DuObject* obj = curr->findObject(var->getIdentifier());
+		if (obj)
+		{
+			curr->replace(var);
+			
+		}
+		else
+		{
+			while (true)
+			{
+				curr = static_cast<Scope*>(curr->getParent());
+				if (!curr)
+					break;
+				obj = curr->findObject(var->getIdentifier());
+				if (obj)
+				{
+					getCurrentScope()->replace(var);
+					break;
+				}
+			}
+		}
+	}
+
 	~AstTree()
 	{
 			for (auto it : m_scopes)

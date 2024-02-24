@@ -75,10 +75,6 @@ public:
 		return this;
 	}
 	const Identifier& getIdentifier() const { return m_id; }
-	virtual bool updateByLLVM(llvm::Value* val, llvm::Type* type)
-	{
-		return false;
-	}
 	virtual void setParent(DuObject* p)
 	{
 		assert(p->isScope());

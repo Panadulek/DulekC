@@ -9,6 +9,7 @@
 #include "GenTmpVariables.h"
 #include "Statement.h"
 #include "SystemFunctions.h"
+#include "LLvmBuilder.h"
 class Expression : public DuObject
 {
 
@@ -18,13 +19,9 @@ protected:
 	void setRes(DuObject* res)
 	{
 		assert(res->isVariable());
-		m_res = static_cast<Variable*>(res->copy());
-	}
-	void setRefRes(DuObject* res)
-	{
-		assert(res->isVariable());
 		m_res = static_cast<Variable*>(res);
 	}
+
 public:
 	virtual void processExpression(llvm::Module*, llvm::IRBuilder<>&, llvm::LLVMContext&, bool s) = 0;
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext& c) const override
@@ -64,9 +61,11 @@ class AdvancedExpression : public Expression
 
 	void processMathematicalExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool s, char op)
 	{
-		auto var1 = m_l->getRes();
-		auto lVal = m_l->getLLVMValue(m_l->getLLVMType(context));
-		auto rVal = var1->getType()->convertValueBasedOnType(builder, m_r->getLLVMValue(m_l->getLLVMType(context)), m_r->getLLVMType(context), context);
+		Variable* var1 = m_l->getRes();
+		Variable* var2 = m_r->getRes();
+		llvm::Value* lVal = LlvmBuilder::loadValue(builder, var1);
+		llvm::Value* rVal = LlvmBuilder::loadValue(builder, var2);
+		rVal = var1->getType()->convertValueBasedOnType(builder, rVal , rVal->getType(), context);
 		llvm::Value* result = nullptr;
 		if (op == '+')
 		{
@@ -87,8 +86,7 @@ class AdvancedExpression : public Expression
 			else
 				result = builder.CreateUDiv(lVal, rVal);
 		}
-		
-		var1->updateByLLVM(result, result->getType());
+		var1 = LlvmBuilder::assigmentValue(builder, var1, result);
 		setRes(var1);
 	}
 	char isMathematicalExpression()
@@ -103,9 +101,11 @@ class AdvancedExpression : public Expression
 
 	void processBooleanExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool s, char op)
 	{
-		auto var1 = m_l->getRes();
-		auto lVal = m_l->getLLVMValue(m_l->getLLVMType(context));
-		auto rVal = var1->getType()->convertValueBasedOnType(builder, m_r->getLLVMValue(m_l->getLLVMType(context)), m_r->getLLVMType(context), context);
+		Variable* var1 = m_l->getRes();
+		Variable* var2 = m_r->getRes();
+		llvm::Value* lVal = LlvmBuilder::loadValue(builder, var1);
+		llvm::Value* rVal = LlvmBuilder::loadValue(builder, var2);
+		rVal = var1->getType()->convertValueBasedOnType(builder, rVal, rVal->getType(), context);
 		llvm::Value* result = nullptr;
 		switch (op)
 		{
@@ -133,9 +133,10 @@ class AdvancedExpression : public Expression
 			}
 		}
 		assert(result->getType()->isIntegerTy(1));
-		var1->setBooleanValue();
-		var1->updateByLLVM(result, result->getType());
-		setRes(var1);
+		Variable* res = new Variable("", TypeContainer::instance().getType(Type::getName(Type::ID::BOOL)), nullptr, false);
+		res->setBooleanValue();
+		res = LlvmBuilder::assigmentValue(builder,  res, result);
+		setRes(res);
 	}
 
 	char isBooleanExpression()
@@ -232,7 +233,7 @@ class CallFunctionExpression : public Expression
 			if (arg && arg->isVariable())
 			{
 				Variable* _arg = static_cast<Variable*>(arg);
-				args.push_back(arg->getLLVMValue(arg->getLLVMType(context)));
+				args.push_back(LlvmBuilder::loadValue(builder, _arg));
 			}
 		}
 		return builder.CreateCall(*fc, args);
@@ -282,9 +283,17 @@ public:
 		}
 		if (m_fun->isProcedure())
 			return;
-		Variable* variable = new Variable(Identifier(""), m_fun->getType(), nullptr, false);
-		variable->updateByLLVM(result, m_fun->getLLVMType(context));
-		setRes(variable);
+		if (getLLVMType(context))
+		{
+			Variable* res = new Variable(Identifier(""), m_fun->getType(), nullptr, false);
+			res = LlvmBuilder::assigmentValue(builder, res, result);
+			setRes(res);
+		}
+		else
+		{
+			setRes(nullptr);
+		}
+		
 	}
 };
 

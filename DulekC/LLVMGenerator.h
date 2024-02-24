@@ -22,6 +22,7 @@
 #include <llvm/Support/FileSystem.h>
 #include "SystemFunctions.h"
 #include "IfManager.h"
+#include "LLvmBuilder.h"
 #define NO_CLEAR_MEMORY
 extern void not_implemented_feature();
 
@@ -56,7 +57,11 @@ class LLVMGen final
 	{
 		if (scope->isFunction())
 		{
-			v->init(m_builder.CreateAlloca(v->getLLVMType(getContext()), nullptr , v->getIdentifier().getName()), m_builder);
+			llvm::Value* val = v->init(m_builder.CreateAlloca(v->getLLVMType(getContext()), nullptr , v->getIdentifier().getName()), m_builder);
+			if (val)
+			{
+				LlvmBuilder::assigmentValue(m_builder, v, val);
+			}
 		}
 	}
 	void genIRForVariable(Variable* v, Scope* scope)
@@ -80,10 +85,9 @@ class LLVMGen final
 			if (found)
 			{
 				llvm::Type* t = found->getLLVMType(getContext());
-				v->updateByLLVM(found->getLLVMValue(t), t);
+				v = LlvmBuilder::assigmentValue(m_builder, v, LlvmBuilder::loadValue(m_builder, static_cast<Variable*>(found)));
 			}
-			else
-				llvm::Value* value = v->getLLVMValueOnStack(m_builder, type);
+
 			generateLocalVariableIrInfo(v, scope);
 		}
 	}

@@ -39,28 +39,15 @@ class AssigmentStatement : public Statement
 	mutable Expression* m_expr;
 	bool m_hasExpr;
 	bool m_copyOpt;
-	void updateAssigment(Variable* var, llvm::Value* val) const
-	{
-		Variable* res = m_left;
-		res->updateByLLVM(val, val->getType());
-		m_left = res;
-	}
-	void updateCopyAssigment(Variable* var, llvm::Value* val) const
-	{
-		Variable* res = static_cast<Variable*>(var->copy());
-		res->updateByLLVM(val, val->getType());
-		m_left = res;
-	}
 	void _processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* module) const
 	{
 		if (m_right && m_right->getIdentifier().getName().empty())
 		{
-			auto value = m_right->getValue();
+			auto value = m_right->loadValue();
 			if (value->isNumericValue())
 			{
-				auto store = builder.CreateStore(llvm::ConstantInt::get(m_left->getLLVMType(context), static_cast<NumericValue*>(value)->getValue()), m_left->getAlloca());
-				store->setAlignment(m_left->getAlligment());
-				updateAssigment(m_left, store->getValueOperand());
+				llvm::Constant* c = llvm::ConstantInt::get(m_left->getLLVMType(context), static_cast<NumericValue*>(value)->loadValue());
+				m_left = LlvmBuilder::assigmentValue(builder,  m_left, c);
 			}
 			else
 				assert(0);
@@ -80,12 +67,7 @@ class AssigmentStatement : public Statement
 			if (m_right->getLLVMType(context) != m_left->getLLVMType(context)) {
 				val = m_left->getType()->convertValueBasedOnType(builder, val, m_right->getLLVMType(context), context);
 			}
-			auto store = builder.CreateStore(val, m_left->getAlloca());
-			store->setAlignment(m_left->getAlligment());
-			if (m_left->getParent() == AstTree::instance().getCurrentScope())
-				updateAssigment(m_left, store->getValueOperand());
-			else
-				updateCopyAssigment(m_left, store->getValueOperand());
+			m_left = LlvmBuilder::assigmentValue(builder, m_left, val);
 		}
 		else
 		{
@@ -106,19 +88,13 @@ class AssigmentStatement : public Statement
 			{
 				m_expr->processExpression(module, builder, context, static_cast<SimpleNumericType*>(m_left->getType())->isSigned());
 			}
-			llvm::Value* val = m_expr->getLLVMValue(m_left->getLLVMType(context));
-			delete m_expr;
-			m_expr = nullptr;
+			llvm::Value* val = LlvmBuilder::loadValue(builder, m_expr->getRes());
+
 			if (val->getType() != m_left->getLLVMType(context))
 			{
 				val = m_left->getType()->convertValueBasedOnType(builder, val, val->getType(), context);
 			}
-			auto store = builder.CreateStore(val, m_left->getAlloca());
-			store->setAlignment(m_left->getAlligment());
-			if (m_left->getParent() == AstTree::instance().getCurrentScope() || m_left->isCopy())
-				updateAssigment(m_left, store->getValueOperand());
-			else
-				updateCopyAssigment(m_left, store->getValueOperand());
+			m_left = LlvmBuilder::assigmentValue(builder, m_left, val);
 		}
 		else
 		{
@@ -178,10 +154,7 @@ public:
 	}
 
 
-	bool updateByLLVM(llvm::Value* val, llvm::Type* type) override
-	{
-		return m_left->updateByLLVM(val, type);
-	}
+
 	virtual DuObject* getObject()
 	{
 		return m_left;
@@ -230,7 +203,7 @@ public:
 			{
 				auto lt = m_var->getLLVMType(context);
 				auto lt2 = m_retType->getLLVMType(context);
-				llvm::Value* llvmRetVal = m_retType->convertValueBasedOnType(builder, m_var->getLLVMValue(nullptr), m_var->getLLVMType(context), context);
+				llvm::Value* llvmRetVal = m_retType->convertValueBasedOnType(builder, m_var->getLLVMValue(m_var->getLLVMType(context)), m_var->getLLVMType(context), context);
 				m_retInstance = builder.CreateRet(llvmRetVal);
 			}
 			else
@@ -249,10 +222,7 @@ public:
 	{
 		return m_retInstance;
 	}
-	bool updateByLLVM(llvm::Value* val, llvm::Type* type) override
-	{
-		return m_var->updateByLLVM(val, type);
-	}
+
 	virtual DuObject* getObject()
 	{
 		return m_var;

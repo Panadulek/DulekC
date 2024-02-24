@@ -25,7 +25,7 @@ public:
 		assert(0);
 		return;
 	}
-	virtual llvm::Value* getLLVMValueOnStack(llvm::IRBuilder<>& builder, llvm::Type* type) const
+	virtual llvm::Value* getLLVMValue(llvm::IRBuilder<>& builder, llvm::Type* type) const
 	{
 		assert(0);
 		return nullptr;
@@ -46,7 +46,7 @@ public:
 	{
 		return llvm::ConstantInt::get(type, m_value, m_isSigned);
 	}
-	virtual llvm::Value* getLLVMValueOnStack(llvm::IRBuilder<>& builder, llvm::Type* type) const override
+	virtual llvm::Value* getLLVMValue(llvm::IRBuilder<>& builder, llvm::Type* type) const override
 	{
 		llvm::Value* var = builder.CreateAlloca(type, nullptr, "numeric_value");
 		llvm::Value* valueToStore = llvm::ConstantInt::get(type, m_value, m_isSigned);
@@ -54,12 +54,12 @@ public:
 		llvm::Value* load = builder.CreateLoad(type, var);
 		return load;
 	}
-	uint64_t getValue() const { return m_value; }
+	uint64_t loadValue() const { return m_value; }
 	void setSigned(bool flag) { m_isSigned = flag; }
 	virtual bool isNumericValue() const { return true; }
 	virtual DuObject* copy() const override
 	{
-		return new NumericValue(getValue());
+		return new NumericValue(loadValue());
 	}
 	virtual void setNewValue(llvm::Value* val) override
 	{

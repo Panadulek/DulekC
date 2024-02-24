@@ -138,6 +138,7 @@ public:
 	{
 		switch (m_size)
 		{
+		case ObjectInByte::BOOLEAN:
 		case ObjectInByte::BYTE:
 			return sizeof(uint8_t);
 		case ObjectInByte::WORD:
@@ -152,7 +153,8 @@ public:
 	{
 		auto myType = getLLVMType(context);
 
-		if (type->isIntegerTy() && myType->isIntegerTy()) {
+		if ( type->isIntegerTy() && myType->isIntegerTy() && type != myType) 
+		{
 			const unsigned typeBits = type->getIntegerBitWidth();
 			const unsigned myTypeBits = myType->getIntegerBitWidth();
 			if (typeBits > myTypeBits) 

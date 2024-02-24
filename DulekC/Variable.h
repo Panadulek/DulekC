@@ -30,19 +30,37 @@ class Variable : public DuObject
 	}
 
 
-	llvm::Value* _getLLVMValue(llvm::IRBuilder<>& builder, llvm::Type* type) const
+	llvm::Value* initValue(llvm::IRBuilder<>& builder, llvm::Type* type) const
 	{
-		if (m_value->isNumericValue() && m_type->isSimpleNumericType())
+		if (m_value && m_type && m_value->isNumericValue() && m_type->isSimpleNumericType())
 		{
 			static_cast<NumericValue*>(m_value)->setSigned(static_cast<SimpleNumericType*>(m_type)->isSigned());
+			return m_value->getLLVMValue(type);
 		}
-		return m_value->getLLVMValueOnStack(builder, type);
+		return nullptr;
 	}
 
+	Variable* updateByLLVM(llvm::Value* val, llvm::Type* type)
+	{
+		Variable* var = nullptr;
+		if (!m_llvmType)
+		{
+			var = new Variable(getIdentifier(), getType(), loadValue(), isGlobalVariable());
+			var->m_llvmType = type;
+			var->m_llvmAllocaInst = m_llvmAllocaInst;
+		}
+		else if (m_llvmType == type)
+		{
+			var = new Variable(getIdentifier(), getType(), loadValue(), isGlobalVariable());
+
+			var->m_llvmAllocaInst = m_llvmAllocaInst;
+		}
+		return var;
+	}
 
 public:
 	Variable(Identifier id, Type* type, Value* val, bool globalScope) : DuObject(id), m_type(type), m_value(val), m_isGlobal(globalScope), 
-		m_llvmType(nullptr), m_llvmValue(nullptr), m_llvmAllocaInst(nullptr), m_hasBooleanValue(false) {}
+		m_llvmType(nullptr),  m_llvmAllocaInst(nullptr), m_hasBooleanValue(false) {}
 	virtual bool isVariable() const override { return true; }
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext& context) const override
 	{
@@ -58,21 +76,15 @@ public:
 		return m_llvmValue;
 
 	}
-	llvm::Value* getLLVMValueOnStack(llvm::IRBuilder<>& b, llvm::Type* type)
-	{
-		if (!m_llvmValue)
-			m_llvmValue = _getLLVMValue(b, type);
-		return m_llvmValue;
-	}
-	void init(llvm::AllocaInst* inst, llvm::IRBuilder<>& builder)
+
+	llvm::Value* init(llvm::AllocaInst* inst, llvm::IRBuilder<>& builder)
 	{
 		if (m_llvmAllocaInst)
-			return;
+			return nullptr;
 		auto align = getAlligment();
 		inst->setAlignment(align);
-		auto store = builder.CreateStore(getLLVMValue(getLLVMType(builder.getContext())), inst, false);
-		store->setAlignment(align);
 		m_llvmAllocaInst = inst;
+		return initValue(builder, getLLVMType(builder.getContext()));
 	}
 	void setAlloca(llvm::AllocaInst* inst)
 	{
@@ -91,41 +103,29 @@ public:
 		return m_isGlobal;
 	}
 
-	void forceUpdateByLLVM(llvm::Value* val, llvm::Type* type)
-	{
-		m_llvmValue = val;
-		m_llvmType = type;
-	}
-
-	bool updateByLLVM(llvm::Value* val, llvm::Type* type)
-	{
-		if ( type == getLLVMType(type->getContext()) )
-		{
-			m_llvmValue = val;
-			m_llvmType = type;
-			return true;
-		}
-		return false;
-	}
-
 	Type* getType()
 	{
 		return m_type;
 	}
-	Value* getValue()
+	Value* loadValue()
 	{
 		return m_value;
 	}
+
+	void setLLVMValue(llvm::Value* val)
+	{
+		if (val->getType() == m_llvmType)
+		{
+			m_llvmValue = val;
+		}
+	}
+
 	virtual DuObject* copy() const override
 	{
 		auto variable = new Variable(getIdentifier(), m_type ? m_type : nullptr, m_value ? static_cast<Value*>(m_value->copy()) : nullptr, isGlobalVariable());
 		variable->setCopy();
 		if (m_hasBooleanValue)
 			variable->setBooleanValue();
-		if (m_llvmValue && m_llvmType)
-		{
-			variable->updateByLLVM(m_llvmValue, m_llvmType);
-		}
 		variable->setKey(getKey());
 		return variable;
 	}
@@ -164,6 +164,7 @@ public:
 	{
 		delete m_value;
 	}
+	friend class LlvmBuilder;
 };
 
 
