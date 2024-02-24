@@ -86,8 +86,9 @@ class AdvancedExpression : public Expression
 			else
 				result = builder.CreateUDiv(lVal, rVal);
 		}
-		var1 = LlvmBuilder::assigmentValue(builder, var1, result);
-		setRes(var1);
+		Variable* newVar = new Variable("res+", var1->getType(), nullptr, false);
+		newVar = LlvmBuilder::assigmentValue(builder, newVar, result);
+		setRes(newVar);
 	}
 	char isMathematicalExpression()
 	{
@@ -317,6 +318,8 @@ public:
 			if (isNumber)
 			{
 				auto toDelete = GeneratorTmpVariables::generateI32Variable(getIdentifier(), val);
+				llvm::Value* initVal = toDelete->init(builder.CreateAlloca(toDelete->getLLVMType(context), toDelete->getLLVMValue(toDelete->getLLVMType(context))), builder);
+				LlvmBuilder::assigmentValue(builder, toDelete.get(), initVal);
 				setRes(toDelete.get());
 				toDelete.release();
 			}

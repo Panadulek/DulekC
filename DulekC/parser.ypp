@@ -17,6 +17,7 @@
 #include "MessageEngine.h"
 #include "LexerContext.h"
 #include "IfManager.h"
+#include "Loop.h"
 extern void Error(MessageEngine::Code code, const char* additionalMsg);
 extern void Warning(MessageEngine::Code code, const char* additionalMsg);
 extern void Info(MessageEngine::Code code, const char* additionalMsg);
@@ -65,7 +66,7 @@ extern int lex(void);
 }
 
 %token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE ASSIGMENT PLUS MINUS MULTIPLICATION DIV COMMENT
-%token FUNCTION_KEYWORD RETURN_KEYWORD IF_KEYWORD ELSE_KEYWORD
+%token FUNCTION_KEYWORD RETURN_KEYWORD IF_KEYWORD ELSE_KEYWORD WHILE_KEYWORD
 %token LT GT EQ
 %token SYS_DISPLAY
 %token <bytetype> I8 U8 I16 U16 I32 U32 I64 U64
@@ -102,6 +103,7 @@ statement
     | ignored_rules
     | if_block
     | else_block
+    | while_block
     ;
 
 
@@ -124,7 +126,20 @@ function_declaration:
         s_lc->setNeedOpenBuckle(true);
         delete [] $2;
     }
-
+while_block:
+    WHILE_KEYWORD LBRACE expression RBRACE
+    {
+        if(s_lc->isInGlobalContext())
+        {
+            Error(MessageEngine::Code::FunctionInsideScope, nullptr);
+        }
+        auto& tree = AstTree::instance();
+        WhileScope* ifm = new WhileScope($3);
+        tree.addObject(ifm);
+        tree.beginScope(ifm);
+        s_lc->setNeedOpenBuckle(true);
+    }
+    ;
 if_block:
     IF_KEYWORD LBRACE expression RBRACE
     {

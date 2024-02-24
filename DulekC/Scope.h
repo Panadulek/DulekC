@@ -12,6 +12,7 @@ protected:
 	std::vector<DuPtr> m_childs;
 	llvm::BasicBlock* m_llvmBlock;
 	std::string m_blockEntryName;
+
 public:
 	using Iterator = decltype(m_childs)::iterator;
 	Scope(Identifier id) : DuObject(id), m_llvmBlock(nullptr)
@@ -153,7 +154,10 @@ public:
 		}
 		return false;
 	}
-
+	void setBlock(llvm::BasicBlock* bb)
+	{
+		m_llvmBlock = bb;
+	}
 	virtual ~Scope()
 	{
 		for (auto& it : m_childs)

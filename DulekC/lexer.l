@@ -19,6 +19,7 @@
 
 
 %%
+"while"                 {return WHILE_KEYWORD;}
 "fnc"					{return FUNCTION_KEYWORD;}
 "if"                    {return IF_KEYWORD;}
 "else"                  {return ELSE_KEYWORD;}

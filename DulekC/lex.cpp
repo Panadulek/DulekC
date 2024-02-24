@@ -54,6 +54,8 @@ static CMContext findNextContext(int token)
 		return CMContext::IF;
 	else if (token == ELSE_KEYWORD)
 		return CMContext::ELSE;
+	else if (token == WHILE_KEYWORD)
+		return CMContext::WHILE;
 	return CMContext::EMPTY;
 }
 

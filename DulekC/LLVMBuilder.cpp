@@ -6,7 +6,7 @@ Variable* LlvmBuilder::assigmentValue(llvm::IRBuilder<>& b, Variable* l, llvm::V
 	llvm::AllocaInst* inst = l->getAlloca();
 	if (!inst)
 	{
-		l->init(b.CreateAlloca(l->getLLVMType(b.getContext()), nullptr, ""), b);
+		l->init(b.CreateAlloca(l->getLLVMType(b.getContext()), nullptr, l->getIdentifier().getName()), b);
 	}
 	inst = l->getAlloca();
 	b.CreateStore(r, inst);

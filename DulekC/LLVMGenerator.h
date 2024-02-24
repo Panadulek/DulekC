@@ -23,6 +23,7 @@
 #include "SystemFunctions.h"
 #include "IfManager.h"
 #include "LLvmBuilder.h"
+#include "Interfaces.h"
 #define NO_CLEAR_MEMORY
 extern void not_implemented_feature();
 
@@ -55,7 +56,7 @@ class LLVMGen final
 
 	void generateLocalVariableIrInfo(Variable* v, Scope* scope)
 	{
-		if (scope->isFunction() || scope->isIfScope())
+		if (scope->isFunction() || dynamic_cast<ISelfGeneratedScope*>(scope))
 		{
 			llvm::Value* val = v->init(m_builder.CreateAlloca(v->getLLVMType(getContext()), nullptr , v->getIdentifier().getName()), m_builder);
 			if (val)
@@ -75,12 +76,10 @@ class LLVMGen final
 			llvm::Constant* _const = llvm::dyn_cast<llvm::Constant>(value);
 			llvm::GlobalVariable* global = new llvm::GlobalVariable(*m_module, type, false, llvm::GlobalValue::ExternalLinkage, _const, v->getIdentifier().getName().data());
 		}
-		else if(!v->isGlobalVariable() && ( scope->isFunction() || scope->isIfScope()))
+		else if(!v->isGlobalVariable() && ( scope->isFunction() || dynamic_cast<ISelfGeneratedScope*>(scope)))
 		{
-			
-
 			Variable* found = nullptr;
-			if(scope->isIfScope())
+			if(dynamic_cast<ISelfGeneratedScope*>(scope))
 				found = dynamic_cast<Variable*>(scope->findUpperObject(v->getIdentifier()));
 			if (found)
 			{
@@ -111,9 +110,8 @@ class LLVMGen final
 	}
 	void genIRForElement(DuObject* obj, Scope* scope)
 	{
-		if (obj->isIfScope())
+		if (ISelfGeneratedScope* ifm = dynamic_cast<ISelfGeneratedScope*>(obj))
 		{
-			IfManager* ifm = static_cast<IfManager*>(obj);
 			ifm->generateLLVM(m_builder, m_module.get(), [this](Scope* scope, DuObject* obj) { genIRForElement(obj, scope); });
 		}
 		else if (obj->isVariable())
@@ -137,7 +135,7 @@ class LLVMGen final
 			IfManager* ifm = dynamic_cast<IfManager*>(it);
 			if (ifm)
 			{
-				if (ifm->hasBothRet())
+				if (ifm->HasBranchedRet())
 					break;
 			}
 		}

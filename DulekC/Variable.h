@@ -22,6 +22,8 @@ class Variable : public DuObject
 	bool m_hasBooleanValue;
 	llvm::Value* _getLLVMValue(llvm::Type* type) const
 	{
+		if (!m_value)
+			return nullptr;
 		if (m_value->isNumericValue() && m_type->isSimpleNumericType())
 		{
 			static_cast<NumericValue*>(m_value)->setSigned(static_cast<SimpleNumericType*>(m_type)->isSigned());
@@ -60,7 +62,7 @@ class Variable : public DuObject
 
 public:
 	Variable(Identifier id, Type* type, Value* val, bool globalScope) : DuObject(id), m_type(type), m_value(val), m_isGlobal(globalScope), 
-		m_llvmType(nullptr),  m_llvmAllocaInst(nullptr), m_hasBooleanValue(false) {}
+		m_llvmType(nullptr), m_llvmValue(nullptr), m_llvmAllocaInst(nullptr), m_hasBooleanValue(false) {}
 	virtual bool isVariable() const override { return true; }
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext& context) const override
 	{

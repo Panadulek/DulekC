@@ -5,8 +5,8 @@
 #include "LLvmBuilder.h"
 #include "Statement.h"
 #include "AstTree.h"
-
-class IfManager : public DuObject
+#include "Interfaces.h"
+class IfManager : public DuObject, public ISelfGeneratedScope
 {
 protected:
 	friend class IfManager;
@@ -47,10 +47,7 @@ public:
 			return m_hasRet;
 		}
 		virtual bool isIfScope() const { return true; }
-		void setBlock(llvm::BasicBlock* bb)
-		{
-			m_llvmBlock = bb;
-		}
+
 		Type* getRetType()
 		{
 			return m_manager->getRetType();
@@ -92,7 +89,7 @@ private:
 	{
 		return m_ifelse.first;
 	}
-	void initParentFun()
+	void initParentFun() override
 	{
 		if (m_function)
 			return;
@@ -137,11 +134,6 @@ private:
 	}
 
 
-	void merge(llvm::IRBuilder<>& b, Scope* ifs, std::map<std::shared_ptr<KeyType>, llvm::PHINode*>& map);
-	void merge(llvm::IRBuilder<>& b)
-	{
-
-	}
 public:
 	enum class ScopeFlag
 	{
@@ -155,20 +147,19 @@ public:
 		
 	}
 
-	void callCallback(std::function<void(Scope*, DuObject*)> cb, IfScope* scope)
+	void callCallback(std::function<void(Scope*, DuObject*)> cb, Scope* scope) override
 	{
 		AstTree::instance().beginScope(scope);
 		for (auto it = scope->begin(); it != scope->end(); it++)
 		{
 			cb(scope, *it);
-			IfManager* ifm = dynamic_cast<IfManager*>(*it);
+			ISelfGeneratedScope* ifm = dynamic_cast<ISelfGeneratedScope*>(*it);
 			if (ifm)
 			{
 				llvm::BasicBlock* newBB = ifm->getMergeBlock();
 				scope->setBlock(newBB);
-				if (ifm->hasBothRet())
+				if (ifm->HasBranchedRet())
 				{
-					scope->setNoMerge();
 					break;
 				}
 			}
@@ -178,7 +169,7 @@ public:
 
 	
 
-	void generateLLVM(llvm::IRBuilder<>& b, llvm::Module* m, std::function<void(Scope*, DuObject*)> cb)
+	void generateLLVM(llvm::IRBuilder<>& b, llvm::Module* m, std::function<void(Scope*, DuObject*)> cb) override
 	{
 		std::map<std::shared_ptr<KeyType>, llvm::PHINode*> map;
 		assert(m_ifelse.first);
@@ -208,8 +199,6 @@ public:
 			
 		}
 		b.SetInsertPoint(m_mergeBlock);
-		merge(b, m_ifelse.first, map);
-		merge(b, _else ? m_ifelse.second : static_cast<Scope*>(getParent()), map);
 		if (!m_hasBothRet)
 		{			
 			Scope* parent = static_cast<Scope*>(getParent());
@@ -257,12 +246,12 @@ public:
 		m_parent = p;
 		m_ifelse.first->setParent(p);
 	}
-	llvm::BasicBlock* getMergeBlock()
+	virtual llvm::BasicBlock* getMergeBlock() override
 	{
 		return m_mergeBlock;
 	}
 
-	bool hasBothRet()
+	const bool HasBranchedRet() const override
 	{
 		return m_hasBothRet;
 	}

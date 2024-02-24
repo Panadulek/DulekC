@@ -15,6 +15,7 @@ public:
 		FUNCTION,
 		IF,
 		ELSE,
+		WHILE,
 		END_CONTEXT
 	};
 private:

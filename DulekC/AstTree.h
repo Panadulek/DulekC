@@ -9,6 +9,7 @@
 #include <ranges>
 #include "SystemFunctions.h"
 #include "TypeContainer.h"
+#include "Interfaces.h"
 extern DuObject* s_GlobalScope;
 class AstTree
 {
@@ -38,7 +39,7 @@ public:
 	{
 		auto predicate = [&obj](const DuObject* _obj)
 			{ 	
-				return (!_obj->isStatement() && !_obj->isIfScope() && _obj->getIdentifier() == obj->getIdentifier());
+				return (!_obj->isStatement() && !dynamic_cast<ISelfGeneratedScope*>(obj) && _obj->getIdentifier() == obj->getIdentifier());
 			
 			};
 		assert(!m_stack.empty());
@@ -62,7 +63,8 @@ public:
 
 	void beginScope(Scope* scope)
 	{
-		if (!scope->isIfScope())
+		ISelfGeneratedScope* isgs = dynamic_cast<ISelfGeneratedScope*>(scope);
+		if (!isgs && !scope->isIfScope())
 		{
 			auto predicate = [&scope](const DuObject* _scope) { return _scope->getIdentifier() == scope->getIdentifier(); };
 			auto filteredView = std::views::filter(m_scopes, predicate);
