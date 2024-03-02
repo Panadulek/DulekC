@@ -13,11 +13,14 @@ public:
 	{}
 	Identifier(const char* id) : m_id(id) {}
 	std::string_view getName() const { return m_id; }
+	void operator =(const Identifier& other)
+	{
+		const_cast<std::string&>(m_id) = other.m_id;
+	}
 	bool operator==(const Identifier& otherId) const
 	{
 		return m_id.compare(otherId.m_id) == 0;
 	}
-
 	const std::pair<bool, uint64_t> toNumber() const
 	{
 		uint64_t val;
@@ -54,6 +57,10 @@ public:
 	virtual bool isScope() const { return false; }
 	virtual bool isConstValue() const { return false; }
 	virtual bool isIfScope() const { return false;  }
+	void setIdentifier(const Identifier id)
+	{
+		m_id = id;
+	}
 	std::string_view getName() { return m_id.getName(); }
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const
 	{

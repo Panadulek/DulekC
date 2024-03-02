@@ -1,6 +1,5 @@
 #pragma once
 #include "Scope.h"
-#include "ExpressionSeracher.h"
 #include "Expression.h"
 #include "Interfaces.h"
 

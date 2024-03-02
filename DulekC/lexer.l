@@ -24,6 +24,7 @@
 "if"                    {return IF_KEYWORD;}
 "else"                  {return ELSE_KEYWORD;}
 "return"				{ return RETURN_KEYWORD;}
+"pointer"               { return PTR; }
 "i8"					{ yylval.bytetype = ObjectInByte::BYTE; return I8; }
 "u8"					{ yylval.bytetype = ObjectInByte::BYTE; return U8; }
 "i16"					{ yylval.bytetype = ObjectInByte::WORD; return I16; }

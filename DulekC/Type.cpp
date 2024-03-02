@@ -7,7 +7,7 @@
 #include <string_view>
 #include <llvm-c/Core.h>
 #include <memory>
-
+#include <format>
 #include "DuObject.h"
 
 namespace LLVM_GEN
@@ -36,9 +36,43 @@ namespace LLVM_GEN
 	public:
 		friend class SimpleNumericType;
 	};
+
+
+	class LLVMPointerTypeClass
+	{
+	public:
+		llvm::Type* genType(llvm::Type* type, llvm::LLVMContext& context)
+		{
+			return type->getPointerTo();
+		}
+	};
 }
 llvm::Type* SimpleNumericType::getLLVMType(llvm::LLVMContext& context)  const
 {
 	LLVM_GEN::LLVMSimpleNumericType l;
 	return l.genType(m_size, m_isSigned, context);
 }
+
+llvm::Type* PointerType::getLLVMType(llvm::LLVMContext& context) const 
+{
+	llvm::Type* type = m_ptrType->getLLVMType(context);
+	LLVM_GEN::LLVMPointerTypeClass lptc;
+	return lptc.genType(type, context);
+}
+
+
+const Identifier PointerType::getTypeName() const 
+{
+	std::string val = "null";
+	if (PointerType* pt = dynamic_cast<PointerType*>(m_ptrType))
+	{
+		
+		val = pt->getTypeName().getName();
+	}
+	else if (SimpleNumericType* snt = dynamic_cast<SimpleNumericType*>(m_ptrType))
+	{
+		val = Type::generateId(snt->getObjectInByte(), snt->isSigned()).getName();
+	}
+	return std::format("pointer<{}>", val);
+}
+

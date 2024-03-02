@@ -30,6 +30,8 @@ public:
 	enum class SysFunctionID
 	{
 		DISPLAY = 0,
+		ALLOCATE_MEMORY,
+		DEALLOCATE_MEMORY,
 		LAST
 	};
 	template<SysFunctionID ID>
@@ -39,6 +41,10 @@ public:
 		{
 		case SysFunctionID::DISPLAY:
 			return "$display";
+		case SysFunctionID::ALLOCATE_MEMORY:
+			return "$allocate";
+		case SysFunctionID::DEALLOCATE_MEMORY:
+			return "$deallocate";
 		case SysFunctionID::LAST:
 		default:
 			return std::string();

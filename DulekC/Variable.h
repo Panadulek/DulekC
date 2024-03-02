@@ -34,10 +34,26 @@ class Variable : public DuObject
 
 	llvm::Value* initValue(llvm::IRBuilder<>& builder, llvm::Type* type) const
 	{
-		if (m_value && m_type && m_value->isNumericValue() && m_type->isSimpleNumericType())
+		if (m_value && m_type )
 		{
-			static_cast<NumericValue*>(m_value)->setSigned(static_cast<SimpleNumericType*>(m_type)->isSigned());
-			return m_value->getLLVMValue(type);
+			if ( m_value->isNumericValue() )
+			{
+				
+				
+				if (m_type->isSimpleNumericType())
+				{
+					static_cast<NumericValue*>(m_value)->setSigned(static_cast<SimpleNumericType*>(m_type)->isSigned());
+					llvm::Value* llvmVal = m_value->getLLVMValue(type);
+					return llvmVal;
+				}
+				else if(PointerType* pt = dynamic_cast<PointerType*>(m_type))
+				{
+					static_cast<NumericValue*>(m_value)->setSigned(false);
+					llvm::Value* llvmVal = m_value->getLLVMValue(llvm::Type::getInt64Ty(builder.getContext()));
+					llvmVal = builder.CreateIntToPtr(llvmVal, pt->getLLVMType(builder.getContext()), "CreateIntToPtr");
+					return llvmVal;
+				}
+			}
 		}
 		return nullptr;
 	}

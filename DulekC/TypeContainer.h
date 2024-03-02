@@ -24,9 +24,8 @@ public:
 		auto it = m_typeMap.find(id);
 		if (it != m_typeMap.end())
 			return;
-		m_typeMap[id] = std::make_unique<T>(std::forward<Args>(args)...);
+		m_typeMap.insert({ id, std::make_unique<T>(std::forward<Args>(args)...) });
 	}
-	
 
 	void init()
 	{

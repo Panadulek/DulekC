@@ -67,6 +67,7 @@ extern int lex(void);
 
 %token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE ASSIGMENT PLUS MINUS MULTIPLICATION DIV COMMENT
 %token FUNCTION_KEYWORD RETURN_KEYWORD IF_KEYWORD ELSE_KEYWORD WHILE_KEYWORD
+%token PTR 
 %token LT GT EQ
 %token SYS_DISPLAY
 %token <bytetype> I8 U8 I16 U16 I32 U32 I64 U64
@@ -223,6 +224,15 @@ variable_declaration
         Identifier id = SimpleNumericType::generateId($1, true) ;
         TypeContainer::instance().insert<SimpleNumericType>(id, id, $1, false);
         $$ = TypeContainer::instance().getType(id);
+    }
+    |
+    PTR LT type GT
+    {
+        PointerType* pt = new PointerType($3);
+        Identifier id = pt->getTypeName();
+        TypeContainer::instance().insert<PointerType>(id, $3);
+        $$ = TypeContainer::instance().getType(id);
+        delete pt;
     }
     ;
 

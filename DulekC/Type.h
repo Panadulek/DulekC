@@ -13,6 +13,7 @@
 enum class ObjectInByte : unsigned char
 {
 	BOOLEAN,
+	POINTER,
 	BYTE,
 	WORD,
 	DWORD,
@@ -37,6 +38,37 @@ public:
 	{
 		return nullptr;
 	};
+
+	static Identifier generateId(ObjectInByte id, bool isSigned)
+	{
+		switch (id)
+		{
+
+		case ObjectInByte::BOOLEAN:
+			return Identifier(Type::getName(Type::ID::BOOL));
+		case ObjectInByte::BYTE:
+			if (isSigned)
+				return Identifier(Type::getName(Type::ID::I8));
+			else
+				return Identifier(Type::getName(Type::ID::U8));
+		case ObjectInByte::WORD:
+			if (isSigned)
+				return Identifier(Type::getName(Type::ID::I16));
+			else
+				return Identifier(Type::getName(Type::ID::U16));
+		case ObjectInByte::DWORD:
+			if (isSigned)
+				return Identifier(Type::getName(Type::ID::I32));
+			else
+				return Identifier(Type::getName(Type::ID::U32));
+		case ObjectInByte::QWORD:
+			if (isSigned)
+				return Identifier(Type::getName(Type::ID::I64));
+			else
+				return Identifier(Type::getName(Type::ID::U64));
+		}
+	}
+
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const override
 	{
 		assert(0);
@@ -53,6 +85,7 @@ public:
 	enum ID
 	{
 		BOOL = 0,
+		POINTER,
 		I8,
 		U8,
 		I16,
@@ -68,6 +101,8 @@ public:
 	{
 		switch (id)
 		{
+		case ID::POINTER:
+			return "pointer";
 		case ID::BOOL:
 			return "bool";
 		
@@ -102,34 +137,7 @@ private:
 	ObjectInByte m_size;
 	bool m_isSigned;
 public:
-	static Identifier generateId(ObjectInByte id, bool isSigned)
-	{
-		switch (id)
-		{
-		case ObjectInByte::BOOLEAN:
-			return Identifier(Type::getName(Type::ID::BOOL));
-		case ObjectInByte::BYTE:
-			if (isSigned)
-				return Identifier(Type::getName(Type::ID::I8));
-			else
-				return Identifier(Type::getName(Type::ID::U8));
-		case ObjectInByte::WORD:
-			if (isSigned)
-				return Identifier(Type::getName(Type::ID::I16));
-			else
-				return Identifier(Type::getName(Type::ID::U16));
-		case ObjectInByte::DWORD:
-			if (isSigned)
-				return Identifier(Type::getName(Type::ID::I32));
-			else
-				return Identifier(Type::getName(Type::ID::U32));
-		case ObjectInByte::QWORD:
-			if (isSigned)
-				return Identifier(Type::getName(Type::ID::I64));
-			else
-				return Identifier(Type::getName(Type::ID::U64));
-		}
-	}
+
 	virtual bool isSimpleNumericType() const override { return true; }
 	SimpleNumericType(const Identifier& id, const ObjectInByte oib, const bool isSigned) : Type(id), m_size(oib), m_isSigned(isSigned) {}
 	virtual llvm::Type* getLLVMType (llvm::LLVMContext&) const override;
@@ -145,9 +153,14 @@ public:
 			return sizeof(uint16_t);
 		case ObjectInByte::DWORD:
 			return sizeof(uint32_t);
+		case ObjectInByte::POINTER:
 		case ObjectInByte::QWORD:
 			return sizeof(uint64_t);
 		}
+	}
+	ObjectInByte getObjectInByte()
+	{
+		return m_size;
 	}
 	virtual llvm::Value* convertValueBasedOnType(llvm::IRBuilder<>& builder, llvm::Value* value, llvm::Type* type, llvm::LLVMContext& context) override
 	{
@@ -186,4 +199,36 @@ public:
 		return new SimpleNumericType(getIdentifier(), m_size, isSigned());
 	}
 	virtual ~SimpleNumericType() {}
+};
+
+
+
+class PointerType : public Type
+{
+	Type* m_ptrType;
+public:
+	PointerType(Type* ptrType) : m_ptrType(ptrType), Type("")
+	{
+		setIdentifier(getTypeName());
+	}
+	PointerType(Identifier id, Type* ptrType) : Type(id), m_ptrType(ptrType) {}
+	virtual llvm::Type* getLLVMType(llvm::LLVMContext&) const override;
+	const Identifier getTypeName() const;
+	virtual Value* getDefaultValue() const override
+	{
+		return nullptr;
+	}
+	virtual Value* convertLLVMToValue(llvm::Value* lv) const override
+	{
+		return nullptr;
+	}
+	DuObject* copy() const override
+	{
+		return nullptr;
+	}
+	virtual size_t getSizeInBytes() const override
+	{
+		return sizeof(void*);
+	}
+	virtual ~PointerType() {}
 };
