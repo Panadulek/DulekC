@@ -215,11 +215,10 @@ class CallFunctionExpression : public Expression
 		}
 		return builder.CreateCall(m_fun->getLLVMFunction(context, m, builder), args);
 	}
-	llvm::Value* processSystemFunc(llvm::FunctionCallee* fc, llvm::Value* str, llvm::IRBuilder<>& builder, llvm::LLVMContext& context)
+	llvm::Value* processSystemFunc(llvm::FunctionCallee* fc, llvm::IRBuilder<>& builder, llvm::LLVMContext& context)
 	{
 		AstTree& tree = AstTree::instance();
 		std::vector<llvm::Value*> args;
-		args.push_back(str);
 		for (auto it : m_args)
 		{
 			auto [isNumber, val] = it.toNumber();
@@ -274,7 +273,7 @@ public:
 			SystemFunctions* sf = SystemFunctions::GetSystemFunctions(module, &builder, &context);
 			auto callee = sf->findFunction(m_fun->getIdentifier());
 			if (callee)
-				result = processSystemFunc(callee, builder.CreateGlobalStringPtr("%d\n\0"), builder, context);
+				result = processSystemFunc(callee,  builder, context);
 			else
 				isSystemFun = false;
 		}

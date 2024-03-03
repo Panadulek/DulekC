@@ -140,6 +140,9 @@
     <ClInclude Include="Loop.h">
       <Filter>AST\Declaration</Filter>
     </ClInclude>
+    <ClInclude Include="DuFunctions.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="lexer.l">

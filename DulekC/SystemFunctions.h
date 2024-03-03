@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include "../CFunctions/DuFunctions.h"
 #include <llvm/IR/IRBuilder.h>
 #include <map>
 #include "DuObject.h"
@@ -11,7 +10,8 @@ class SystemFunctions final
 	llvm::LLVMContext* m_context;
 	std::map<std::string, llvm::FunctionCallee> m_functions;
 	void generatePrintNumberFunction();
-
+	void generateAllocateFunction();
+	void generateDeallocateFunction();
 	SystemFunctions(llvm::Module* m, llvm::IRBuilder<>* b, llvm::LLVMContext* c) : m_module(m), m_builder(b), m_context(c)
 	{
 		generatePrintNumberFunction();

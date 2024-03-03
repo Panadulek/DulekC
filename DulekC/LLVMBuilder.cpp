@@ -1,7 +1,7 @@
 #include "LLvmBuilder.h"
 #include "AstTree.h"
 #include <format>
-#include "../CFunctions/DuFunctions.h"
+
 Variable* LlvmBuilder::assigmentValue(llvm::IRBuilder<>& b, Variable* l, llvm::Value* r)
 {
 	llvm::AllocaInst* inst = l->getAlloca();
