@@ -72,6 +72,9 @@
     <ClCompile Include="message.cpp">
       <Filter>Pliki zasobów</Filter>
     </ClCompile>
+    <ClCompile Include="SystemFunctions.cpp">
+      <Filter>Pliki zasobów\Pliki źródłowe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DuObject.h">

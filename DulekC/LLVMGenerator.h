@@ -24,6 +24,7 @@
 #include "IfManager.h"
 #include "LLvmBuilder.h"
 #include "Interfaces.h"
+#include <llvm/IR/Verifier.h>
 #define NO_CLEAR_MEMORY
 extern void not_implemented_feature();
 
@@ -176,7 +177,7 @@ public:
 	{
 		genfile();
 		std::string ErrStr;
-
+		llvm::verifyModule(*m_module, &llvm::errs());
 		llvm::Function* F = m_module->getFunction("main");
 		if (!F)
 		{
