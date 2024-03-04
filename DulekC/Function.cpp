@@ -16,9 +16,7 @@ llvm::Function* Function::getLLVMFunction(llvm::LLVMContext& context, llvm::Modu
 				{
 					auto arg = m_llvmFunction->getArg(i);
 					Variable* v = static_cast<Variable*>(AstTree::instance().findObject(m_args[i]));
-					Variable* _arg = new Variable(Identifier(""), m_typesArgs[i], m_typesArgs[i]->convertLLVMToValue(arg), false);
 					v = LlvmBuilder::assigmentValue(b, v, arg);
-					delete _arg;
 					v->setParent(this);
 				}
 			}

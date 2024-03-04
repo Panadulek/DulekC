@@ -351,7 +351,7 @@ variable_declaration
         delete $1;
     }
     |
-    argument ASSIGMENT  expression SEMICOLON
+    argument ASSIGMENT expression SEMICOLON
     {
         if(s_lc->isInGlobalContext())
         {
@@ -467,6 +467,13 @@ factor
         Function* f = tree.findFunction(*$1);
         $$ = new CallFunctionExpression(std::move(yys_ids), f);
         delete $1;
+    }
+    | SYS_DISPLAY LBRACE argument_list RBRACE
+    {
+        auto& tree = AstTree::instance();
+        Identifier id(SystemFunctions::getSysFunctionName<SystemFunctions::SysFunctionID::DISPLAY>());
+        Function* f = tree.findFunction(id);
+        $$ = new CallFunctionExpression(std::move(yys_ids), f);
     }
     ;
 
