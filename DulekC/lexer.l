@@ -34,6 +34,8 @@
 "i64"					{ yylval.bytetype = ObjectInByte::QWORD; return I64; }
 "u64"					{ yylval.bytetype = ObjectInByte::QWORD; return U64; }
 "$display"				{return SYS_DISPLAY;}
+"$allocate"             {return ALLOCATOR;}
+"$deallocate"           {return DEALLOCATOR;}
 
 -?[0-9]+ {
     yylval.num = std::stoull(yytext); 

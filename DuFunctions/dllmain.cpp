@@ -33,13 +33,13 @@ extern "C"
     {
         return printf("\t%d\n", n);
     }
-    DLLEXPORT void* DuAllocate(uint64_t size)
+    DLLEXPORT uint8_t* DuAllocate(uint64_t size)
     {
-        return malloc(size);
+        return (uint8_t*)malloc(size);
     }
-    DLLEXPORT void* DuReallocate(uint64_t size, void* memory)
+    DLLEXPORT uint8_t* DuReallocate(uint64_t size, uint8_t* memory)
     {
-        return realloc(memory, size);
+        return (uint8_t*)realloc((void*)memory, size);
     }
     DLLEXPORT void DuDeallocate(void* memory)
     {

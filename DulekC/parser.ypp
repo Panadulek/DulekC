@@ -63,13 +63,14 @@ extern int lex(void);
     Statement* pstatement;
     Value* pval;
     Expression* pexpr;
+    SystemFunctions::SysFunctionID sysfunid;
 }
 
 %token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE ASSIGMENT PLUS MINUS MULTIPLICATION DIV COMMENT
 %token FUNCTION_KEYWORD RETURN_KEYWORD IF_KEYWORD ELSE_KEYWORD WHILE_KEYWORD
 %token PTR 
 %token LT GT EQ
-%token SYS_DISPLAY
+%token SYS_DISPLAY ALLOCATOR DEALLOCATOR REALLOCATOR
 %token <bytetype> I8 U8 I16 U16 I32 U32 I64 U64
 %token <str> IDENTIFIER
 %token <num> NUMBER
@@ -90,6 +91,7 @@ extern int lex(void);
 %type<pexpr> term
 %type<pexpr> expression
 %type<pexpr> boolean_expr
+%type<sysfunid> system_function_group
 %%
 
 program
@@ -221,7 +223,7 @@ variable_declaration
     |
      ubyte_type
     {
-        Identifier id = SimpleNumericType::generateId($1, true) ;
+        Identifier id = SimpleNumericType::generateId($1, false) ;
         TypeContainer::instance().insert<SimpleNumericType>(id, id, $1, false);
         $$ = TypeContainer::instance().getType(id);
     }
@@ -395,14 +397,14 @@ variable_declaration
         delete $2;
     }
     |
-    SYS_DISPLAY LBRACE argument_list RBRACE SEMICOLON
+    system_function_group LBRACE argument_list RBRACE SEMICOLON
     {
         if(s_lc->isInGlobalContext())
         {
            Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
         }
         auto& tree = AstTree::instance();
-        Identifier id(SystemFunctions::getSysFunctionName<SystemFunctions::SysFunctionID::DISPLAY>());
+        Identifier id(SystemFunctions::getSysFunctionName($1));
         Function* f = tree.findFunction(id);
         $$ = new CallFunction( new CallFunctionExpression(std::move(yys_ids), f) );
         tree.addObject($$);
@@ -468,10 +470,10 @@ factor
         $$ = new CallFunctionExpression(std::move(yys_ids), f);
         delete $1;
     }
-    | SYS_DISPLAY LBRACE argument_list RBRACE
+    | system_function_group LBRACE argument_list RBRACE
     {
         auto& tree = AstTree::instance();
-        Identifier id(SystemFunctions::getSysFunctionName<SystemFunctions::SysFunctionID::DISPLAY>());
+        Identifier id(SystemFunctions::getSysFunctionName($1));
         Function* f = tree.findFunction(id);
         $$ = new CallFunctionExpression(std::move(yys_ids), f);
     }
@@ -491,7 +493,25 @@ boolean_expr
             $$ = new AdvancedExpression(Identifier("=="), $1, $3);
         }
     ;
-
+system_function_group:
+    SYS_DISPLAY
+    {
+        $$ = SystemFunctions::SysFunctionID::DISPLAY;
+    }
+    | ALLOCATOR
+    {
+        $$ = SystemFunctions::SysFunctionID::ALLOCATE_MEMORY;
+    }
+    | 
+    DEALLOCATOR
+    {
+        $$ = SystemFunctions::SysFunctionID::DEALLOCATE_MEMORY;
+    }
+    | REALLOCATOR
+    {
+        $$ = SystemFunctions::SysFunctionID::LAST;
+    }
+    ;
     ignored_rules:
         LBUCKLE{}
         |

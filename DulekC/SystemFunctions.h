@@ -15,6 +15,8 @@ class SystemFunctions final
 	SystemFunctions(llvm::Module* m, llvm::IRBuilder<>* b, llvm::LLVMContext* c) : m_module(m), m_builder(b), m_context(c)
 	{
 		generatePrintNumberFunction();
+		generateAllocateFunction();
+		generateDeallocateFunction();
 	}
 public:
 	static SystemFunctions* GetSystemFunctions(llvm::Module* m, llvm::IRBuilder<>* b, llvm::LLVMContext* c)
@@ -22,15 +24,14 @@ public:
 		static SystemFunctions sf(m, b, c);
 		return &sf;
 	}
-	enum class SysFunctionID
+	enum class SysFunctionID : uint16_t
 	{
 		DISPLAY = 0,
 		ALLOCATE_MEMORY,
 		DEALLOCATE_MEMORY,
 		LAST
 	};
-	template<SysFunctionID ID>
-	static std::string getSysFunctionName()
+	static std::string getSysFunctionName(SysFunctionID ID)
 	{
 		switch (ID)
 		{

@@ -26,6 +26,8 @@ public:
 		NeedToOpenScope,
 		ElseNeedsIfContext,
 		CannotConvertToBoolean,
+		INVALID_NUMBER_OF_ARGUMENTS,
+		INVALID_ARGUMENT_TYPE,
 	};
 private:
 	std::string getErrorMessage(Code code)
@@ -47,6 +49,10 @@ private:
 			return "Else statement needs if statement before";
 		case Code::CannotConvertToBoolean:
 			return "Variable cannot been convert to boolean type";
+		case Code::INVALID_NUMBER_OF_ARGUMENTS:
+			return "Invalid number of arguments";
+		case Code::INVALID_ARGUMENT_TYPE:
+			return "Invalid argument type";
 		default:
 			return "Not implemented message";
 		}

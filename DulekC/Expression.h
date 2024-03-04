@@ -185,7 +185,7 @@ public:
 	}
 };
 
-
+#define DEBUG_CALLE
 
 class CallFunctionExpression : public Expression
 {
@@ -219,14 +219,26 @@ class CallFunctionExpression : public Expression
 	{
 		AstTree& tree = AstTree::instance();
 		std::vector<llvm::Value*> args;
-		for (auto it : m_args)
+		if (fc && fc->getFunctionType()->getNumParams() != m_args.size())
 		{
-			auto [isNumber, val] = it.toNumber();
-			auto arg = tree.findObject(it);
+			Error(MessageEngine::Code::INVALID_NUMBER_OF_ARGUMENTS, nullptr);
+		}
+		for (int i = 0; i < m_args.size(); i++)
+		{
+			auto [isNumber, val] = m_args[i].toNumber();
+			auto arg = tree.findObject(m_args[i]);
 			llvm::Type* _type = nullptr;
 			if (!arg && isNumber)
 			{
-				std::unique_ptr<Variable> uniqueArg = GeneratorTmpVariables::generateI32Variable(it, val);
+				std::unique_ptr<Variable> uniqueArg = nullptr;
+				if(fc->getFunctionType()->getParamType(i) == builder.getInt32Ty())
+				{
+					uniqueArg = GeneratorTmpVariables::generateI32Variable(m_args[i], val);
+				}
+				else
+				{
+					uniqueArg = GeneratorTmpVariables::generateI64Variable(m_args[i], val);
+				}
 				_type = uniqueArg->getLLVMType(context);
 				args.push_back(uniqueArg->getLLVMValue(_type));
 			}
@@ -235,6 +247,8 @@ class CallFunctionExpression : public Expression
 				Variable* _arg = static_cast<Variable*>(arg);
 				args.push_back(LlvmBuilder::loadValue(builder, _arg));
 			}
+			if (args[i]->getType() != fc->getFunctionType()->getParamType(i))
+				Error(MessageEngine::Code::INVALID_ARGUMENT_TYPE, nullptr);
 		}
 		return builder.CreateCall(*fc, args);
 	}

@@ -11,7 +11,7 @@ extern "C"
 {
 	DLLEXPORT int DuDisplay(const char*, ...);
 	DLLEXPORT int DuDisplayNumber(int32_t);
-	DLLEXPORT void* DuAllocate(uint64_t);
-	DLLEXPORT void* DuReallocate(uint64_t, void*);
+	DLLEXPORT uint8_t* DuAllocate(uint64_t);
+	DLLEXPORT uint8_t* DuReallocate(uint64_t, uint8_t*);
 	DLLEXPORT void DuDeallocate(void*);
 }

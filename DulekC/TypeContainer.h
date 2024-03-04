@@ -27,6 +27,23 @@ public:
 		m_typeMap.insert({ id, std::make_unique<T>(std::forward<Args>(args)...) });
 	}
 
+	static std::string generatePointerType(std::vector<Type::ID> ids)
+	{
+		std::string name = "pointer<";
+		Type::ID id = ids[0];
+		ids.erase(ids.begin());
+		if (id == Type::ID::POINTER)
+		{
+			name += generatePointerType(ids);
+		}
+		else
+		{
+			name += Type::getName(id);
+		}
+		name += ">";
+		return name;
+	}
+
 	void init()
 	{
 		if (m_isInited)
@@ -43,6 +60,8 @@ public:
 		insert<SimpleNumericType>(Identifier(Type::getName(Type::ID::I16)), Identifier(Type::getName(Type::ID::I16)), ObjectInByte::WORD, true);
 		insert<SimpleNumericType>(Identifier(Type::getName(Type::ID::I32)), Identifier(Type::getName(Type::ID::I32)), ObjectInByte::DWORD, true);
 		insert<SimpleNumericType>(Identifier(Type::getName(Type::ID::I64)), Identifier(Type::getName(Type::ID::I64)), ObjectInByte::QWORD, true);
+		insert<PointerType>(generatePointerType({ Type::ID::U8 }), getType(Type::getName(Type::ID::U8)));
+		
 
 	}
 

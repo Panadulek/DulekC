@@ -7,21 +7,21 @@ void SystemFunctions::generatePrintNumberFunction()
 	llvm::FunctionType* printFunctionType = llvm::FunctionType::get(m_builder->getInt32Ty(), m_builder->getInt32Ty(), false);
 	auto functionPtr = llvm::Function::Create(printFunctionType, llvm::Function::LinkageTypes::ExternalLinkage, "DuDisplayNumber", m_module);
 	auto printfFunc = llvm::FunctionCallee(functionPtr);
-	m_functions.insert({ getSysFunctionName<SysFunctionID::DISPLAY>(), printfFunc });
+	m_functions.insert({ getSysFunctionName(SysFunctionID::DISPLAY), printfFunc });
 }
 void SystemFunctions::generateAllocateFunction()
 {
-	llvm::FunctionType* allocateFunctionType = llvm::FunctionType::get(m_builder->getVoidTy()->getPointerTo(), m_builder->getInt64Ty(), false);
+	llvm::FunctionType* allocateFunctionType = llvm::FunctionType::get(m_builder->getInt8Ty()->getPointerTo(), m_builder->getInt64Ty(), false);
 	auto functionPtr = llvm::Function::Create(allocateFunctionType, llvm::Function::LinkageTypes::ExternalLinkage, "DuAllocate", m_module);
 	auto allocateFunc = llvm::FunctionCallee(functionPtr);
-	m_functions.insert({ getSysFunctionName<SysFunctionID::ALLOCATE_MEMORY>(), allocateFunc });
+	m_functions.insert({ getSysFunctionName(SysFunctionID::ALLOCATE_MEMORY), allocateFunc });
 }
 void SystemFunctions::generateDeallocateFunction()
 {
-	llvm::FunctionType* allocateFunctionType = llvm::FunctionType::get(m_builder->getVoidTy(), m_builder->getVoidTy()->getPointerTo(), false);
+	llvm::FunctionType* allocateFunctionType = llvm::FunctionType::get(m_builder->getVoidTy(), m_builder->getInt8Ty()->getPointerTo(), false);
 	auto functionPtr = llvm::Function::Create(allocateFunctionType, llvm::Function::LinkageTypes::ExternalLinkage, "DuAllocate", m_module);
 	auto allocateFunc = llvm::FunctionCallee(functionPtr);
-	m_functions.insert({ getSysFunctionName<SysFunctionID::DEALLOCATE_MEMORY>(), allocateFunc });
+	m_functions.insert({ getSysFunctionName(SysFunctionID::DEALLOCATE_MEMORY), allocateFunc });
 }
 
 llvm::FunctionCallee* SystemFunctions::findFunction(Identifier id)

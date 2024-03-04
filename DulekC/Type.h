@@ -43,7 +43,6 @@ public:
 	{
 		switch (id)
 		{
-
 		case ObjectInByte::BOOLEAN:
 			return Identifier(Type::getName(Type::ID::BOOL));
 		case ObjectInByte::BYTE:
@@ -66,6 +65,8 @@ public:
 				return Identifier(Type::getName(Type::ID::I64));
 			else
 				return Identifier(Type::getName(Type::ID::U64));
+		case ObjectInByte::POINTER:
+			return Identifier(Type::getName(Type::ID::POINTER));
 		}
 	}
 

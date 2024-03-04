@@ -88,6 +88,10 @@ class AssigmentStatement : public Statement
 			{
 				m_expr->processExpression(module, builder, context, static_cast<SimpleNumericType*>(m_left->getType())->isSigned());
 			}
+			else if (PointerType* pt = dynamic_cast<PointerType*>(m_left->getType()))
+			{
+				m_expr->processExpression(module, builder, context, false);
+			}
 			llvm::Value* val = LlvmBuilder::loadValue(builder, m_expr->getRes());
 
 			if (val->getType() != m_left->getLLVMType(context))
