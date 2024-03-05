@@ -59,6 +59,12 @@ class AdvancedExpression : public Expression
 	Expression* m_l;
 	Expression* m_r;
 
+
+	void processPointerExpression(llvm::Module* m, llvm::IRBuilder<>& b, char op)
+	{
+		assert(0);
+	}
+
 	void processMathematicalExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool s, char op)
 	{
 		Variable* var1 = m_l->getRes();
@@ -162,7 +168,13 @@ public:
 		char op = isMathematicalExpression();
 		if (op)
 		{
-			processMathematicalExpression(module, builder, context, s, op);
+			Variable* var = m_l->getRes();
+			if (var->isPointer())
+			{
+				processPointerExpression(module, builder, op);
+			}
+			else
+				processMathematicalExpression(module, builder, context, s, op);
 			return;
 		}
 		op = isBooleanExpression();

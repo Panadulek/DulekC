@@ -178,6 +178,10 @@ public:
 		Error(MessageEngine::Code::CannotConvertToBoolean, getIdentifier().getName().data());
 		return nullptr;
 	}
+	bool isPointer()
+	{
+		return m_type && dynamic_cast<PointerType*>(m_type) != nullptr;
+	}
 	virtual ~Variable() 
 	{
 		delete m_value;

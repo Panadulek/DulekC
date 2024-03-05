@@ -18,8 +18,8 @@ void SystemFunctions::generateAllocateFunction()
 }
 void SystemFunctions::generateDeallocateFunction()
 {
-	llvm::FunctionType* allocateFunctionType = llvm::FunctionType::get(m_builder->getVoidTy(), m_builder->getInt8Ty()->getPointerTo(), false);
-	auto functionPtr = llvm::Function::Create(allocateFunctionType, llvm::Function::LinkageTypes::ExternalLinkage, "DuAllocate", m_module);
+	llvm::FunctionType* deallocateFunctionType = llvm::FunctionType::get(m_builder->getVoidTy(), m_builder->getInt8Ty()->getPointerTo(), false);
+	auto functionPtr = llvm::Function::Create(deallocateFunctionType, llvm::Function::LinkageTypes::ExternalLinkage, "DuDeallocate", m_module);
 	auto allocateFunc = llvm::FunctionCallee(functionPtr);
 	m_functions.insert({ getSysFunctionName(SysFunctionID::DEALLOCATE_MEMORY), allocateFunc });
 }

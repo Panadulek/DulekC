@@ -20,7 +20,9 @@ class AstTree
 	{
 		m_scopes.emplace_back(new Function(SystemFunctions::getSysFunctionName(SystemFunctions::SysFunctionID::DISPLAY), TypeContainer::instance().getType(Type::generateId(ObjectInByte::DWORD, true)), {}, {}, true, false));
 		m_scopes.emplace_back(new Function(SystemFunctions::getSysFunctionName(SystemFunctions::SysFunctionID::ALLOCATE_MEMORY), TypeContainer::instance().getType(TypeContainer::generatePointerType({Type::U8})), {}, {}, true, false));
+		m_scopes.emplace_back(new Function(SystemFunctions::getSysFunctionName(SystemFunctions::SysFunctionID::DEALLOCATE_MEMORY), nullptr, {}, {}, true, true));
 	}
+
 	AstTree()
 	{
 		m_root = new Scope(Identifier("GLOBAL_SCOPE"));
