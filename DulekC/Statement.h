@@ -78,8 +78,6 @@ class AssigmentStatement : public Statement
 		}
 	}
 
-
-
 	void _processStatementExpr(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* module) const
 	{
 		if (m_expr)
@@ -92,7 +90,14 @@ class AssigmentStatement : public Statement
 			{
 				m_expr->processExpression(module, builder, context, false);
 			}
-			llvm::Value* val = LlvmBuilder::loadValue(builder, m_expr->getRes());
+			llvm::Value* val = nullptr;
+			
+			if (m_expr->isExprValueWrapper())
+			{
+				val = m_expr->getResWrapper()->getLLVMValue(nullptr);
+			}
+			else
+				val =  LlvmBuilder::loadValue(builder, m_expr->getRes());
 
 			if (val->getType() != m_left->getLLVMType(context))
 			{
@@ -266,4 +271,24 @@ public:
 	}
 	virtual bool isCallFunctionStatement() const override { return true; }
 	virtual ~CallFunction() {}
+};
+
+
+class ExpressionStmtWrapper : public Statement
+{
+	std::unique_ptr<Expression> m_expr;
+public:
+	ExpressionStmtWrapper(Expression* expr) : m_expr(expr), Statement("Expression_Wrapper") {}
+	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* m) const override
+	{
+		m_expr->processExpression(m, builder, context, false);
+	}
+	virtual llvm::Type* getLLVMType(llvm::LLVMContext& context) const override
+	{
+		return m_expr->getLLVMType(context);
+	}
+	virtual llvm::Value* getLLVMValue(llvm::Type* type) const override
+	{
+		return m_expr->getLLVMValue(type);
+	}
 };

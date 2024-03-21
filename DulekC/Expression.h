@@ -10,31 +10,56 @@
 #include "Statement.h"
 #include "SystemFunctions.h"
 #include "LLvmBuilder.h"
+#include "ValueWrapper.h"
 class Expression : public DuObject
 {
-
-	Variable* m_res;
+	union
+	{
+		Variable* m_res;
+		ValueWrapper* m_resWrapper;
+	};
 protected:
+	bool m_bValueWrapper{ false };
 	Expression(Identifier id) : DuObject(id), m_res(nullptr) {}
 	void setRes(DuObject* res)
 	{
-		assert(res->isVariable());
-		m_res = static_cast<Variable*>(res);
+		assert(res->isVariable() || res->isValueWrapper());
+		if (res->isValueWrapper())
+		{
+			m_resWrapper = dynamic_cast<ValueWrapper*>(res);
+			m_bValueWrapper = true;
+		}
+		else
+		{
+			m_res = dynamic_cast<Variable*>(res);
+		}
 	}
 
 public:
 	virtual void processExpression(llvm::Module*, llvm::IRBuilder<>&, llvm::LLVMContext&, bool s) = 0;
 	virtual llvm::Type* getLLVMType(llvm::LLVMContext& c) const override
 	{
-		return m_res->getLLVMType(c);
+		if (m_bValueWrapper)
+		{
+			return m_resWrapper->getType()->getLLVMType(c);
+		}
+		else
+			return m_res->getLLVMType(c);
 	}
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const override
 	{
-		return m_res->getLLVMValue(type);
+		if (m_bValueWrapper)
+			return m_resWrapper->getLLVMValue(type);
+		else
+			return m_res->getLLVMValue(type);
 	}
 	Variable* getRes() const
 	{
 		return m_res;
+	}
+	ValueWrapper* getResWrapper()
+	{
+		return m_resWrapper;
 	}
 	DuObject* copy() const
 	{
@@ -43,8 +68,17 @@ public:
 	}
 	virtual std::shared_ptr<KeyType> getKey() const
 	{
-		assert(m_res);
+		assert(m_res && m_bValueWrapper);
 		return m_res->getKey();
+	}
+
+	bool isValueWrapper()
+	{
+		return m_resWrapper;
+	}
+	const bool isExprValueWrapper()
+	{
+		return m_bValueWrapper;
 	}
 	virtual ~Expression()
 	{
@@ -353,4 +387,64 @@ public:
 	}
 	virtual ~BasicExpression() {}
 
+};
+
+
+
+class AllocExpression : public Expression
+{
+	Type* m_type;
+	Expression* m_counts;
+public:
+	AllocExpression(Type* type, Expression* counts) : m_type(type), m_counts(counts), Expression("AllocaExpression")
+	{
+	}
+	virtual void processExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool s)
+	{
+		auto& tree = AstTree::instance();
+		llvm::Type* type = m_type->getLLVMType(context);
+		llvm::Constant* size_of = llvm::ConstantExpr::getSizeOf(type);
+		m_counts->processExpression(module, builder, context, s);
+		Variable* countsVar = m_counts->getRes();
+		llvm::Value* counts = countsVar->getLLVMValue(countsVar->getLLVMType(context));
+		SystemFunctions* sf = SystemFunctions::GetSystemFunctions(module, &builder, &context);
+		llvm::FunctionCallee* callee = sf->findFunction(SystemFunctions::getSysFunctionName(SystemFunctions::SysFunctionID::ALLOCATE_MEMORY));
+		llvm::Value* allocatedMemory = LlvmBuilder::allocate ( builder, size_of, counts, callee );
+		setRes(new ValueWrapper("allocated_value", allocatedMemory, m_type));
+	}
+};
+
+
+class DeallocateExpression : public Expression
+{
+	Variable* m_obj;
+public:
+	DeallocateExpression(Identifier id) : m_obj(nullptr), Expression("Deallocate") 
+	{
+		auto& tree = AstTree::instance();
+		auto obj = tree.findObject(id);
+		if (Variable* var = dynamic_cast<Variable*>(obj))
+		{
+			if (var->isPointer())
+			{
+				m_obj = var;
+			}
+			else
+			{
+				Error(MessageEngine::Code::INVALID_ARGUMENT_TYPE, "");
+			}
+		}
+		else
+			Error(MessageEngine::Code::ERROR_TOKEN, "");
+	}
+
+	virtual void processExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool s)
+	{
+		SystemFunctions* sf = SystemFunctions::GetSystemFunctions(module, &builder, &context);
+		llvm::FunctionCallee* callee = sf->findFunction(SystemFunctions::getSysFunctionName(SystemFunctions::SysFunctionID::DEALLOCATE_MEMORY));
+		llvm::Value* ptrToDelete = LlvmBuilder::loadValue(builder, m_obj);
+		assert(ptrToDelete && ptrToDelete->getType()->isPointerTy());
+		llvm::Value* resVal = LlvmBuilder::deallocate(builder, ptrToDelete, callee);
+		LlvmBuilder::assigmentValue(builder, m_obj, resVal);
+	}
 };

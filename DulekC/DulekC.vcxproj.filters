@@ -24,9 +24,6 @@
     <Filter Include="Pliki nagłówkowe\LLVM">
       <UniqueIdentifier>{acf5b4b4-6304-4936-bd22-bd7aaa5a12e6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="LVMSource">
-      <UniqueIdentifier>{8d2814e7-759c-4324-827b-fada2ba9a90f}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Pliki nagłówkowe\Lexer">
       <UniqueIdentifier>{0e218ed4-fc81-43dc-b4b5-0dca75311a05}</UniqueIdentifier>
     </Filter>
@@ -39,6 +36,9 @@
     <Filter Include="Pliki zasobów\Pliki źródłowe">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="LVMSource">
+      <UniqueIdentifier>{8d2814e7-759c-4324-827b-fada2ba9a90f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -138,6 +138,9 @@
       <Filter>Pliki nagłówkowe\LLVM</Filter>
     </ClInclude>
     <ClInclude Include="Loop.h">
+      <Filter>AST\Declaration</Filter>
+    </ClInclude>
+    <ClInclude Include="ValueWrapper.h">
       <Filter>AST\Declaration</Filter>
     </ClInclude>
     <ClInclude Include="DuFunctions.h">

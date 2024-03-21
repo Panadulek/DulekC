@@ -206,8 +206,36 @@ public:
 
 class PointerType : public Type
 {
+private:
+	class Iterator
+	{
+		Type* m_curr;
+	public:
+		Iterator(Type* begin) : m_curr(begin) {}
+		Iterator& getNext()
+		{
+			if (PointerType* pt = dynamic_cast<PointerType*>(m_curr))
+			{
+				m_curr = pt->getPtrType();
+			}
+			else
+				m_curr = nullptr;
+			return *this;
+		}
+		bool isEnd()
+		{
+			return m_curr == nullptr;
+		}
+		Type*& getValue()
+		{
+			return m_curr;
+		}
+
+	};
+private:
 	Type* m_ptrType;
 public:
+	using PtrIterator = Iterator;
 	PointerType(Type* ptrType) : m_ptrType(ptrType), Type("")
 	{
 		setIdentifier(getTypeName());
@@ -230,6 +258,15 @@ public:
 	virtual size_t getSizeInBytes() const override
 	{
 		return sizeof(void*);
+	}
+	Type* getPtrType()
+	{
+		return m_ptrType;
+	}
+
+	PtrIterator begin()
+	{
+		return PtrIterator(m_ptrType);
 	}
 	virtual ~PointerType() {}
 };

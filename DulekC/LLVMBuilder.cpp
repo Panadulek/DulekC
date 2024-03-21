@@ -28,10 +28,28 @@ llvm::Value* LlvmBuilder::loadValue(llvm::IRBuilder<>& b, Variable* var)
 
 }
 
-llvm::PHINode* LlvmBuilder::initPhiNode(llvm::IRBuilder<>& b, Variable* var)
+
+llvm::Value* LlvmBuilder::allocate(llvm::IRBuilder<>& b, llvm::Value* sizeofElement, llvm::Value* counts, llvm::FunctionCallee* allocateFunc)
 {
-	llvm::Value* val = loadValue(b, var);
-	llvm::PHINode* ret = b.CreatePHI(val->getType(), 0, var->getIdentifier().getName());
-	ret->addIncoming(val, static_cast<Scope*>(var->getParent())->getBasicBlock(b.getContext(), nullptr));
-	return ret;
+	assert(sizeofElement->getType()->isIntegerTy() && counts->getType()->isIntegerTy());
+	sizeofElement = b.CreateIntCast(sizeofElement, llvm::Type::getInt64Ty(b.getContext()), false);
+	counts = b.CreateIntCast(counts, llvm::Type::getInt64Ty(b.getContext()), false);
+	llvm::Value* size = b.CreateMul(counts, sizeofElement, "CalculateSizeToAllocate");
+	std::vector<llvm::Value*> args(1);
+	args[0] = size;
+	llvm::Value* memory = b.CreateCall(*allocateFunc, args);
+	return memory;
+}
+
+
+llvm::Value* LlvmBuilder::deallocate(llvm::IRBuilder<>& b, llvm::Value* ptr, llvm::FunctionCallee* deallocateFunc)
+{
+	assert(ptr && ptr->getType()->isPointerTy());
+	llvm::Type* ptrType = ptr->getType();
+	//ptr = b.CreateBitCast(ptr, llvm::IntegerType::getInt8Ty(b.getContext())->getPointerTo(), "cast to i8*");
+	std::vector<llvm::Value*> args(1);
+	args[0] = ptr;
+	b.CreateCall(*deallocateFunc, args);
+	return llvm::Constant::getNullValue(ptrType);
+
 }

@@ -14,6 +14,8 @@
 #include <llvm/Support/raw_ostream.h>
 #include "MessageEngine.h"
 #include <memory>
+#include <Windows.h>
+#include "DuFunctions.h"
 int yyparse(void);
 extern FILE* yyin;
 #define NOT_IMPLEMENTED_FEATURE_
@@ -32,13 +34,12 @@ static constexpr bool LLVM_IR_PRINT = true;
 
 int main(int argc, char* argv[])
 {
+	DuDisplay("\tCompilation Begin...\n");
 	errno_t code;
 	if(argc > 1)
 		code = fopen_s(&yyin, argv[1], "r");
 	else
 		code = fopen_s(&yyin, "Main.du", "r");
-	
-
 	initlex();
 	initTerminalMessageEngine();
 	yyparse();

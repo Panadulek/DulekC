@@ -68,7 +68,7 @@ extern int lex(void);
 
 %token ARROW LBRACE RBRACE COMMA SEMICOLON LBUCKLE RBUCKLE INIT_TYPE ASSIGMENT PLUS MINUS MULTIPLICATION DIV COMMENT
 %token FUNCTION_KEYWORD RETURN_KEYWORD IF_KEYWORD ELSE_KEYWORD WHILE_KEYWORD
-%token PTR 
+%token PTR NEW DELETE 
 %token LT GT EQ
 %token SYS_DISPLAY ALLOCATOR DEALLOCATOR REALLOCATOR
 %token <bytetype> I8 U8 I16 U16 I32 U32 I64 U64
@@ -85,7 +85,11 @@ extern int lex(void);
 %type<pvariable>variable_declaration
 %type<pnumvalue> variable_numeric_init
 %type<pidentifier> argument
+
 %type<pstatement>  variable_assigment
+%type<pstatement> expression_statement
+%type<pstatement> statement_group
+
 %type<pval> just_value_init
 %type<pexpr> factor
 %type<pexpr> term
@@ -102,7 +106,7 @@ program
 statement
     : variable_declaration
     | function_declaration
-    | variable_assigment
+    | statement_group
     | ignored_rules
     | if_block
     | else_block
@@ -322,7 +326,19 @@ variable_declaration
   ;
 
 
-
+  statement_group:
+    variable_assigment
+    {
+        auto& tree = AstTree::instance();
+        tree.addObject($1);
+    }
+    |
+    expression_statement
+    {
+        auto& tree = AstTree::instance();
+        tree.addObject($1);
+    }
+    ;
   variable_assigment:
     argument ASSIGMENT argument SEMICOLON
     {
@@ -334,7 +350,6 @@ variable_declaration
 		auto l = dynamic_cast<Variable*>(tree.findObject(*$1));
 		auto r = dynamic_cast<Variable*>(tree.findObject(*$3));
         $$ = new AssigmentStatement(l, r);
-        tree.addObject($$);
         delete $1;
         delete $3;
     }
@@ -349,7 +364,6 @@ variable_declaration
         auto l = dynamic_cast<Variable*>(tree.findObject(*$1));
         Variable* r = new Variable(Identifier(""), l->getType(), $3, tree.inGlobal());
         $$ = new AssigmentStatement(l, r);
-        tree.addObject($$);
         delete $1;
     }
     |
@@ -362,7 +376,6 @@ variable_declaration
         auto& tree = AstTree::instance();
         auto l = dynamic_cast<Variable*>(tree.findObject(*$1));
         $$ = new AssigmentStatement(l, $3);
-        tree.addObject($$);
         delete $1;
 
     }
@@ -379,7 +392,6 @@ variable_declaration
         if( s->isFunction() )
         {
             $$ = new ReturnStatement(l, static_cast<Function*>(s)->getType());
-            tree.addObject($$);
         }
         else if(s->isIfScope())
         {
@@ -387,7 +399,6 @@ variable_declaration
             if(_s)
             {
                 $$ = new ReturnStatement(l, _s->getRetType());
-                tree.addObject($$);
             }
         }
         else
@@ -407,7 +418,6 @@ variable_declaration
         Identifier id(SystemFunctions::getSysFunctionName($1));
         Function* f = tree.findFunction(id);
         $$ = new CallFunction( new CallFunctionExpression(std::move(yys_ids), f) );
-        tree.addObject($$);
     }
     |
     argument LBRACE argument_list RBRACE SEMICOLON
@@ -419,14 +429,19 @@ variable_declaration
         auto& tree = AstTree::instance();
         Function* f = tree.findFunction(*$1);
         $$ = new CallFunction( new CallFunctionExpression(std::move(yys_ids), f) );
-        tree.addObject($$);
         delete $1;
     }
     |
-
     ;
-
-
+    expression_statement: expression SEMICOLON
+    {
+        if(s_lc->isInGlobalContext())
+        {
+            Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+        }
+        $$ = new ExpressionStmtWrapper($1);
+    }
+    ;
 
 
     expression
@@ -462,6 +477,15 @@ factor
     | LBRACE expression RBRACE
     {
             $$ = $2; 
+    }
+    | NEW type LBRACE expression RBRACE
+    {
+        $$ = new AllocExpression($2, $4); 
+    }
+    | DELETE argument
+    {
+        $$ = new DeallocateExpression(*$2);
+        delete $2;
     }
     | argument LBRACE argument_list RBRACE 
     {

@@ -19,6 +19,10 @@
 
 
 %%
+"new"                   {return NEW;}
+"delete"                {
+                            return DELETE;
+                        }
 "while"                 {return WHILE_KEYWORD;}
 "fnc"					{return FUNCTION_KEYWORD;}
 "if"                    {return IF_KEYWORD;}

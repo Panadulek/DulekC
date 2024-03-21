@@ -105,7 +105,10 @@ public:
 	{
 		return m_isCopy;
 	}
-
+	virtual bool isValueWrapper() const
+	{
+		return false;
+	}
 };
 
 using DuPtr = DuObject*;

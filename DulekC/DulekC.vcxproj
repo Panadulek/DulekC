@@ -186,6 +186,7 @@
     <ClInclude Include="Type.h" />
     <ClInclude Include="TypeContainer.h" />
     <ClInclude Include="Value.h" />
+    <ClInclude Include="ValueWrapper.h" />
     <ClInclude Include="Variable.h" />
   </ItemGroup>
   <ItemGroup>
