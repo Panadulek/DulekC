@@ -7,10 +7,11 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include "GenTmpVariables.h"
-#include "Statement.h"
 #include "SystemFunctions.h"
 #include "LLvmBuilder.h"
 #include "ValueWrapper.h"
+
+
 class Expression : public DuObject
 {
 	union
@@ -231,7 +232,7 @@ public:
 	}
 };
 
-#define DEBUG_CALLE
+
 
 class CallFunctionExpression : public Expression
 {

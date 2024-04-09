@@ -67,6 +67,7 @@ private:
 			return "Warning";
 		case MessageType::ERROR:
 			return "Error";
+		default: return "";
 		}
 	}
 protected:

@@ -1,13 +1,14 @@
 #pragma once
 #include "DuObject.h"
 #include "Variable.h"
-#include <llvm/IR/IRBuilder.h>
+#include "llvm/IR/IRBuilder.h"
 #include "AstTree.h"
-#include <llvm/IR/Instructions.h>
+#include "llvm/IR/Instructions.h"
 #include "TypeContainer.h"
 #include "GenTmpVariables.h"
 #include "Expression.h"
 #include <format>
+#include <memory>
 #define DELETE_TMP_VARIABLE(X)	if(X && X->getIdentifier().getName().empty() && X->isTmp()) delete X;
 
 class Statement : public DuObject
@@ -276,7 +277,7 @@ public:
 
 class ExpressionStmtWrapper : public Statement
 {
-	std::unique_ptr<Expression> m_expr;
+	Expression *m_expr;
 public:
 	ExpressionStmtWrapper(Expression* expr) : m_expr(expr), Statement("Expression_Wrapper") {}
 	virtual void processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* m) const override
@@ -290,5 +291,9 @@ public:
 	virtual llvm::Value* getLLVMValue(llvm::Type* type) const override
 	{
 		return m_expr->getLLVMValue(type);
+	}
+	~ExpressionStmtWrapper()
+	{
+		delete m_expr;
 	}
 };

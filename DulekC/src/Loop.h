@@ -1,5 +1,6 @@
 #pragma once
 #include "Scope.h"
+#include "Statement.h"
 #include "Expression.h"
 #include "Interfaces.h"
 

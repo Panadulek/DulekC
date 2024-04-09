@@ -67,6 +67,8 @@ public:
 				return Identifier(Type::getName(Type::ID::U64));
 		case ObjectInByte::POINTER:
 			return Identifier(Type::getName(Type::ID::POINTER));
+		default:
+			return Identifier("");
 		}
 	}
 
@@ -157,6 +159,8 @@ public:
 		case ObjectInByte::POINTER:
 		case ObjectInByte::QWORD:
 			return sizeof(uint64_t);
+		default:
+			return 0;
 		}
 	}
 	ObjectInByte getObjectInByte()

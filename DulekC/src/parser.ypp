@@ -1,4 +1,5 @@
 %{
+#include "Loop.h"
 #include <memory>
 #include <iostream>
 #include <string>
@@ -17,7 +18,7 @@
 #include "MessageEngine.h"
 #include "LexerContext.h"
 #include "IfManager.h"
-#include "Loop.h"
+
 extern void Error(MessageEngine::Code code, const char* additionalMsg);
 extern void Warning(MessageEngine::Code code, const char* additionalMsg);
 extern void Info(MessageEngine::Code code, const char* additionalMsg);

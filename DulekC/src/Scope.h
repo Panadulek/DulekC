@@ -89,6 +89,7 @@ public:
 			}
 
 		} while (parent);
+		return nullptr;
 	}
 	std::span<DuPtr> getList()
 	{
