@@ -4,7 +4,7 @@
 
 Variable* LlvmBuilder::assigmentValue(llvm::IRBuilder<>& b, Variable* l, llvm::Value* r)
 {
-	llvm::AllocaInst* inst = l->getAlloca();
+	llvm::Value* inst = l->getAlloca();
 	if (!inst)
 	{
 		l->init(b.CreateAlloca(l->getLLVMType(b.getContext()), nullptr, l->getIdentifier().getName()), b);
@@ -17,7 +17,7 @@ Variable* LlvmBuilder::assigmentValue(llvm::IRBuilder<>& b, Variable* l, llvm::V
 
 llvm::Value* LlvmBuilder::loadValue(llvm::IRBuilder<>& b, Variable* var)
 {
-	llvm::AllocaInst* memory = var->getAlloca();
+	llvm::Value* memory = var->getAlloca();
 	if (!memory)
 	{
 		auto fmt = std::format("\'{}'\@", var->getIdentifier().getName()); 
@@ -52,4 +52,10 @@ llvm::Value* LlvmBuilder::deallocate(llvm::IRBuilder<>& b, llvm::Value* ptr, llv
 	b.CreateCall(*deallocateFunc, args);
 	return llvm::Constant::getNullValue(ptrType);
 
+}
+
+llvm::Value* LlvmBuilder::arrayOperator(llvm::IRBuilder<>& b, llvm::Value* address_based, llvm::Value* dim, llvm::Type* type)
+{	
+	address_based = b.CreateInBoundsGEP(type, address_based, { dim }, "CREATE_IN_BOUNDS_GEP");
+	return address_based;
 }

@@ -35,91 +35,143 @@ public:
 
 class AssigmentStatement : public Statement
 {
-	mutable Variable* m_left;
-	Variable* m_right;
-	mutable Expression* m_expr;
+	mutable DuObject* m_left;
+	DuObject* m_right;
 	bool m_hasExpr;
 	bool m_copyOpt;
 	void _processStatement(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* module) const
 	{
-		if (m_right && m_right->getIdentifier().getName().empty())
+		if (Variable* right = dynamic_cast<Variable*>(m_right))
 		{
-			auto value = m_right->loadValue();
-			if (value->isNumericValue())
+			if (Variable* left = dynamic_cast<Variable*>(m_left))
 			{
-				llvm::Constant* c = llvm::ConstantInt::get(m_left->getLLVMType(context), static_cast<NumericValue*>(value)->loadValue());
-				m_left = LlvmBuilder::assigmentValue(builder,  m_left, c);
-			}
-			else
-				assert(0);
-		}
-		else if (m_right && (AstTree::instance().checkVisibility(m_left, m_right) || AstTree::instance().checkGlobalVisibility(m_right)))
-		{
-			llvm::Value* val = nullptr;
-			if (!m_right->isGlobalVariable())
-			{
-				val = builder.CreateLoad(m_right->getLLVMType(context), m_right->getAlloca(), m_right->getIdentifier().getName().data());
-			}
-			else
-			{
-				llvm::GlobalVariable* gv = module->getGlobalVariable(m_right->getIdentifier().getName());
-				val = builder.CreateLoad(gv->getValueType(), gv, "");
-			}
-			if (m_right->getLLVMType(context) != m_left->getLLVMType(context)) {
-				val = m_left->getType()->convertValueBasedOnType(builder, val, m_right->getLLVMType(context), context);
-			}
-			m_left = LlvmBuilder::assigmentValue(builder, m_left, val);
-		}
-		else
-		{
-			const std::string format = "Undeclared variable\n";
-			printf(format.c_str());
-			std::exit(15);
+				if (right && right->getIdentifier().getName().empty())
+				{
+					auto value = right->loadValue();
+					if (value->isNumericValue())
+					{
+						llvm::Constant* c = llvm::ConstantInt::get(left->getLLVMType(context), static_cast<NumericValue*>(value)->loadValue());
+						m_left = LlvmBuilder::assigmentValue(builder, left, c);
+					}
+					else
+						assert(0);
+				}
+				else if (m_right && (AstTree::instance().checkVisibility(left, right) || AstTree::instance().checkGlobalVisibility(right)))
+				{
+					llvm::Value* val = nullptr;
+					if (!right->isGlobalVariable())
+					{
+						val = builder.CreateLoad(m_right->getLLVMType(context), right->getAlloca(), right->getIdentifier().getName().data());
+					}
+					else
+					{
+						llvm::GlobalVariable* gv = module->getGlobalVariable(right->getIdentifier().getName());
+						val = builder.CreateLoad(gv->getValueType(), gv, "");
+					}
+					if (m_right->getLLVMType(context) != m_left->getLLVMType(context)) {
+						val = left->getType()->convertValueBasedOnType(builder, val, right->getLLVMType(context), context);
+					}
+					m_left = LlvmBuilder::assigmentValue(builder, left, val);
+				}
+				else
+				{
+					const std::string format = "Undeclared variable\n";
+					printf(format.c_str());
+					std::exit(15);
 
+				}
+			}
 		}
 	}
 
 	void _processStatementExpr(llvm::IRBuilder<>& builder, llvm::LLVMContext& context, llvm::Module* module) const
 	{
-		if (m_expr)
+		if (Expression* expr = dynamic_cast<Expression*>(m_right))
 		{
-			if (m_left->getType()->isSimpleNumericType())
+			if (Variable* left = dynamic_cast<Variable*>(m_left))
 			{
-				m_expr->processExpression(module, builder, context, static_cast<SimpleNumericType*>(m_left->getType())->isSigned());
+				if (left->getType()->isSimpleNumericType())
+				{
+					expr->processExpression(module, builder, context, static_cast<SimpleNumericType*>(left->getType())->isSigned());
+				}
+				else if (PointerType* pt = dynamic_cast<PointerType*>(left->getType()))
+				{
+					expr->processExpression(module, builder, context, false);
+				}
+				llvm::Value* val = nullptr;
+
+				if (expr->isExprValueWrapper())
+				{
+					if (ArrayOperatorExprerssion* aoe = dynamic_cast<ArrayOperatorExprerssion*>(expr))
+					{
+						DuObject* res = aoe->getResWrapper();
+						Variable* var = dynamic_cast<ValueWrapper*>(res)->generateVariableValAsAlloca(builder);
+						val = LlvmBuilder::loadValue(builder, var);
+						delete var;
+					}
+					else
+						val = expr->getResWrapper()->getLLVMValue(nullptr);
+				}
+				else
+					val = LlvmBuilder::loadValue(builder, expr->getRes());
+
+				if (val->getType() != m_left->getLLVMType(context))
+				{
+					val = left->getType()->convertValueBasedOnType(builder, val, val->getType(), context);
+				}
+				m_left = LlvmBuilder::assigmentValue(builder, left, val);
 			}
-			else if (PointerType* pt = dynamic_cast<PointerType*>(m_left->getType()))
+			else if (ArrayOperatorExprerssion* left = dynamic_cast<ArrayOperatorExprerssion*>(m_left))
 			{
-				m_expr->processExpression(module, builder, context, false);
-			}
-			llvm::Value* val = nullptr;
-			
-			if (m_expr->isExprValueWrapper())
-			{
-				val = m_expr->getResWrapper()->getLLVMValue(nullptr);
+				left->processExpression(module, builder, context, false);
+				llvm::Value* lVal = nullptr;
+				llvm::Value* val = nullptr;
+				if (left->isExprValueWrapper())
+				{
+					m_left = left->getResWrapper();
+					m_left = dynamic_cast<ValueWrapper*>(m_left)->generateVariableValAsAlloca(builder);					
+				}
+				else
+				{
+					m_left = left->getRes();
+				}
+				if (Variable* varl = dynamic_cast<Variable*>(m_left))
+				{
+					if (varl->getType()->isSimpleNumericType())
+					{
+						expr->processExpression(module, builder, context, static_cast<SimpleNumericType*>(varl->getType())->isSigned());
+					}
+					else if (PointerType* pt = dynamic_cast<PointerType*>(varl->getType()))
+					{
+						expr->processExpression(module, builder, context, false);
+					}
+					if (expr->isExprValueWrapper())
+					{
+						val = expr->getResWrapper()->getLLVMValue(nullptr);
+					}
+					else
+						val = LlvmBuilder::loadValue(builder, expr->getRes());
+					m_left = LlvmBuilder::assigmentValue(builder, varl, val);
+				}
+				
 			}
 			else
-				val =  LlvmBuilder::loadValue(builder, m_expr->getRes());
-
-			if (val->getType() != m_left->getLLVMType(context))
 			{
-				val = m_left->getType()->convertValueBasedOnType(builder, val, val->getType(), context);
-			}
-			m_left = LlvmBuilder::assigmentValue(builder, m_left, val);
-		}
-		else
-		{
-			const std::string format = "null expr\n";
-			printf(format.c_str());
-			std::exit(15);
+				const std::string format = "null expr\n";
+				printf(format.c_str());
+				std::exit(15);
 
+			}
 		}
 	}
 
 
 public:
-	AssigmentStatement(Variable* l, Variable* r) : Statement(Identifier("assigment statement")), m_left(l), m_right(r), m_expr(nullptr), m_hasExpr(false), m_copyOpt(false)
+	AssigmentStatement(Variable* l, Variable* r) : Statement(Identifier("assigment statement")), m_left(l), m_right(r), m_hasExpr(false), m_copyOpt(false)
 	{}
-	AssigmentStatement(Variable* l, Expression* r) : Statement(Identifier("assigment statement")), m_left(l), m_right(nullptr), m_expr(r), m_hasExpr(true), m_copyOpt(false)
+	AssigmentStatement(Variable* l, Expression* r) : Statement(Identifier("assigment statement")), m_left(l), m_right(r), m_hasExpr(true), m_copyOpt(false)
+	{}
+	AssigmentStatement(Expression* l, Expression* r) : Statement(Identifier("assigment statement")), m_left(l), m_right(r), m_hasExpr(true), m_copyOpt(false)
 	{}
 	void setRightElement(Variable* r)
 	{
@@ -145,7 +197,7 @@ public:
 		if (!m_hasExpr)
 			_processStatement(builder, context, module);
 		else
-			_processStatementExpr(builder, context, module);
+			 _processStatementExpr(builder, context, module);
 		m_beforeProcess = false;
 	}
 
@@ -153,17 +205,17 @@ public:
 
 	virtual ~AssigmentStatement() 
 	{
-		DELETE_TMP_VARIABLE(m_right)
+		if(Variable* rVar = dynamic_cast<Variable*>(m_right))
+			DELETE_TMP_VARIABLE(rVar)
 		if (m_copyOpt)
 			delete m_left;
 	}
+
 	virtual std::shared_ptr<KeyType>getKey() const
 	{
 		assert(m_left);
 		return m_left->getKey();
 	}
-
-
 
 	virtual DuObject* getObject()
 	{

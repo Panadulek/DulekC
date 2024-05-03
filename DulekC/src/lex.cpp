@@ -5,7 +5,7 @@
 #include <memory>
 int __cdecl yylex();
 LexerContext* s_lc = nullptr;
-extern void Error(MessageEngine::Code code, const char* additional_msg);
+extern void Error(MessageEngine::Code code, std::string_view additional_msg);
 extern char* yytext;
 static enum 
 {

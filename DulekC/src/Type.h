@@ -79,7 +79,6 @@ public:
 	}
 	virtual llvm::Value* convertValueBasedOnType(llvm::IRBuilder<>& builder, llvm::Value* value, llvm::Type* type, llvm::LLVMContext& context)
 	{
-		assert(0);
 		return nullptr;
 	}
 	virtual size_t getSizeInBytes() const = 0;

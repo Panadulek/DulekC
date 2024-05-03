@@ -1,7 +1,7 @@
 #pragma once
 #include "DuObject.h"
 #include "Type.h"
-
+class Variable;
 class ValueWrapper : public DuObject
 {
 	llvm::Value* m_val;
@@ -38,6 +38,24 @@ public:
 		}
 		else
 			return nullptr;
+	}
+	Variable* generateVariable(llvm::IRBuilder<>& b)
+	{
+		Variable* var = new Variable("", m_type, nullptr, false);
+		var->getLLVMType(b.getContext());
+		LlvmBuilder::assigmentValue(b, var, m_val);
+		return var;
+	}
+	Variable* generateVariableValAsAlloca(llvm::IRBuilder<>& b)
+	{
+		Variable* var = new Variable("", m_type, nullptr, false);
+		var->getLLVMType(b.getContext());
+		var->setAlloca(m_val);
+		return var;
+	}
+	void setType(Type* type)
+	{
+		m_type = type;
 	}
 
 	virtual ~ValueWrapper() {}

@@ -9,4 +9,5 @@ public:
 	static llvm::Value* loadValue(llvm::IRBuilder<>& b, Variable* var);
 	static llvm::Value* allocate(llvm::IRBuilder<>& b, llvm::Value* sizeofElement, llvm::Value* counts, llvm::FunctionCallee*);
 	static llvm::Value* deallocate(llvm::IRBuilder<>& b, llvm::Value* Pointer, llvm::FunctionCallee* deallocateFunc);
+	static llvm::Value* arrayOperator(llvm::IRBuilder<>& b, llvm::Value* address_based, llvm::Value* dim, llvm::Type* type);
 };

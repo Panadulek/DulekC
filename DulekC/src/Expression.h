@@ -19,9 +19,12 @@ class Expression : public DuObject
 		Variable* m_res;
 		ValueWrapper* m_resWrapper;
 	};
+	
+	bool m_leftSideExpr;
+	TypeValue m_tv;
 protected:
 	bool m_bValueWrapper{ false };
-	Expression(Identifier id) : DuObject(id), m_res(nullptr) {}
+	Expression(Identifier id, TypeValue tv = TypeValue::RVAL) : DuObject(id), m_res(nullptr), m_leftSideExpr(false), m_tv(tv) {}
 	void setRes(DuObject* res)
 	{
 		assert(res->isVariable() || res->isValueWrapper());
@@ -35,6 +38,11 @@ protected:
 			m_res = dynamic_cast<Variable*>(res);
 		}
 	}
+	void setLHSFlag()
+	{
+		m_leftSideExpr = true;
+	}
+
 
 public:
 	virtual void processExpression(llvm::Module*, llvm::IRBuilder<>&, llvm::LLVMContext&, bool s) = 0;
@@ -73,6 +81,11 @@ public:
 		return m_res->getKey();
 	}
 
+	bool getLHSFlag()
+	{
+		return m_leftSideExpr;
+	}
+
 	bool isValueWrapper()
 	{
 		return m_resWrapper;
@@ -85,6 +98,12 @@ public:
 	{
 		delete m_res;
 	}
+
+	uint8_t isAvaiableLeftSideExpr()
+	{
+		return m_tv & ( TypeValue::LVAL & 0xFE);
+	}
+
 };
 
 
@@ -257,7 +276,13 @@ class CallFunctionExpression : public Expression
 			if (arg && arg->isVariable())
 			{
 				Variable* _arg = static_cast<Variable*>(arg);
-				args.push_back(arg->getLLVMValue(arg->getLLVMType(context)));
+				if (_arg->isPointer())
+				{
+					llvm::Value* val = LlvmBuilder::loadValue(builder, _arg);
+					args.push_back(val);
+				}
+				else
+					args.push_back(arg->getLLVMValue(arg->getLLVMType(context)));
 			}
 		}
 		return builder.CreateCall(m_fun->getLLVMFunction(context, m, builder), args);
@@ -364,27 +389,24 @@ public:
 	BasicExpression(Identifier id) : Expression(id) {}
 
 	virtual void processExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool s)
-	{ 
+	{
 		auto& tree = AstTree::instance();
 		auto ret = tree.findObject(getIdentifier());
 		llvm::Value* res = nullptr;
-		if(ret && ret->isVariable())
+		if (ret && ret->isVariable())
 		{
 			setRes(ret);
 		}
-		else 
+		else
 		{
 			auto [isNumber, val] = getIdentifier().toNumber();
 			if (isNumber)
 			{
-				auto toDelete = GeneratorTmpVariables::generateI32Variable(getIdentifier(), val);
-				llvm::Value* initVal = toDelete->init(builder.CreateAlloca(toDelete->getLLVMType(context), toDelete->getLLVMValue(toDelete->getLLVMType(context))), builder);
-				LlvmBuilder::assigmentValue(builder, toDelete.get(), initVal);
-				setRes(toDelete.get());
-				toDelete.release();
+				llvm::Value* initVal = llvm::ConstantInt::get(llvm::Type::getInt32Ty(context), val);
+				setRes(new ValueWrapper("const val", initVal, TypeContainer::instance().getType(Type::generateId(ObjectInByte::DWORD, true))));
 			}
+
 		}
-		
 	}
 	virtual ~BasicExpression() {}
 
@@ -448,4 +470,82 @@ public:
 		llvm::Value* resVal = LlvmBuilder::deallocate(builder, ptrToDelete, callee);
 		LlvmBuilder::assigmentValue(builder, m_obj, resVal);
 	}
+};
+
+
+class ArrayOperatorExprerssion : public Expression
+{
+
+	DuObject* m_object;
+	std::vector<std::unique_ptr<Expression>> m_dims;
+public:
+	ArrayOperatorExprerssion(Identifier id, Expression* expr) : m_object(nullptr), m_dims(0), Expression("Array_op_expr", TypeValue::LVAL)
+	{
+		setLHSFlag();
+		m_object = AstTree::instance().findObject(id);
+		if (!m_object || !m_object->isValueWrapper() && !m_object->isVariable())
+			Error(MessageEngine::Code::WRONG_ARGUMENT, id.getName());
+		addDim(expr);
+	}
+
+	void addDim(Expression* expr)
+	{
+		if (!expr)
+			Error(MessageEngine::Code::INVALID_ARGUMENT_TYPE, "");
+		m_dims.emplace_back(expr);
+	}
+
+	virtual void processExpression(llvm::Module* module, llvm::IRBuilder<>& builder, llvm::LLVMContext& context, bool) override
+	{
+		llvm::Value* addressArr = nullptr;
+		PointerType::PtrIterator ptit(nullptr);
+		Type* _type = nullptr;
+		if (m_object->isValueWrapper())
+		{
+			addressArr = dynamic_cast<ValueWrapper*>(m_object)->getValue();
+			Type* t = dynamic_cast<ValueWrapper*>(m_object)->getType();
+			if (PointerType* pt = dynamic_cast<PointerType*>(t))
+			{
+				ptit = pt->begin();
+			}
+			_type = t;
+		}
+		else
+		{
+			addressArr = LlvmBuilder::loadValue(builder, dynamic_cast<Variable*>(m_object));
+			Type* t = dynamic_cast<Variable*>(m_object)->getType();
+			if (PointerType* pt = dynamic_cast<PointerType*>(t))
+			{
+				ptit = pt->begin();
+			}
+			_type = t;
+		}
+		Type* nextType = nullptr;
+		for (auto& it : m_dims)
+		{
+			if (ptit.isEnd())
+				Error(MessageEngine::Code::INVALID_NUMBER_OF_ARGUMENTS, "Too much dimensions expression");
+			it->processExpression(module, builder, context, true);
+			llvm::Value* dimVal = nullptr;
+			if (it->isValueWrapper())
+			{
+				ValueWrapper* wrapper = it->getResWrapper();
+				dimVal = wrapper ? wrapper->getValue() : nullptr;
+			}
+			else
+			{
+				Variable* res = it->getRes();
+				dimVal = res ? res->getLLVMValue(res->getLLVMType(context)) : nullptr;
+			}
+
+			if (!dimVal || !addressArr->getType()->isPointerTy())
+				Error(MessageEngine::Code::WRONG_ARGUMENT, "dimension for array operator called");
+			addressArr = LlvmBuilder::arrayOperator(builder, addressArr, dimVal, ptit.getValue()->getLLVMType(context));
+			_type = ptit.getValue();
+			ptit = ptit.getNext();
+			
+		}
+		setRes(new ValueWrapper("tmp_value_from_address", addressArr, _type));
+	}
+
 };

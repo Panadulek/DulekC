@@ -5,6 +5,14 @@
 #include <llvm/IR/Module.h>
 #include <charconv>
 #include <cstdint>
+
+enum TypeValue : uint8_t
+{
+	RVAL = 0x01,
+	LVAL = 0x03,
+	UNKOWN = 0xFF
+};
+
 class Identifier
 {
 	const std::string m_id;

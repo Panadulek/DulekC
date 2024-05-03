@@ -36,21 +36,14 @@ extern "C"
     DLLEXPORT uint8_t* DuAllocate(uint64_t size)
     {
         uint8_t* ret = (uint8_t*)malloc(size);
-#ifdef _DEBUG
-        printf("pointer address allocated: %p\n", ret);
-#endif
         return ret;
     }
     DLLEXPORT uint8_t* DuReallocate(uint64_t size, uint8_t* memory)
     {
-
         return (uint8_t*)realloc((void*)memory, size);
     }
     DLLEXPORT void DuDeallocate(uint8_t* memory)
     {
-#ifdef _DEBUG
-        printf("pointer address deallocated: %p\n", memory);
-#endif
         free((uint8_t*)memory);
     }
 }

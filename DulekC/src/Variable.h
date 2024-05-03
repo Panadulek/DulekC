@@ -7,16 +7,17 @@
 #include "MessageEngine.h"
 class AstTree;
 #define DECLARELLVM(X) mutable llvm::##X* m_llvm##X
-extern void Error(MessageEngine::Code code, const char* additionalMsg);
-extern void Warning(MessageEngine::Code code, const char* additionalMsg);
-extern void Info(MessageEngine::Code code, const char* additionalMsg);
+extern void Error(MessageEngine::Code code, std::string_view additionalMsg);
+extern void Warning(MessageEngine::Code code, std::string_view additionalMsg);
+extern void Info(MessageEngine::Code code, std::string_view additionalMsg);
+
 class Variable : public DuObject
 {
 	Type* m_type;
 	Value* m_value;
 	DECLARELLVM(Type);
 	DECLARELLVM(Value);
-	DECLARELLVM(AllocaInst);
+	llvm::Value* m_llvmAllocaInst;
 	bool m_isGlobal;
 	bool m_isTmp = false;
 	bool m_hasBooleanValue;
@@ -104,11 +105,11 @@ public:
 		m_llvmAllocaInst = inst;
 		return initValue(builder, getLLVMType(builder.getContext()));
 	}
-	void setAlloca(llvm::AllocaInst* inst)
+	void setAlloca(llvm::Value* inst)
 	{
 		m_llvmAllocaInst = inst;
 	}
-	llvm::AllocaInst* getAlloca()
+	llvm::Value* getAlloca()
 	{
 		return m_llvmAllocaInst;
 	}

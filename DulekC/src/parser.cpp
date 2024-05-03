@@ -90,9 +90,9 @@
 #include "LexerContext.h"
 #include "IfManager.h"
 
-extern void Error(MessageEngine::Code code, const char* additionalMsg);
-extern void Warning(MessageEngine::Code code, const char* additionalMsg);
-extern void Info(MessageEngine::Code code, const char* additionalMsg);
+extern void Error(MessageEngine::Code code, std::string_view additionalMsg);
+extern void Warning(MessageEngine::Code code, std::string_view additionalMsg);
+extern void Info(MessageEngine::Code code, std::string_view additionalMsg);
 extern LexerContext* s_lc;
  extern char* yytext;
  int __cdecl yylex(void);
@@ -451,16 +451,16 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  2
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   163
+#define YYLAST   196
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  42
+#define YYNTOKENS  44
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  25
+#define YYNNTS  26
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  73
+#define YYNRULES  78
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  130
+#define YYNSTATES  136
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
@@ -481,7 +481,7 @@ static const yytype_uint8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,    42,     2,    43,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -510,54 +510,55 @@ static const yytype_uint8 yytranslate[] =
 static const yytype_uint8 yyprhs[] =
 {
        0,     0,     3,     4,     7,     9,    11,    13,    15,    17,
-      19,    21,    32,    37,    42,    44,    51,    56,    58,    60,
-      61,    63,    65,    70,    72,    74,    76,    78,    80,    82,
-      84,    86,    87,    89,    91,    95,    99,   101,   102,   104,
-     108,   110,   112,   117,   122,   127,   131,   137,   143,   144,
-     147,   149,   151,   155,   159,   161,   165,   169,   171,   173,
-     177,   183,   186,   191,   196,   200,   204,   208,   210,   212,
-     214,   216,   218,   220
+      19,    21,    23,    34,    39,    44,    46,    53,    58,    60,
+      62,    63,    65,    67,    72,    74,    76,    78,    80,    82,
+      84,    86,    88,    89,    91,    93,    97,   101,   103,   104,
+     106,   110,   113,   116,   120,   124,   128,   132,   135,   140,
+     145,   146,   148,   150,   152,   156,   160,   166,   169,   171,
+     173,   177,   181,   183,   185,   189,   194,   199,   204,   209,
+     213,   217,   221,   223,   225,   227,   229,   231,   233
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-      43,     0,    -1,    -1,    43,    44,    -1,    49,    -1,    45,
-      -1,    58,    -1,    66,    -1,    47,    -1,    48,    -1,    46,
-      -1,    17,    40,     4,    55,     5,     3,    52,     4,    57,
-       5,    -1,    21,     4,    61,     5,    -1,    19,     4,    61,
-       5,    -1,    20,    -1,    40,     3,    52,    10,    50,     7,
-      -1,    40,     3,    52,     7,    -1,    51,    -1,    41,    -1,
-      -1,    53,    -1,    54,    -1,    22,    25,    52,    26,    -1,
-      32,    -1,    34,    -1,    36,    -1,    38,    -1,    33,    -1,
-      35,    -1,    37,    -1,    39,    -1,    -1,    56,    -1,    41,
-      -1,    55,     6,    56,    -1,    55,     6,    41,    -1,    40,
-      -1,    -1,    52,    -1,    57,     6,    52,    -1,    59,    -1,
-      60,    -1,    56,    11,    56,     7,    -1,    56,    11,    50,
-       7,    -1,    56,    11,    61,     7,    -1,    18,    56,     7,
-      -1,    65,     4,    55,     5,     7,    -1,    56,     4,    55,
-       5,     7,    -1,    -1,    61,     7,    -1,    62,    -1,    64,
-      -1,    61,    12,    62,    -1,    61,    13,    62,    -1,    63,
-      -1,    62,    14,    63,    -1,    62,    15,    63,    -1,    41,
-      -1,    56,    -1,     4,    61,     5,    -1,    23,    52,     4,
-      61,     5,    -1,    24,    56,    -1,    56,     4,    55,     5,
-      -1,    65,     4,    55,     5,    -1,    61,    25,    61,    -1,
-      61,    26,    61,    -1,    61,    27,    61,    -1,    28,    -1,
-      29,    -1,    30,    -1,    31,    -1,     8,    -1,     9,    -1,
-      16,    -1
+      45,     0,    -1,    -1,    45,    46,    -1,    51,    -1,    47,
+      -1,    60,    -1,    69,    -1,    49,    -1,    50,    -1,    48,
+      -1,    66,    -1,    17,    40,     4,    57,     5,     3,    54,
+       4,    59,     5,    -1,    21,     4,    63,     5,    -1,    19,
+       4,    63,     5,    -1,    20,    -1,    40,     3,    54,    10,
+      52,     7,    -1,    40,     3,    54,     7,    -1,    53,    -1,
+      41,    -1,    -1,    55,    -1,    56,    -1,    22,    25,    54,
+      26,    -1,    32,    -1,    34,    -1,    36,    -1,    38,    -1,
+      33,    -1,    35,    -1,    37,    -1,    39,    -1,    -1,    58,
+      -1,    41,    -1,    57,     6,    58,    -1,    57,     6,    41,
+      -1,    40,    -1,    -1,    54,    -1,    59,     6,    54,    -1,
+      61,     7,    -1,    62,     7,    -1,    63,    11,    63,    -1,
+      58,    11,    58,    -1,    58,    11,    52,    -1,    58,    11,
+      63,    -1,    18,    58,    -1,    68,     4,    57,     5,    -1,
+      58,     4,    57,     5,    -1,    -1,    63,    -1,    64,    -1,
+      67,    -1,    63,    12,    64,    -1,    63,    13,    64,    -1,
+      23,    54,     4,    63,     5,    -1,    24,    58,    -1,    66,
+      -1,    65,    -1,    64,    14,    65,    -1,    64,    15,    65,
+      -1,    41,    -1,    58,    -1,     4,    63,     5,    -1,    58,
+       4,    57,     5,    -1,    68,     4,    57,     5,    -1,    58,
+      42,    63,    43,    -1,    66,    42,    63,    43,    -1,    63,
+      25,    63,    -1,    63,    26,    63,    -1,    63,    27,    63,
+      -1,    28,    -1,    29,    -1,    30,    -1,    31,    -1,     8,
+      -1,     9,    -1,    16,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   102,   102,   104,   108,   109,   110,   111,   112,   113,
-     114,   120,   138,   152,   166,   187,   194,   204,   211,   219,
-     221,   229,   236,   247,   252,   257,   262,   268,   273,   278,
-     283,   288,   289,   293,   297,   302,   309,   316,   317,   322,
-     331,   337,   344,   358,   371,   384,   412,   424,   435,   437,
-     449,   450,   451,   453,   459,   460,   464,   469,   473,   478,
-     482,   486,   491,   498,   508,   512,   516,   522,   526,   531,
-     535,   541,   543,   545
+       0,   103,   103,   105,   109,   110,   111,   112,   113,   114,
+     115,   116,   122,   140,   154,   168,   189,   196,   206,   213,
+     221,   223,   231,   238,   249,   254,   259,   264,   270,   275,
+     280,   285,   290,   291,   295,   299,   304,   311,   318,   319,
+     324,   333,   339,   346,   355,   369,   382,   395,   423,   435,
+     446,   447,   459,   460,   461,   463,   465,   469,   474,   478,
+     479,   483,   488,   492,   497,   501,   508,   518,   523,   531,
+     535,   539,   545,   549,   554,   558,   564,   566,   568
 };
 #endif
 
@@ -572,13 +573,14 @@ static const char *const yytname[] =
   "RETURN_KEYWORD", "IF_KEYWORD", "ELSE_KEYWORD", "WHILE_KEYWORD", "PTR",
   "NEW", "DELETE", "LT", "GT", "EQ", "SYS_DISPLAY", "ALLOCATOR",
   "DEALLOCATOR", "REALLOCATOR", "I8", "U8", "I16", "U16", "I32", "U32",
-  "I64", "U64", "IDENTIFIER", "NUMBER", "$accept", "program", "statement",
-  "function_declaration", "while_block", "if_block", "else_block",
-  "variable_declaration", "just_value_init", "variable_numeric_init",
-  "type", "byte_type", "ubyte_type", "argument_list", "argument",
-  "type_list", "statement_group", "variable_assigment",
-  "expression_statement", "expression", "term", "factor", "boolean_expr",
-  "system_function_group", "ignored_rules", 0
+  "I64", "U64", "IDENTIFIER", "NUMBER", "'['", "']'", "$accept", "program",
+  "statement", "function_declaration", "while_block", "if_block",
+  "else_block", "variable_declaration", "just_value_init",
+  "variable_numeric_init", "type", "byte_type", "ubyte_type",
+  "argument_list", "argument", "type_list", "statement_group",
+  "variable_assigment", "expression_statement", "expression", "term",
+  "factor", "array_operator_expr", "boolean_expr", "system_function_group",
+  "ignored_rules", 0
 };
 #endif
 
@@ -591,34 +593,34 @@ static const yytype_uint16 yytoknum[] =
      265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
      275,   276,   277,   278,   279,   280,   281,   282,   283,   284,
      285,   286,   287,   288,   289,   290,   291,   292,   293,   294,
-     295,   296
+     295,   296,    91,    93
 };
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,    42,    43,    43,    44,    44,    44,    44,    44,    44,
-      44,    45,    46,    47,    48,    49,    49,    50,    51,    52,
-      52,    52,    52,    53,    53,    53,    53,    54,    54,    54,
-      54,    55,    55,    55,    55,    55,    56,    57,    57,    57,
-      58,    58,    59,    59,    59,    59,    59,    59,    59,    60,
-      61,    61,    61,    61,    62,    62,    62,    63,    63,    63,
-      63,    63,    63,    63,    64,    64,    64,    65,    65,    65,
-      65,    66,    66,    66
+       0,    44,    45,    45,    46,    46,    46,    46,    46,    46,
+      46,    46,    47,    48,    49,    50,    51,    51,    52,    53,
+      54,    54,    54,    54,    55,    55,    55,    55,    56,    56,
+      56,    56,    57,    57,    57,    57,    57,    58,    59,    59,
+      59,    60,    60,    61,    61,    61,    61,    61,    61,    61,
+      61,    62,    63,    63,    63,    63,    63,    63,    63,    64,
+      64,    64,    65,    65,    65,    65,    65,    66,    66,    67,
+      67,    67,    68,    68,    68,    68,    69,    69,    69
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
 static const yytype_uint8 yyr2[] =
 {
        0,     2,     0,     2,     1,     1,     1,     1,     1,     1,
-       1,    10,     4,     4,     1,     6,     4,     1,     1,     0,
-       1,     1,     4,     1,     1,     1,     1,     1,     1,     1,
-       1,     0,     1,     1,     3,     3,     1,     0,     1,     3,
-       1,     1,     4,     4,     4,     3,     5,     5,     0,     2,
-       1,     1,     3,     3,     1,     3,     3,     1,     1,     3,
-       5,     2,     4,     4,     3,     3,     3,     1,     1,     1,
-       1,     1,     1,     1
+       1,     1,    10,     4,     4,     1,     6,     4,     1,     1,
+       0,     1,     1,     4,     1,     1,     1,     1,     1,     1,
+       1,     1,     0,     1,     1,     3,     3,     1,     0,     1,
+       3,     2,     2,     3,     3,     3,     3,     2,     4,     4,
+       0,     1,     1,     1,     3,     3,     5,     2,     1,     1,
+       3,     3,     1,     1,     3,     4,     4,     4,     4,     3,
+       3,     3,     1,     1,     1,     1,     1,     1,     1
 };
 
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
@@ -626,121 +628,130 @@ static const yytype_uint8 yyr2[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-       2,     0,     1,     0,    71,    72,    73,     0,     0,     0,
-      14,     0,    19,     0,    67,    68,    69,    70,    36,    57,
-       3,     5,    10,     8,     9,     4,    58,     6,    40,    41,
-       0,    50,    54,    51,     0,     7,    36,    58,     0,     0,
-       0,     0,     0,     0,     0,    23,    27,    24,    28,    25,
-      29,    26,    30,     0,    20,    21,    61,    19,    31,     0,
-      49,     0,     0,     0,     0,     0,     0,     0,    31,    31,
-      59,    31,    31,    45,     0,     0,    19,     0,     0,    33,
-       0,    32,    57,     0,    17,    58,     0,    52,    53,    64,
-      65,    66,    55,    56,     0,     0,     0,     0,    13,    12,
-       0,     0,    16,     0,    62,     0,    43,    42,    44,    63,
-      62,    63,     0,    22,    60,    18,     0,    47,    35,    34,
-      46,    19,    15,     0,    19,    38,     0,    11,    19,    39
+       2,    50,     1,     0,    76,    77,    78,     0,     0,     0,
+      15,     0,    20,     0,    72,    73,    74,    75,    37,    62,
+       3,     5,    10,     8,     9,     4,    63,     6,     0,     0,
+      51,    52,    59,    11,    53,     0,     7,    37,    63,     0,
+      58,     0,     0,    47,     0,     0,     0,    24,    28,    25,
+      29,    26,    30,    27,    31,     0,    21,    22,    57,    20,
+      32,     0,     0,    41,    42,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,    32,    32,    64,    32,    32,     0,
+       0,    20,     0,     0,    34,     0,    33,    62,    45,    18,
+      63,    46,     0,    43,    63,    54,    55,    69,    70,    71,
+      60,    61,     0,     0,     0,     0,     0,    14,    13,     0,
+       0,    17,     0,    65,     0,    67,    68,    66,    65,    66,
+       0,    23,    56,    19,     0,    36,    35,    20,    16,     0,
+      20,    39,     0,    12,    20,    40
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
-static const yytype_int8 yydefgoto[] =
+static const yytype_int16 yydefgoto[] =
 {
-      -1,     1,    20,    21,    22,    23,    24,    25,    83,    84,
-      53,    54,    55,    80,    37,   126,    27,    28,    29,    30,
-      31,    32,    33,    39,    35
+      -1,     1,    20,    21,    22,    23,    24,    25,    88,    89,
+      55,    56,    57,    85,    38,   132,    27,    28,    29,    30,
+      31,    32,    40,    34,    41,    36
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -56
+#define YYPACT_NINF -54
 static const yytype_int16 yypact[] =
 {
-     -56,     6,   -56,    51,   -56,   -56,   -56,   -31,   -29,    24,
-     -56,    36,   116,   -29,   -56,   -56,   -56,   -56,    17,   -56,
-     -56,   -56,   -56,   -56,   -56,   -56,    -3,   -56,   -56,   -56,
-      98,    18,   -56,   -56,    41,   -56,   -56,    46,    26,    50,
-      52,    65,    51,    51,    37,   -56,   -56,   -56,   -56,   -56,
-     -56,   -56,   -56,    74,   -56,   -56,   -56,   116,     8,    72,
-     -56,    51,    51,    51,    51,    51,    51,    51,     8,     8,
-     -56,     8,     8,   -56,    81,   104,   116,    51,    34,   -56,
-      55,   -56,    76,   108,   -56,     9,   120,    18,    18,    -8,
-      -8,    -8,   -56,   -56,    84,    92,   113,   134,   -56,   -56,
-      73,   109,   -56,    79,   119,   101,   -56,   -56,   -56,   121,
-     -56,   -56,   155,   -56,   -56,   -56,   130,   -56,   -56,   -56,
-     -56,   116,   -56,   157,   116,   -56,   138,   -56,   116,   -56
+     -54,    10,   -54,    79,   -54,   -54,   -54,   -31,   -17,    45,
+     -54,    54,   151,   -17,   -54,   -54,   -54,   -54,    66,   -54,
+     -54,   -54,   -54,   -54,   -54,   -54,     0,   -54,    60,    65,
+     166,    22,   -54,   -10,   -54,    76,   -54,   -54,     2,   136,
+      33,    85,    87,   -54,    79,    79,    73,   -54,   -54,   -54,
+     -54,   -54,   -54,   -54,   -54,    92,   -54,   -54,   -54,   151,
+       6,    93,    79,   -54,   -54,    79,    64,    64,    79,    79,
+      79,    64,    64,    79,     6,     6,   -54,     6,     6,   139,
+     142,   151,    79,    38,   -54,    47,   -54,    99,   -54,   -54,
+       1,   169,   102,   169,   114,    22,    22,   169,   169,   169,
+     -54,   -54,   113,    49,    51,    58,    95,   -54,   -54,   106,
+     145,   -54,    96,   135,    71,   -54,   -54,   146,   -54,   -54,
+     140,   -54,   -54,   -54,   167,   -54,   -54,   151,   -54,   171,
+     151,   -54,   125,   -54,   151,   -54
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int16 yypgoto[] =
 {
-     -56,   -56,   -56,   -56,   -56,   -56,   -56,   -56,    59,   -56,
-     -55,   -56,   -56,    16,    -1,   -56,   -56,   -56,   -56,     0,
-      95,    93,   -56,   162,   -56
+     -54,   -54,   -54,   -54,   -54,   -54,   -54,   -54,    34,   -54,
+     -46,   -54,   -54,   -53,    -1,   -54,   -54,   -54,   -54,    17,
+      69,    88,   175,   -54,   179,   -54
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
    positive, shift that token.  If negative, reduce the rule which
    number is the opposite.  If zero, do what YYDEFACT says.
    If YYTABLE_NINF, syntax error.  */
-#define YYTABLE_NINF -19
+#define YYTABLE_NINF -59
 static const yytype_int16 yytable[] =
 {
-      26,    58,    78,    38,    61,    62,     2,    41,    59,    40,
-       3,    36,    56,    69,     4,     5,   107,    63,    64,    65,
-      57,   100,     6,     7,     8,     9,    10,    11,    42,    12,
-      13,    70,    66,    67,    14,    15,    16,    17,    61,    62,
-      43,   102,    74,    75,   103,    68,    18,    19,    36,    79,
-      69,    63,    64,    65,    71,     3,    72,    81,    85,    86,
-     104,   105,    76,    89,    90,    91,   123,    81,    81,   125,
-      81,    81,    73,   129,    12,    13,     3,   101,    77,    14,
-      15,    16,    17,   -18,    94,    95,    98,    96,    97,   109,
-     105,    36,    19,    61,    62,    12,    13,   110,   105,   113,
-      14,    15,    16,    17,   119,    60,    63,    64,    65,    99,
-      61,    62,    36,    82,   114,   106,    61,    62,   111,   105,
-     115,    61,    62,    63,    64,    65,   117,   108,   120,    63,
-      64,    65,    61,    62,    63,    64,    65,   122,    44,   112,
-     105,    36,   118,   127,   128,    63,    64,    65,    45,    46,
-      47,    48,    49,    50,    51,    52,    87,    88,   121,    92,
-      93,   124,   116,    34
+      26,   -58,   -58,   -58,    60,    75,    75,    43,   -44,    42,
+       2,    61,    58,    83,     3,   -58,   -58,   -58,     4,     5,
+      39,   103,   104,    37,   105,   106,     6,     7,     8,     9,
+      10,    11,    73,    12,    13,   109,    71,    72,    14,    15,
+      16,    17,    62,    62,    62,   111,    37,    84,   112,    44,
+      18,    19,   113,   114,   117,   114,   118,   114,    45,    86,
+      90,    79,    80,   119,   114,    94,    94,    63,     3,    59,
+      94,    94,    64,    86,    86,    73,    86,    86,    91,    92,
+      74,   129,    93,     3,   131,    97,    98,    99,   135,    77,
+     102,    78,    14,    15,    16,    17,    82,     3,    81,   110,
+     120,   114,    12,    13,    37,    19,   -19,    14,    15,    16,
+      17,    37,   125,   126,    66,    67,    12,    13,    75,    37,
+      19,    14,    15,    16,    17,    66,    67,    68,    69,    70,
+     133,   134,   121,    37,    87,    95,    96,   123,    68,    69,
+      70,    76,   -49,   127,   107,   115,   124,   108,    66,    67,
+     122,    66,    67,   -48,    66,    67,   116,    66,    67,   100,
+     101,    68,    69,    70,    68,    69,    70,    68,    69,    70,
+      68,    69,    70,    46,   128,   130,    33,    65,    66,    67,
+      35,    66,    67,    47,    48,    49,    50,    51,    52,    53,
+      54,    68,    69,    70,    68,    69,    70
 };
 
 static const yytype_uint8 yycheck[] =
 {
-       1,     4,    57,     3,    12,    13,     0,     8,    11,    40,
-       4,    40,    13,     4,     8,     9,     7,    25,    26,    27,
-       3,    76,    16,    17,    18,    19,    20,    21,     4,    23,
-      24,     5,    14,    15,    28,    29,    30,    31,    12,    13,
-       4,     7,    42,    43,    10,     4,    40,    41,    40,    41,
-       4,    25,    26,    27,     4,     4,     4,    58,    59,    59,
-       5,     6,    25,    63,    64,    65,   121,    68,    69,   124,
-      71,    72,     7,   128,    23,    24,     4,    77,     4,    28,
-      29,    30,    31,     7,    68,    69,     5,    71,    72,     5,
-       6,    40,    41,    12,    13,    23,    24,     5,     6,    26,
-      28,    29,    30,    31,   105,     7,    25,    26,    27,     5,
-      12,    13,    40,    41,     5,     7,    12,    13,     5,     6,
-      41,    12,    13,    25,    26,    27,     7,     7,     7,    25,
-      26,    27,    12,    13,    25,    26,    27,     7,    22,     5,
-       6,    40,    41,     5,     6,    25,    26,    27,    32,    33,
-      34,    35,    36,    37,    38,    39,    61,    62,     3,    66,
-      67,     4,   103,     1
+       1,    11,    12,    13,     4,     4,     4,     8,     7,    40,
+       0,    11,    13,    59,     4,    25,    26,    27,     8,     9,
+       3,    74,    75,    40,    77,    78,    16,    17,    18,    19,
+      20,    21,    42,    23,    24,    81,    14,    15,    28,    29,
+      30,    31,    42,    42,    42,     7,    40,    41,    10,     4,
+      40,    41,     5,     6,     5,     6,     5,     6,     4,    60,
+      61,    44,    45,     5,     6,    66,    67,     7,     4,     3,
+      71,    72,     7,    74,    75,    42,    77,    78,    61,    62,
+       4,   127,    65,     4,   130,    68,    69,    70,   134,     4,
+      73,     4,    28,    29,    30,    31,     4,     4,    25,    82,
+       5,     6,    23,    24,    40,    41,     7,    28,    29,    30,
+      31,    40,    41,   114,    12,    13,    23,    24,     4,    40,
+      41,    28,    29,    30,    31,    12,    13,    25,    26,    27,
+       5,     6,    26,    40,    41,    66,    67,    41,    25,    26,
+      27,     5,     7,     3,     5,    43,   112,     5,    12,    13,
+       5,    12,    13,     7,    12,    13,    43,    12,    13,    71,
+      72,    25,    26,    27,    25,    26,    27,    25,    26,    27,
+      25,    26,    27,    22,     7,     4,     1,    11,    12,    13,
+       1,    12,    13,    32,    33,    34,    35,    36,    37,    38,
+      39,    25,    26,    27,    25,    26,    27
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,    43,     0,     4,     8,     9,    16,    17,    18,    19,
+       0,    45,     0,     4,     8,     9,    16,    17,    18,    19,
       20,    21,    23,    24,    28,    29,    30,    31,    40,    41,
-      44,    45,    46,    47,    48,    49,    56,    58,    59,    60,
-      61,    62,    63,    64,    65,    66,    40,    56,    61,    65,
-      40,    56,     4,     4,    22,    32,    33,    34,    35,    36,
-      37,    38,    39,    52,    53,    54,    56,     3,     4,    11,
-       7,    12,    13,    25,    26,    27,    14,    15,     4,     4,
-       5,     4,     4,     7,    61,    61,    25,     4,    52,    41,
-      55,    56,    41,    50,    51,    56,    61,    62,    62,    61,
-      61,    61,    63,    63,    55,    55,    55,    55,     5,     5,
-      52,    61,     7,    10,     5,     6,     7,     7,     7,     5,
-       5,     5,     5,    26,     5,    41,    50,     7,    41,    56,
-       7,     3,     7,    52,     4,    52,    57,     5,     6,    52
+      46,    47,    48,    49,    50,    51,    58,    60,    61,    62,
+      63,    64,    65,    66,    67,    68,    69,    40,    58,    63,
+      66,    68,    40,    58,     4,     4,    22,    32,    33,    34,
+      35,    36,    37,    38,    39,    54,    55,    56,    58,     3,
+       4,    11,    42,     7,     7,    11,    12,    13,    25,    26,
+      27,    14,    15,    42,     4,     4,     5,     4,     4,    63,
+      63,    25,     4,    54,    41,    57,    58,    41,    52,    53,
+      58,    63,    63,    63,    58,    64,    64,    63,    63,    63,
+      65,    65,    63,    57,    57,    57,    57,     5,     5,    54,
+      63,     7,    10,     5,     6,    43,    43,     5,     5,     5,
+       5,    26,     5,    41,    52,    41,    58,     3,     7,    54,
+       4,    54,    59,     5,     6,    54
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1551,10 +1562,10 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-        case 11:
+        case 12:
 
 /* Line 1455 of yacc.c  */
-#line 121 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 123 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         if(!s_lc->isInGlobalContext())
         {
@@ -1573,10 +1584,10 @@ yyreduce:
     ;}
     break;
 
-  case 12:
+  case 13:
 
 /* Line 1455 of yacc.c  */
-#line 139 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 141 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         if(s_lc->isInGlobalContext())
         {
@@ -1590,10 +1601,10 @@ yyreduce:
     ;}
     break;
 
-  case 13:
+  case 14:
 
 /* Line 1455 of yacc.c  */
-#line 153 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 155 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         if(s_lc->isInGlobalContext())
         {
@@ -1607,10 +1618,10 @@ yyreduce:
     ;}
     break;
 
-  case 14:
+  case 15:
 
 /* Line 1455 of yacc.c  */
-#line 167 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 169 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         auto& tree = AstTree::instance();
         Scope* currScope = tree.getCurrentScope();
@@ -1630,10 +1641,10 @@ yyreduce:
     ;}
     break;
 
-  case 15:
+  case 16:
 
 /* Line 1455 of yacc.c  */
-#line 188 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 190 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         Identifier id((yyvsp[(1) - (6)].str));
         (yyval.pvariable) = new Variable(id, (yyvsp[(3) - (6)].ptype), (yyvsp[(5) - (6)].pval), AstTree::instance().inGlobal());
@@ -1642,10 +1653,10 @@ yyreduce:
     ;}
     break;
 
-  case 16:
+  case 17:
 
 /* Line 1455 of yacc.c  */
-#line 195 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 197 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         Identifier id((yyvsp[(1) - (4)].str));
         (yyval.pvariable) = new Variable(id, (yyvsp[(3) - (4)].ptype), new NumericValue(), AstTree::instance().inGlobal());
@@ -1654,35 +1665,35 @@ yyreduce:
     ;}
     break;
 
-  case 17:
+  case 18:
 
 /* Line 1455 of yacc.c  */
-#line 205 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 207 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         (yyval.pval) = (yyvsp[(1) - (1)].pnumvalue);
     ;}
     break;
 
-  case 18:
+  case 19:
 
 /* Line 1455 of yacc.c  */
-#line 212 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 214 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
             (yyval.pnumvalue) = new NumericValue((yyvsp[(1) - (1)].num))
         ;}
     break;
 
-  case 19:
-
-/* Line 1455 of yacc.c  */
-#line 219 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    {(yyval.ptype) = nullptr;;}
-    break;
-
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 222 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 221 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    {(yyval.ptype) = nullptr;;}
+    break;
+
+  case 21:
+
+/* Line 1455 of yacc.c  */
+#line 224 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
        Identifier id = SimpleNumericType::generateId((yyvsp[(1) - (1)].bytetype), true) ;
        TypeContainer::instance().insert<SimpleNumericType>(id, id, (yyvsp[(1) - (1)].bytetype), true);
@@ -1691,10 +1702,10 @@ yyreduce:
     ;}
     break;
 
-  case 21:
+  case 22:
 
 /* Line 1455 of yacc.c  */
-#line 230 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 232 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         Identifier id = SimpleNumericType::generateId((yyvsp[(1) - (1)].bytetype), false) ;
         TypeContainer::instance().insert<SimpleNumericType>(id, id, (yyvsp[(1) - (1)].bytetype), false);
@@ -1702,10 +1713,10 @@ yyreduce:
     ;}
     break;
 
-  case 22:
+  case 23:
 
 /* Line 1455 of yacc.c  */
-#line 237 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 239 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         PointerType* pt = new PointerType((yyvsp[(3) - (4)].ptype));
         Identifier id = pt->getTypeName();
@@ -1715,28 +1726,19 @@ yyreduce:
     ;}
     break;
 
-  case 23:
-
-/* Line 1455 of yacc.c  */
-#line 248 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    {
-   (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
-  ;}
-    break;
-
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 253 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 250 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
-    (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
+   (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
   ;}
     break;
 
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 258 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 255 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
     (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
   ;}
@@ -1745,7 +1747,7 @@ yyreduce:
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 263 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 260 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
     (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
   ;}
@@ -1754,7 +1756,7 @@ yyreduce:
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 269 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 265 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
     (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
   ;}
@@ -1763,7 +1765,7 @@ yyreduce:
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 274 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 271 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
     (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
   ;}
@@ -1772,7 +1774,7 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 279 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 276 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
     (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
   ;}
@@ -1781,35 +1783,44 @@ yyreduce:
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 284 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 281 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    {
+    (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
+  ;}
+    break;
+
+  case 31:
+
+/* Line 1455 of yacc.c  */
+#line 286 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
    (yyval.bytetype) = (yyvsp[(1) - (1)].bytetype);
   ;}
     break;
 
-  case 32:
+  case 33:
 
 /* Line 1455 of yacc.c  */
-#line 289 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 291 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         yys_ids.push_back(*(yyvsp[(1) - (1)].pidentifier));
         delete (yyvsp[(1) - (1)].pidentifier);
     ;}
     break;
 
-  case 33:
+  case 34:
 
 /* Line 1455 of yacc.c  */
-#line 294 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 296 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         yys_ids.push_back(Identifier(std::to_string((yyvsp[(1) - (1)].num))));
   ;}
     break;
 
-  case 34:
+  case 35:
 
 /* Line 1455 of yacc.c  */
-#line 297 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 299 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     { 
   
     yys_ids.push_back(*(yyvsp[(3) - (3)].pidentifier));
@@ -1817,129 +1828,142 @@ yyreduce:
   ;}
     break;
 
-  case 35:
+  case 36:
 
 /* Line 1455 of yacc.c  */
-#line 302 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 304 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     { 
   
     yys_ids.push_back(Identifier(std::to_string((yyvsp[(3) - (3)].num))));
   ;}
     break;
 
-  case 36:
+  case 37:
 
 /* Line 1455 of yacc.c  */
-#line 310 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 312 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         (yyval.pidentifier) = new Identifier((yyvsp[(1) - (1)].str));
         delete [] (yyvsp[(1) - (1)].str);
     ;}
     break;
 
-  case 38:
+  case 39:
 
 /* Line 1455 of yacc.c  */
-#line 318 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 320 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
     if((yyvsp[(1) - (1)].ptype))
         yys_types.push_back((yyvsp[(1) - (1)].ptype));
   ;}
     break;
 
-  case 39:
+  case 40:
 
 /* Line 1455 of yacc.c  */
-#line 323 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 325 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
     if((yyvsp[(3) - (3)].ptype))
         yys_types.push_back((yyvsp[(3) - (3)].ptype));
   ;}
     break;
 
-  case 40:
-
-/* Line 1455 of yacc.c  */
-#line 332 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    {
-        auto& tree = AstTree::instance();
-        tree.addObject((yyvsp[(1) - (1)].pstatement));
-    ;}
-    break;
-
   case 41:
 
 /* Line 1455 of yacc.c  */
-#line 338 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 334 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         auto& tree = AstTree::instance();
-        tree.addObject((yyvsp[(1) - (1)].pstatement));
+        tree.addObject((yyvsp[(1) - (2)].pstatement));
     ;}
     break;
 
   case 42:
 
 /* Line 1455 of yacc.c  */
-#line 345 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 340 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
-        if(s_lc->isInGlobalContext())
-        {
-            Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
-        }
         auto& tree = AstTree::instance();
-		auto l = dynamic_cast<Variable*>(tree.findObject(*(yyvsp[(1) - (4)].pidentifier)));
-		auto r = dynamic_cast<Variable*>(tree.findObject(*(yyvsp[(3) - (4)].pidentifier)));
-        (yyval.pstatement) = new AssigmentStatement(l, r);
-        delete (yyvsp[(1) - (4)].pidentifier);
-        delete (yyvsp[(3) - (4)].pidentifier);
+        tree.addObject((yyvsp[(1) - (2)].pstatement));
     ;}
     break;
 
   case 43:
 
 /* Line 1455 of yacc.c  */
-#line 359 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 347 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
-        if(s_lc->isInGlobalContext())
+        if((yyvsp[(1) - (3)].pexpr)->isAvaiableLeftSideExpr() == 0)
         {
-            Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+            Error(MessageEngine::Code::CANNOT_CREATE_RVAL_EXPR_LSIDE, (yyvsp[(1) - (3)].pexpr)->getIdentifier().getName());
         }
-        auto& tree = AstTree::instance();
-        auto l = dynamic_cast<Variable*>(tree.findObject(*(yyvsp[(1) - (4)].pidentifier)));
-        Variable* r = new Variable(Identifier(""), l->getType(), (yyvsp[(3) - (4)].pval), tree.inGlobal());
-        (yyval.pstatement) = new AssigmentStatement(l, r);
-        delete (yyvsp[(1) - (4)].pidentifier);
+        (yyval.pstatement) = new AssigmentStatement((yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr));
     ;}
     break;
 
   case 44:
 
 /* Line 1455 of yacc.c  */
-#line 372 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 356 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         if(s_lc->isInGlobalContext())
         {
-           Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+            Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
         }
         auto& tree = AstTree::instance();
-        auto l = dynamic_cast<Variable*>(tree.findObject(*(yyvsp[(1) - (4)].pidentifier)));
-        (yyval.pstatement) = new AssigmentStatement(l, (yyvsp[(3) - (4)].pexpr));
-        delete (yyvsp[(1) - (4)].pidentifier);
-
+		auto l = dynamic_cast<Variable*>(tree.findObject(*(yyvsp[(1) - (3)].pidentifier)));
+		auto r = dynamic_cast<Variable*>(tree.findObject(*(yyvsp[(3) - (3)].pidentifier)));
+        (yyval.pstatement) = new AssigmentStatement(l, r);
+        delete (yyvsp[(1) - (3)].pidentifier);
+        delete (yyvsp[(3) - (3)].pidentifier);
     ;}
     break;
 
   case 45:
 
 /* Line 1455 of yacc.c  */
-#line 385 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 370 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    {
+        if(s_lc->isInGlobalContext())
+        {
+            Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+        }
+        auto& tree = AstTree::instance();
+        auto l = dynamic_cast<Variable*>(tree.findObject(*(yyvsp[(1) - (3)].pidentifier)));
+        Variable* r = new Variable(Identifier(""), l->getType(), (yyvsp[(3) - (3)].pval), tree.inGlobal());
+        (yyval.pstatement) = new AssigmentStatement(l, r);
+        delete (yyvsp[(1) - (3)].pidentifier);
+    ;}
+    break;
+
+  case 46:
+
+/* Line 1455 of yacc.c  */
+#line 383 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         if(s_lc->isInGlobalContext())
         {
            Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
         }
         auto& tree = AstTree::instance();
-        auto l = tree.findObject(*(yyvsp[(2) - (3)].pidentifier));
+        auto l = dynamic_cast<Variable*>(tree.findObject(*(yyvsp[(1) - (3)].pidentifier)));
+        (yyval.pstatement) = new AssigmentStatement(l, (yyvsp[(3) - (3)].pexpr));
+        delete (yyvsp[(1) - (3)].pidentifier);
+
+    ;}
+    break;
+
+  case 47:
+
+/* Line 1455 of yacc.c  */
+#line 396 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    {
+        if(s_lc->isInGlobalContext())
+        {
+           Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+        }
+        auto& tree = AstTree::instance();
+        auto l = tree.findObject(*(yyvsp[(2) - (2)].pidentifier));
         auto s = tree.getCurrentScope();
         if( s->isFunction() )
         {
@@ -1957,104 +1981,90 @@ yyreduce:
         {
              throw std::runtime_error("NOT FUNCTION");
         }
-        delete (yyvsp[(2) - (3)].pidentifier);
+        delete (yyvsp[(2) - (2)].pidentifier);
     ;}
     break;
 
-  case 46:
+  case 48:
 
 /* Line 1455 of yacc.c  */
-#line 413 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 424 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         if(s_lc->isInGlobalContext())
         {
            Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
         }
         auto& tree = AstTree::instance();
-        Identifier id(SystemFunctions::getSysFunctionName((yyvsp[(1) - (5)].sysfunid)));
+        Identifier id(SystemFunctions::getSysFunctionName((yyvsp[(1) - (4)].sysfunid)));
         Function* f = tree.findFunction(id);
         (yyval.pstatement) = new CallFunction( new CallFunctionExpression(std::move(yys_ids), f) );
-    ;}
-    break;
-
-  case 47:
-
-/* Line 1455 of yacc.c  */
-#line 425 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    {
-        if(s_lc->isInGlobalContext())
-        {
-            Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
-        }
-        auto& tree = AstTree::instance();
-        Function* f = tree.findFunction(*(yyvsp[(1) - (5)].pidentifier));
-        (yyval.pstatement) = new CallFunction( new CallFunctionExpression(std::move(yys_ids), f) );
-        delete (yyvsp[(1) - (5)].pidentifier);
     ;}
     break;
 
   case 49:
 
 /* Line 1455 of yacc.c  */
-#line 438 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 436 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         if(s_lc->isInGlobalContext())
         {
             Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
         }
-        (yyval.pstatement) = new ExpressionStmtWrapper((yyvsp[(1) - (2)].pexpr));
+        auto& tree = AstTree::instance();
+        Function* f = tree.findFunction(*(yyvsp[(1) - (4)].pidentifier));
+        (yyval.pstatement) = new CallFunction( new CallFunctionExpression(std::move(yys_ids), f) );
+        delete (yyvsp[(1) - (4)].pidentifier);
     ;}
-    break;
-
-  case 50:
-
-/* Line 1455 of yacc.c  */
-#line 449 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    { (yyval.pexpr) = (yyvsp[(1) - (1)].pexpr) ; ;}
     break;
 
   case 51:
 
 /* Line 1455 of yacc.c  */
-#line 450 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    { (yyval.pexpr) = (yyvsp[(1) - (1)].pexpr); ;}
+#line 448 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    {
+        if(s_lc->isInGlobalContext())
+        {
+            Error(MessageEngine::Code::ExecuteGlobalExpression, nullptr);
+        }
+        (yyval.pstatement) = new ExpressionStmtWrapper((yyvsp[(1) - (1)].pexpr));
+    ;}
     break;
 
   case 52:
 
 /* Line 1455 of yacc.c  */
-#line 452 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    { (yyval.pexpr) = new AdvancedExpression(Identifier("+"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr));    ;}
+#line 459 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    { (yyval.pexpr) = (yyvsp[(1) - (1)].pexpr) ; ;}
     break;
 
   case 53:
 
 /* Line 1455 of yacc.c  */
-#line 454 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    { (yyval.pexpr) = new AdvancedExpression(Identifier("-"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr));    ;}
+#line 460 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    { (yyval.pexpr) = (yyvsp[(1) - (1)].pexpr); ;}
     break;
 
   case 54:
 
 /* Line 1455 of yacc.c  */
-#line 459 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    { (yyval.pexpr) = (yyvsp[(1) - (1)].pexpr) ;}
+#line 462 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    { (yyval.pexpr) = new AdvancedExpression(Identifier("+"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr));    ;}
     break;
 
   case 55:
 
 /* Line 1455 of yacc.c  */
-#line 461 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    { 
-        (yyval.pexpr) = new AdvancedExpression(Identifier("*"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr));    
-    ;}
+#line 464 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    { (yyval.pexpr) = new AdvancedExpression(Identifier("-"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr));    ;}
     break;
 
   case 56:
 
 /* Line 1455 of yacc.c  */
-#line 465 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    { (yyval.pexpr) = new AdvancedExpression(Identifier("/"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr));    ;}
+#line 466 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    {
+        (yyval.pexpr) = new AllocExpression((yyvsp[(2) - (5)].ptype), (yyvsp[(4) - (5)].pexpr)); 
+    ;}
     break;
 
   case 57:
@@ -2062,52 +2072,73 @@ yyreduce:
 /* Line 1455 of yacc.c  */
 #line 470 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
-           (yyval.pexpr) = new BasicExpression(Identifier(std::to_string((yyvsp[(1) - (1)].num))));
-        ;}
+        (yyval.pexpr) = new DeallocateExpression(*(yyvsp[(2) - (2)].pidentifier));
+        delete (yyvsp[(2) - (2)].pidentifier);
+    ;}
     break;
 
   case 58:
 
 /* Line 1455 of yacc.c  */
 #line 474 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    { 
-            (yyval.pexpr) = new BasicExpression(*(yyvsp[(1) - (1)].pidentifier));
-            delete (yyvsp[(1) - (1)].pidentifier);
-        ;}
+    {(yyval.pexpr) = (yyvsp[(1) - (1)].pexpr);;}
     break;
 
   case 59:
 
 /* Line 1455 of yacc.c  */
-#line 479 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    {
-            (yyval.pexpr) = (yyvsp[(2) - (3)].pexpr); 
-    ;}
+#line 478 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    { (yyval.pexpr) = (yyvsp[(1) - (1)].pexpr) ;}
     break;
 
   case 60:
 
 /* Line 1455 of yacc.c  */
-#line 483 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    {
-        (yyval.pexpr) = new AllocExpression((yyvsp[(2) - (5)].ptype), (yyvsp[(4) - (5)].pexpr)); 
+#line 480 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    { 
+        (yyval.pexpr) = new AdvancedExpression(Identifier("*"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr));    
     ;}
     break;
 
   case 61:
 
 /* Line 1455 of yacc.c  */
-#line 487 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    {
-        (yyval.pexpr) = new DeallocateExpression(*(yyvsp[(2) - (2)].pidentifier));
-        delete (yyvsp[(2) - (2)].pidentifier);
-    ;}
+#line 484 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    { (yyval.pexpr) = new AdvancedExpression(Identifier("/"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr));    ;}
     break;
 
   case 62:
 
 /* Line 1455 of yacc.c  */
-#line 492 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 489 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    {
+           (yyval.pexpr) = new BasicExpression(Identifier(std::to_string((yyvsp[(1) - (1)].num))));
+        ;}
+    break;
+
+  case 63:
+
+/* Line 1455 of yacc.c  */
+#line 493 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    { 
+            (yyval.pexpr) = new BasicExpression(*(yyvsp[(1) - (1)].pidentifier));
+            delete (yyvsp[(1) - (1)].pidentifier);
+        ;}
+    break;
+
+  case 64:
+
+/* Line 1455 of yacc.c  */
+#line 498 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    {
+            (yyval.pexpr) = (yyvsp[(2) - (3)].pexpr); 
+    ;}
+    break;
+
+  case 65:
+
+/* Line 1455 of yacc.c  */
+#line 502 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         auto& tree = AstTree::instance();
         Function* f = tree.findFunction(*(yyvsp[(1) - (4)].pidentifier));
@@ -2116,10 +2147,10 @@ yyreduce:
     ;}
     break;
 
-  case 63:
+  case 66:
 
 /* Line 1455 of yacc.c  */
-#line 499 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 509 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
         auto& tree = AstTree::instance();
         Identifier id(SystemFunctions::getSysFunctionName((yyvsp[(1) - (4)].sysfunid)));
@@ -2128,48 +2159,23 @@ yyreduce:
     ;}
     break;
 
-  case 64:
-
-/* Line 1455 of yacc.c  */
-#line 509 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    {
-            (yyval.pexpr) = new AdvancedExpression(Identifier("<"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr))
-        ;}
-    break;
-
-  case 65:
-
-/* Line 1455 of yacc.c  */
-#line 513 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    {
-            (yyval.pexpr) = new AdvancedExpression(Identifier(">"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr))
-        ;}
-    break;
-
-  case 66:
-
-/* Line 1455 of yacc.c  */
-#line 517 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    {
-            (yyval.pexpr) = new AdvancedExpression(Identifier("=="), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr));
-        ;}
-    break;
-
   case 67:
 
 /* Line 1455 of yacc.c  */
-#line 523 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 519 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
-        (yyval.sysfunid) = SystemFunctions::SysFunctionID::DISPLAY;
+        (yyval.pexpr) = new ArrayOperatorExprerssion(*(yyvsp[(1) - (4)].pidentifier), (yyvsp[(3) - (4)].pexpr));
+        delete (yyvsp[(1) - (4)].pidentifier);
     ;}
     break;
 
   case 68:
 
 /* Line 1455 of yacc.c  */
-#line 527 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 524 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
-        (yyval.sysfunid) = SystemFunctions::SysFunctionID::ALLOCATE_MEMORY;
+        static_cast<ArrayOperatorExprerssion*>((yyvsp[(1) - (4)].pexpr))->addDim((yyvsp[(3) - (4)].pexpr));
+        (yyval.pexpr) = (yyvsp[(1) - (4)].pexpr);
     ;}
     break;
 
@@ -2178,8 +2184,8 @@ yyreduce:
 /* Line 1455 of yacc.c  */
 #line 532 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
-        (yyval.sysfunid) = SystemFunctions::SysFunctionID::DEALLOCATE_MEMORY;
-    ;}
+            (yyval.pexpr) = new AdvancedExpression(Identifier("<"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr))
+        ;}
     break;
 
   case 70:
@@ -2187,35 +2193,80 @@ yyreduce:
 /* Line 1455 of yacc.c  */
 #line 536 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {
-        (yyval.sysfunid) = SystemFunctions::SysFunctionID::LAST;
-    ;}
+            (yyval.pexpr) = new AdvancedExpression(Identifier(">"), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr))
+        ;}
     break;
 
   case 71:
 
 /* Line 1455 of yacc.c  */
-#line 541 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    {;}
+#line 540 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    {
+            (yyval.pexpr) = new AdvancedExpression(Identifier("=="), (yyvsp[(1) - (3)].pexpr), (yyvsp[(3) - (3)].pexpr));
+        ;}
     break;
 
   case 72:
 
 /* Line 1455 of yacc.c  */
-#line 543 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
-    {;}
+#line 546 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    {
+        (yyval.sysfunid) = SystemFunctions::SysFunctionID::DISPLAY;
+    ;}
     break;
 
   case 73:
 
 /* Line 1455 of yacc.c  */
-#line 545 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 550 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    {
+        (yyval.sysfunid) = SystemFunctions::SysFunctionID::ALLOCATE_MEMORY;
+    ;}
+    break;
+
+  case 74:
+
+/* Line 1455 of yacc.c  */
+#line 555 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    {
+        (yyval.sysfunid) = SystemFunctions::SysFunctionID::DEALLOCATE_MEMORY;
+    ;}
+    break;
+
+  case 75:
+
+/* Line 1455 of yacc.c  */
+#line 559 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    {
+        (yyval.sysfunid) = SystemFunctions::SysFunctionID::LAST;
+    ;}
+    break;
+
+  case 76:
+
+/* Line 1455 of yacc.c  */
+#line 564 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    {;}
+    break;
+
+  case 77:
+
+/* Line 1455 of yacc.c  */
+#line 566 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+    {;}
+    break;
+
+  case 78:
+
+/* Line 1455 of yacc.c  */
+#line 568 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
     {;}
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 2219 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.cpp"
+#line 2270 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.cpp"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2427,7 +2478,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 546 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
+#line 569 "E:/LocalRepo/Compilers/AssemblerCompiler/DulekC/DulekC/src/parser.ypp"
 
 
 

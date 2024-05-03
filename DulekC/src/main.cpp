@@ -34,18 +34,20 @@ static constexpr bool LLVM_IR_PRINT = true;
 
 int main(int argc, char* argv[])
 {
+	initTerminalMessageEngine();
 	DuDisplay("\tCompilation Begin...\n");
 	errno_t code;
 	if(argc > 1)
 		code = fopen_s(&yyin, argv[1], "r");
 	else
 		code = fopen_s(&yyin, "Main.du", "r");
+	if (code)
+		Error(MessageEngine::Code::CANNOT_OPEN_FILE, argc > 1 ? argv[1] : "Main.du");
 	initlex();
-	initTerminalMessageEngine();
 	yyparse();
 	LLVMGen generator("test");
 	generator.genIRForFile(AstTree::instance().begin(), AstTree::instance().end());
-	generator.print();
+	//generator.print();
 	generator.executeCodeToByteCode();
 	return 0;
 }

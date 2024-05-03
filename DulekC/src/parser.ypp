@@ -19,9 +19,9 @@
 #include "LexerContext.h"
 #include "IfManager.h"
 
-extern void Error(MessageEngine::Code code, const char* additionalMsg);
-extern void Warning(MessageEngine::Code code, const char* additionalMsg);
-extern void Info(MessageEngine::Code code, const char* additionalMsg);
+extern void Error(MessageEngine::Code code, std::string_view additionalMsg);
+extern void Warning(MessageEngine::Code code, std::string_view additionalMsg);
+extern void Info(MessageEngine::Code code, std::string_view additionalMsg);
 extern LexerContext* s_lc;
  extern char* yytext;
  int __cdecl yylex(void);
@@ -96,6 +96,7 @@ extern int lex(void);
 %type<pexpr> term
 %type<pexpr> expression
 %type<pexpr> boolean_expr
+%type <pexpr> array_operator_expr
 %type<sysfunid> system_function_group
 %%
 
@@ -112,6 +113,7 @@ statement
     | if_block
     | else_block
     | while_block
+    | array_operator_expr
     ;
 
 
@@ -328,20 +330,29 @@ variable_declaration
 
 
   statement_group:
-    variable_assigment
+    variable_assigment SEMICOLON
     {
         auto& tree = AstTree::instance();
         tree.addObject($1);
     }
     |
-    expression_statement
+    expression_statement SEMICOLON
     {
         auto& tree = AstTree::instance();
         tree.addObject($1);
     }
     ;
   variable_assigment:
-    argument ASSIGMENT argument SEMICOLON
+    expression ASSIGMENT expression
+    {
+        if($1->isAvaiableLeftSideExpr() == 0)
+        {
+            Error(MessageEngine::Code::CANNOT_CREATE_RVAL_EXPR_LSIDE, $1->getIdentifier().getName());
+        }
+        $$ = new AssigmentStatement($1, $3);
+    }
+
+    | argument ASSIGMENT argument
     {
         if(s_lc->isInGlobalContext())
         {
@@ -355,7 +366,7 @@ variable_declaration
         delete $3;
     }
     |
-    argument ASSIGMENT just_value_init  SEMICOLON
+    argument ASSIGMENT just_value_init
     {
         if(s_lc->isInGlobalContext())
         {
@@ -368,7 +379,7 @@ variable_declaration
         delete $1;
     }
     |
-    argument ASSIGMENT expression SEMICOLON
+    argument ASSIGMENT expression
     {
         if(s_lc->isInGlobalContext())
         {
@@ -381,7 +392,7 @@ variable_declaration
 
     }
     |
-    RETURN_KEYWORD argument SEMICOLON
+    RETURN_KEYWORD argument
     {
         if(s_lc->isInGlobalContext())
         {
@@ -409,7 +420,7 @@ variable_declaration
         delete $2;
     }
     |
-    system_function_group LBRACE argument_list RBRACE SEMICOLON
+    system_function_group LBRACE argument_list RBRACE
     {
         if(s_lc->isInGlobalContext())
         {
@@ -421,7 +432,7 @@ variable_declaration
         $$ = new CallFunction( new CallFunctionExpression(std::move(yys_ids), f) );
     }
     |
-    argument LBRACE argument_list RBRACE SEMICOLON
+    argument LBRACE argument_list RBRACE
     {
         if(s_lc->isInGlobalContext())
         {
@@ -433,8 +444,7 @@ variable_declaration
         delete $1;
     }
     |
-    ;
-    expression_statement: expression SEMICOLON
+    expression_statement: expression
     {
         if(s_lc->isInGlobalContext())
         {
@@ -452,7 +462,16 @@ variable_declaration
         { $$ = new AdvancedExpression(Identifier("+"), $1, $3);    }
     | expression MINUS term
         { $$ = new AdvancedExpression(Identifier("-"), $1, $3);    }
-
+    | NEW type LBRACE expression RBRACE
+    {
+        $$ = new AllocExpression($2, $4); 
+    }
+    | DELETE argument
+    {
+        $$ = new DeallocateExpression(*$2);
+        delete $2;
+    }
+    | array_operator_expr {$$ = $1;}
     ;
 
 term
@@ -479,15 +498,6 @@ factor
     {
             $$ = $2; 
     }
-    | NEW type LBRACE expression RBRACE
-    {
-        $$ = new AllocExpression($2, $4); 
-    }
-    | DELETE argument
-    {
-        $$ = new DeallocateExpression(*$2);
-        delete $2;
-    }
     | argument LBRACE argument_list RBRACE 
     {
         auto& tree = AstTree::instance();
@@ -502,6 +512,19 @@ factor
         Function* f = tree.findFunction(id);
         $$ = new CallFunctionExpression(std::move(yys_ids), f);
     }
+    ;
+
+array_operator_expr
+    : argument '[' expression ']'
+    {
+        $$ = new ArrayOperatorExprerssion(*$1, $3);
+        delete $1;
+    }
+    | array_operator_expr '[' expression ']'
+    {
+        static_cast<ArrayOperatorExprerssion*>($1)->addDim($3);
+        $$ = $1;
+    }   
     ;
 
 boolean_expr

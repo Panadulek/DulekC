@@ -51,6 +51,8 @@
 "->"                    { DISPLAY("ARROW");return ARROW; }
 "{"                     { return LBUCKLE; }
 "}"                     { return RBUCKLE; }
+"["                     { return '['; }
+"]"                     { return ']'; }    
 ","                     { return COMMA; }
 ";"                     { DISPLAY(";");return SEMICOLON; }
 ":"						{return INIT_TYPE;}

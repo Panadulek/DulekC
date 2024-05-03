@@ -28,6 +28,9 @@ public:
 		CannotConvertToBoolean,
 		INVALID_NUMBER_OF_ARGUMENTS,
 		INVALID_ARGUMENT_TYPE,
+		WRONG_ARGUMENT,
+		CANNOT_OPEN_FILE,
+		CANNOT_CREATE_RVAL_EXPR_LSIDE,
 	};
 private:
 	std::string getErrorMessage(Code code)
@@ -53,6 +56,12 @@ private:
 			return "Invalid number of arguments";
 		case Code::INVALID_ARGUMENT_TYPE:
 			return "Invalid argument type";
+		case Code::WRONG_ARGUMENT:
+			return "Inavlid arguemnt";
+		case Code::CANNOT_OPEN_FILE:
+			return "This file cannot be open:";
+		case Code::CANNOT_CREATE_RVAL_EXPR_LSIDE:
+			return "Cannot create this expr on Left side:";
 		default:
 			return "Not implemented message";
 		}
@@ -75,16 +84,16 @@ protected:
 	{
 		return std::format("{} code: {}\t\"{}\"", getTypeString(mt), static_cast<uint32_t>(c), getErrorMessage(c));
 	}
-	void getStandardMessageWithAdditionalInfo(std::string& format, const char* additionalMsg)
+	void getStandardMessageWithAdditionalInfo(std::string& format, std::string_view additionalMsg)
 	{
-		if (!additionalMsg)
+		if (additionalMsg.empty())
 			return;
 		format = std::format("{}\t\"{}\"", format, additionalMsg);
 	}
 public:
-	virtual void printError(Code c, const char* additionalMsg) = 0;
-	virtual void printWarning(Code c, const char* additionalMsg) = 0;
-	virtual void printInfo(Code c, const char* additionalMsg) = 0;
+	virtual void printError(Code c, std::string_view additionalMsg) = 0;
+	virtual void printWarning(Code c, std::string_view additionalMsg) = 0;
+	virtual void printInfo(Code c, std::string_view additionalMsg) = 0;
 	virtual void printNewLine() = 0;
 };
 
@@ -92,7 +101,7 @@ class TerminalMessageEngine final : public MessageEngine
 {
 	StandardOutput<OUTPUT_MODE::STD_OUT> m_output;
 public:
-	virtual void printError(Code c, const char* additionalMsg)  override
+	virtual void printError(Code c, std::string_view additionalMsg)  override
 	{
 		std::string message = getStandardMessage(MessageType::ERROR, c);
 		getStandardMessageWithAdditionalInfo(message, additionalMsg);
@@ -101,7 +110,7 @@ public:
 		printNewLine();
 	}
 
-	virtual void printWarning(Code c, const char* additionalMsg) override
+	virtual void printWarning(Code c, std::string_view additionalMsg) override
 	{
 		std::string message = getStandardMessage(MessageType::WARNING, c);
 		getStandardMessageWithAdditionalInfo(message, additionalMsg);
@@ -110,7 +119,7 @@ public:
 		printNewLine();
 	}
 
-	virtual void printInfo(Code c, const char* additionalMsg) override
+	virtual void printInfo(Code c, std::string_view additionalMsg) override
 	{
 		std::string message = getStandardMessage(MessageType::INFO, c);
 		getStandardMessageWithAdditionalInfo(message, additionalMsg);
